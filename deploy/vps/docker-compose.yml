@@ -17,9 +17,9 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
-    command: >-
-      sh -c "corepack pnpm --filter @varejo/database exec prisma migrate deploy --schema prisma/schema.prisma
-      && node apps/api/dist/main.js"
+    # Run database migrations as an explicit deployment step. A temporary
+    # database/pooler issue must not keep the API in a restart loop.
+    command: node apps/api/dist/main.js
 
   web:
     build:
