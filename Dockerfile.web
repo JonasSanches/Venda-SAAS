@@ -1,0 +1,14 @@
+FROM node:22-alpine AS build
+WORKDIR /app
+RUN corepack enable
+COPY . .
+RUN corepack pnpm install --frozen-lockfile
+RUN corepack pnpm --filter @varejo/web build
+
+FROM node:22-alpine AS runtime
+WORKDIR /app
+ENV NODE_ENV=production HOSTNAME=0.0.0.0
+COPY --from=build /app/apps/web/.next/standalone ./
+COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=build /app/apps/web/public ./apps/web/public
+CMD ["node", "apps/web/server.js"]

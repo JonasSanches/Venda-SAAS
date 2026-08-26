@@ -1,0 +1,1 @@
+import { Global,Module } from "@nestjs/common";import { PlatformController } from "./platform.controller";import { TrialService } from "./trial.service";@Global()@Module({controllers:[PlatformController],providers:[TrialService],exports:[TrialService]})export class PlatformModule{}

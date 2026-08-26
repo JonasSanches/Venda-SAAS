@@ -1,0 +1,366 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantStatus {
+  TRIAL
+  ACTIVE
+  EXPIRED
+  SUSPENDED
+  CANCELLED
+}
+enum UserStatus {
+  INVITED
+  ACTIVE
+  BLOCKED
+}
+enum OrderStatus {
+  DRAFT
+  OPEN
+  CONFIRMED
+  PAID
+  CANCELLED
+}
+enum StockMovementType {
+  PURCHASE
+  SALE
+  ADJUSTMENT
+  LOSS
+  TRANSFER_IN
+  TRANSFER_OUT
+  REVERSAL
+}
+enum FiscalDocumentType {
+  NFE
+  NFCE
+}
+enum FiscalStatus {
+  PENDING
+  PROCESSING
+  AUTHORIZED
+  REJECTED
+  CANCELLED
+  CONTINGENCY
+}
+enum CashSessionStatus {
+  OPEN
+  CLOSED
+}
+enum CashMovementType {
+  OPENING
+  SALE
+  SUPPLY
+  WITHDRAWAL
+  REVERSAL
+}
+enum PartyType {
+  CUSTOMER
+  SUPPLIER
+}
+
+model Tenant {
+  id        String       @id @default(uuid()) @db.Uuid
+  name      String
+  document  String       @unique
+  status    TenantStatus @default(TRIAL)
+  state     String?      @db.Char(2)
+  city      String?
+  segment   String?
+  phone     String?
+  logoDataUrl String?    @map("logo_data_url")
+  trialStartsAt DateTime? @map("trial_starts_at")
+  trialExpiresAt DateTime? @map("trial_expires_at")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+  branches  Branch[]
+  users     User[]
+  products  Product[]
+  roles     Role[]
+  cashSessions CashSession[]
+  cashMovements CashMovement[]
+  parties Party[]
+  fiscalSettings FiscalSettings?
+  @@map("tenants")
+}
+
+model Branch {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @db.Uuid @map("tenant_id")
+  name           String
+  taxId          String   @map("tax_id")
+  state          String   @db.Char(2)
+  cityCode       String   @map("city_code")
+  taxRegime      String   @map("tax_regime")
+  stateRegistration String @map("state_registration")
+  createdAt      DateTime @default(now()) @map("created_at")
+  tenant         Tenant   @relation(fields: [tenantId], references: [id])
+  warehouses     Warehouse[]
+  orders         Order[]
+  fiscalDocuments FiscalDocument[]
+  cashSessions CashSession[]
+  @@unique([tenantId, taxId])
+  @@index([tenantId])
+  @@map("branches")
+}
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  tenantId     String     @db.Uuid @map("tenant_id")
+  email        String     @unique
+  name         String
+  passwordHash String     @map("password_hash")
+  status       UserStatus @default(INVITED)
+  mfaEnabled   Boolean    @default(false) @map("mfa_enabled")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  tenant       Tenant     @relation(fields: [tenantId], references: [id])
+  roles        UserRole[]
+  @@index([tenantId])
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid @map("tenant_id")
+  name        String
+  permissions String[]
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  users       UserRole[]
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("roles")
+}
+
+model UserRole {
+  userId String @db.Uuid @map("user_id")
+  roleId String @db.Uuid @map("role_id")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Product {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @db.Uuid @map("tenant_id")
+  sku         String
+  barcode     String?
+  name        String
+  price       Decimal  @db.Decimal(14, 2)
+  cost        Decimal  @default(0) @db.Decimal(14, 4)
+  ncm         String?
+  cest        String?
+  cfop        String?
+  csosn       String?
+  pisCst      String?  @map("pis_cst")
+  cofinsCst   String?  @map("cofins_cst")
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenant      Tenant @relation(fields: [tenantId], references: [id])
+  stockMovements StockMovement[]
+  orderItems OrderItem[]
+  @@unique([tenantId, sku])
+  @@index([tenantId, name])
+  @@map("products")
+}
+
+model Warehouse {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  branchId String @db.Uuid @map("branch_id")
+  name     String
+  branch   Branch @relation(fields: [branchId], references: [id])
+  movements StockMovement[]
+  @@unique([tenantId, branchId, name])
+  @@index([tenantId])
+  @@map("warehouses")
+}
+
+model StockMovement {
+  id          String @id @default(uuid()) @db.Uuid
+  tenantId    String @db.Uuid @map("tenant_id")
+  warehouseId String @db.Uuid @map("warehouse_id")
+  productId   String @db.Uuid @map("product_id")
+  type        StockMovementType
+  quantity    Decimal @db.Decimal(14, 3)
+  unitCost    Decimal @db.Decimal(14, 4) @map("unit_cost")
+  referenceId String? @db.Uuid @map("reference_id")
+  occurredAt  DateTime @default(now()) @map("occurred_at")
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  @@index([tenantId, warehouseId, productId, occurredAt])
+  @@map("stock_movements")
+}
+
+model Order {
+  id        String @id @default(uuid()) @db.Uuid
+  tenantId  String @db.Uuid @map("tenant_id")
+  branchId  String @db.Uuid @map("branch_id")
+  cashSessionId String? @db.Uuid @map("cash_session_id")
+  number    BigInt
+  status    OrderStatus @default(DRAFT)
+  channel   String
+  subtotal  Decimal @db.Decimal(14, 2)
+  discount  Decimal @default(0) @db.Decimal(14, 2)
+  total     Decimal @db.Decimal(14, 2)
+  createdAt DateTime @default(now()) @map("created_at")
+  cancelledAt DateTime? @map("cancelled_at")
+  cancelReason String? @map("cancel_reason")
+  branch Branch @relation(fields: [branchId], references: [id])
+  cashSession CashSession? @relation(fields: [cashSessionId], references: [id])
+  items OrderItem[]
+  payments Payment[]
+  fiscalDocuments FiscalDocument[]
+  @@unique([tenantId, branchId, number])
+  @@index([tenantId, createdAt])
+  @@map("orders")
+}
+
+model CashSession {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  branchId String @db.Uuid @map("branch_id")
+  status CashSessionStatus @default(OPEN)
+  openingAmount Decimal @db.Decimal(14,2) @map("opening_amount")
+  declaredAmount Decimal? @db.Decimal(14,2) @map("declared_amount")
+  difference Decimal? @db.Decimal(14,2)
+  openedAt DateTime @default(now()) @map("opened_at")
+  closedAt DateTime? @map("closed_at")
+  tenant Tenant @relation(fields:[tenantId],references:[id])
+  branch Branch @relation(fields:[branchId],references:[id])
+  movements CashMovement[]
+  orders Order[]
+  @@index([tenantId,status])
+  @@map("cash_sessions")
+}
+
+model CashMovement {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  cashSessionId String @db.Uuid @map("cash_session_id")
+  type CashMovementType
+  amount Decimal @db.Decimal(14,2)
+  paymentMethod String @map("payment_method")
+  note String
+  orderId String? @db.Uuid @map("order_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  tenant Tenant @relation(fields:[tenantId],references:[id])
+  cashSession CashSession @relation(fields:[cashSessionId],references:[id])
+  @@index([tenantId,cashSessionId,createdAt])
+  @@map("cash_movements")
+}
+
+model Party {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  type PartyType
+  name String
+  document String
+  email String?
+  phone String?
+  createdAt DateTime @default(now()) @map("created_at")
+  tenant Tenant @relation(fields:[tenantId],references:[id])
+  @@unique([tenantId,document])
+  @@index([tenantId,type])
+  @@map("parties")
+}
+
+model FiscalSettings {
+  tenantId String @id @db.Uuid @map("tenant_id")
+  state String @db.Char(2)
+  taxRegime String @map("tax_regime")
+  stateRegistration String @map("state_registration")
+  cityCode String @map("city_code")
+  nfeSeries Int @map("nfe_series")
+  nfceSeries Int @map("nfce_series")
+  environment String @default("HOMOLOGATION")
+  tenant Tenant @relation(fields:[tenantId],references:[id])
+  @@map("fiscal_settings")
+}
+
+model OrderItem {
+  id        String @id @default(uuid()) @db.Uuid
+  tenantId  String @db.Uuid @map("tenant_id")
+  orderId   String @db.Uuid @map("order_id")
+  productId String @db.Uuid @map("product_id")
+  quantity  Decimal @db.Decimal(14, 3)
+  unitPrice Decimal @db.Decimal(14, 2) @map("unit_price")
+  total     Decimal @db.Decimal(14, 2)
+  order Order @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  @@index([tenantId, orderId])
+  @@map("order_items")
+}
+
+model Payment {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid @map("tenant_id")
+  orderId  String @db.Uuid @map("order_id")
+  method   String
+  amount   Decimal @db.Decimal(14, 2)
+  status   String
+  externalId String? @map("external_id")
+  order Order @relation(fields: [orderId], references: [id])
+  @@index([tenantId, orderId])
+  @@map("payments")
+}
+
+model FiscalDocument {
+  id          String @id @default(uuid()) @db.Uuid
+  tenantId    String @db.Uuid @map("tenant_id")
+  branchId    String @db.Uuid @map("branch_id")
+  orderId     String @db.Uuid @map("order_id")
+  type        FiscalDocumentType
+  status      FiscalStatus @default(PENDING)
+  series      Int
+  number      BigInt
+  accessKey   String? @map("access_key")
+  protocol    String?
+  rejectionCode String? @map("rejection_code")
+  rejectionReason String? @map("rejection_reason")
+  xmlObjectKey String? @map("xml_object_key")
+  idempotencyKey String @map("idempotency_key")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  branch Branch @relation(fields: [branchId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
+  @@unique([tenantId, idempotencyKey])
+  @@unique([tenantId, branchId, type, series, number])
+  @@index([tenantId, status, createdAt])
+  @@map("fiscal_documents")
+}
+
+model AuditLog {
+  id          String @id @default(uuid()) @db.Uuid
+  tenantId    String @db.Uuid @map("tenant_id")
+  actorId     String? @db.Uuid @map("actor_id")
+  action      String
+  resource    String
+  resourceId  String? @map("resource_id")
+  requestId   String @map("request_id")
+  ip          String?
+  before      Json?
+  after       Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  @@index([tenantId, createdAt])
+  @@map("audit_logs")
+}
+
+model OutboxEvent {
+  id          String @id @default(uuid()) @db.Uuid
+  tenantId    String @db.Uuid @map("tenant_id")
+  topic       String
+  aggregateId String @map("aggregate_id")
+  payload     Json
+  createdAt   DateTime @default(now()) @map("created_at")
+  processedAt DateTime? @map("processed_at")
+  attempts    Int @default(0)
+  @@index([processedAt, createdAt])
+  @@index([tenantId])
+  @@map("outbox_events")
+}

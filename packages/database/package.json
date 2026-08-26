@@ -1,0 +1,18 @@
+{
+  "name": "@varejo/database",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test",
+    "generate": "prisma generate",
+    "migrate:dev": "prisma migrate dev",
+    "seed:platform": "node prisma/seed-platform.mjs"
+  },
+  "dependencies": { "@prisma/client": "^6.14.0" },
+  "devDependencies": { "@types/node": "^22.18.0", "prisma": "^6.14.0", "typescript": "^5.9.2" }
+}
