@@ -2,7 +2,9 @@ import { randomUUID, scryptSync } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-for (const line of readFileSync(resolve(process.cwd(), "../../.env"), "utf8").split(/\r?\n/)) {
+let localEnv = "";
+try { localEnv = readFileSync(resolve(process.cwd(), "../../.env"), "utf8"); } catch {}
+for (const line of localEnv.split(/\r?\n/)) {
   const match = line.match(/^([A-Z0-9_]+)=(.*)$/);
   if (!match || process.env[match[1]]) continue;
   process.env[match[1]] = match[2].trim().replace(/^(["'])|(["'])$/g, "");
