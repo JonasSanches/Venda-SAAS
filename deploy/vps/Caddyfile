@@ -1,0 +1,22 @@
+vendamais-app.com {
+  redir https://www.vendamais-app.com{uri} permanent
+}
+
+www.vendamais-app.com {
+  encode zstd gzip
+
+  handle /api/* {
+    reverse_proxy api:3001
+  }
+
+  handle {
+    reverse_proxy web:3000
+  }
+
+  header {
+    Strict-Transport-Security "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options "nosniff"
+    Referrer-Policy "strict-origin-when-cross-origin"
+    -Server
+  }
+}
