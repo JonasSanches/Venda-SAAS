@@ -10,6 +10,22 @@ exec 9>"/run/lock/vendamais-deploy.lock"
 flock -n 9 || exit 0
 
 cd "$APP_DIR"
+
+# Keep operational units synchronized even when there is no application update.
+units_changed=0
+for unit in deploy/vps/systemd/*.service deploy/vps/systemd/*.timer; do
+  destination="/etc/systemd/system/$(basename "$unit")"
+  if [[ ! -f "$destination" ]] || ! cmp -s "$unit" "$destination"; then
+    install -m 0644 "$unit" "$destination"
+    units_changed=1
+  fi
+done
+chmod 750 deploy/vps/auto-deploy.sh deploy/vps/monitor.sh deploy/vps/backup-config.sh
+if [[ "$units_changed" -eq 1 ]]; then
+  systemctl daemon-reload
+  systemctl enable --now vendamais-monitor.timer vendamais-backup.timer
+fi
+
 git fetch --quiet origin main
 target_revision="$(git rev-parse origin/main)"
 deployed_revision="$(cat "$STATE_FILE" 2>/dev/null || true)"

@@ -1,0 +1,7 @@
+[Unit]
+Description=VendaMais protected configuration backup
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /opt/vendamais-app/deploy/vps/backup-config.sh
+

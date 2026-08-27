@@ -1,0 +1,11 @@
+[Unit]
+Description=Create a daily VendaMais configuration backup
+
+[Timer]
+OnCalendar=*-*-* 03:20:00
+RandomizedDelaySec=10min
+Persistent=true
+Unit=vendamais-backup.service
+
+[Install]
+WantedBy=timers.target

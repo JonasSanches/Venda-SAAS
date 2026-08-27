@@ -1,0 +1,11 @@
+[Unit]
+Description=Check VendaMais availability every five minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+Persistent=true
+Unit=vendamais-monitor.service
+
+[Install]
+WantedBy=timers.target

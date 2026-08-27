@@ -1,0 +1,10 @@
+[Unit]
+Description=VendaMais availability and resource monitor
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/bash /opt/vendamais-app/deploy/vps/monitor.sh
+TimeoutStartSec=45s
+

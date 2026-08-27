@@ -32,3 +32,15 @@ journalctl -u vendamais-deploy.service -n 100 --no-pager
 
 Migrações de banco continuam sendo uma etapa explícita e devem ser aplicadas antes
 de versões que alterem o schema.
+
+## Monitoramento e cópias de configuração
+
+`vendamais-monitor.timer` verifica a aplicação e a conexão com o banco a cada cinco
+minutos e alerta no journal quando há três falhas seguidas ou o disco ultrapassa
+85%. Um webhook externo pode ser configurado em `/etc/vendamais-monitor.env` com
+`MONITOR_ALERT_WEBHOOK_URL="..."`.
+
+`vendamais-backup.timer` cria diariamente uma cópia protegida das configurações em
+`/var/backups/vendamais`, mantendo 14 dias. Os dados comerciais residem no Supabase
+e seguem a política de backup daquele projeto; a cópia local não substitui um
+backup externo do banco nem protege contra a perda total da VPS.
