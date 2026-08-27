@@ -248,7 +248,7 @@ export default function Home() {
             onCreated={updated}
           />
         ) : page === "Usuários" ? (
-          <Users token={session.accessToken} />
+          <Users token={session.accessToken} roles={session.user.roles} />
         ) : page === "Filial" ? (
           <Branch session={session} onSelect={selectBranch} />
         ) : (
@@ -276,7 +276,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         await request<Session>("/auth/login", undefined, {
           method: "POST",
           body: JSON.stringify({
-            email: form.get("email"),
+            access: form.get("access"),
             password: form.get("password"),
           }),
         }),
@@ -297,10 +297,10 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <p>Acesse a operação da sua empresa.</p>
         {error && <div className="error">{error}</div>}
         <label>
-          E-mail
+          E-mail ou nome de acesso
           <input
-            name="email"
-            type="email"
+            name="access"
+            type="text"
             defaultValue="admin@demo.com"
             required
           />
@@ -981,12 +981,13 @@ function Cash({ token, onChange }: { token: string; onChange: () => void }) {
     </>
   );
 }
-function Users({ token }: { token: string }) {
+function Users({ token, roles }: { token: string; roles: string[] }) {
   const [users, setUsers] = useState<
       Array<{
         id: string;
         name: string;
         email: string;
+        access?: string;
         roles: string[];
         status?: string;
       }>
@@ -1010,7 +1011,7 @@ function Users({ token }: { token: string }) {
         method: "POST",
         body: JSON.stringify({
           name: f.get("name"),
-          email: f.get("email"),
+          username: f.get("username"),
           password: f.get("password"),
           role: f.get("role"),
         }),
@@ -1047,8 +1048,8 @@ function Users({ token }: { token: string }) {
             <input name="name" minLength={2} required />
           </label>
           <label>
-            E-mail
-            <input name="email" type="email" required />
+            Nome de acesso
+            <input name="username" minLength={3} maxLength={30} pattern="[a-z0-9._-]+" placeholder="Ex.: carlos.caixa" required />
           </label>
           <label>
             Senha provisória
@@ -1059,8 +1060,8 @@ function Users({ token }: { token: string }) {
             <select name="role">
               <option value="CASHIER">Caixa</option>
               <option value="STOCK">Estoque</option>
-              <option value="MANAGER">Gerente</option>
-              <option value="ADMIN">Administrador</option>
+              {roles.includes("ADMIN") && <option value="MANAGER">Gerente</option>}
+              {roles.includes("ADMIN") && <option value="ADMIN">Administrador</option>}
             </select>
           </label>
           <button>Criar usuário</button>
@@ -1069,13 +1070,13 @@ function Users({ token }: { token: string }) {
       <div className="table">
         <div className="row users head">
           <span>Nome</span>
-          <span>E-mail</span>
+          <span>Acesso</span>
           <span>Perfil</span>
         </div>
         {users.map((u) => (
           <div className="row users" key={u.id}>
             <strong>{u.name}</strong>
-            <span>{u.email}</span>
+            <span>{u.access ?? u.email}</span>
             <span>
               {u.roles.map((role) => labels[role] ?? role).join(", ")}
             </span>
@@ -1392,7 +1393,7 @@ const pagesFor = (roles: string[]) =>
         "PDV",
         "Estoque",
         "Produtos",
-        ...(roles.includes("ADMIN") ? ["Usuários"] : []),
+        "Usuários",
         "Filial",
         "Fiscal",
       ]

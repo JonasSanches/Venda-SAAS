@@ -12,9 +12,9 @@ const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("
 export class AuthService {
   constructor(private readonly store: DemoStore,private readonly trials:TrialService) {}
   private secret() { return process.env.JWT_SECRET ?? "local-development-secret-change-before-production"; }
-  async login(email: string, password: string) {
-    const databaseUser=process.env.DEMO_MODE==="false"?await this.trials.findUser(email):null;
-    const trial=process.env.DEMO_MODE==="false"?databaseUser:await this.trials.findUser(email);const user = process.env.DEMO_MODE==="false"?databaseUser?.user:(this.store.findUser(email)??trial?.user);
+  async login(access: string, password: string) {
+    const databaseUser=process.env.DEMO_MODE==="false"?await this.trials.findUser(access):null;
+    const trial=process.env.DEMO_MODE==="false"?databaseUser:await this.trials.findUser(access);const user = process.env.DEMO_MODE==="false"?databaseUser?.user:(this.store.findUser(access)??trial?.user);
     if (!user || !passwordMatches(password, user.passwordHash)) throw new UnauthorizedException("E-mail ou senha inválidos");
     if(trial)await this.trials.assertLogin(user.tenantId);
     const payload: TokenPayload = { tenantId: user.tenantId, userId: user.id, roles: user.roles, exp: Math.floor(Date.now() / 1000) + 8 * 60 * 60 };
@@ -40,14 +40,14 @@ export class AuthService {
       select:{id:true,name:true,email:true,status:true,createdAt:true,roles:{select:{role:{select:{name:true}}}}},
       orderBy:{createdAt:"asc"}
     }));
-    return users.map(user=>({...user,roles:user.roles.map(item=>item.role.name)}));
+    return users.map(user=>({...user,access:user.email.endsWith("@acesso.vendamais-app.com")?user.email.replace("@acesso.vendamais-app.com",""):user.email,roles:user.roles.map(item=>item.role.name)}));
   }
-  async createUser(input:{name:string;email:string;password:string;role:"ADMIN"|"MANAGER"|"CASHIER"|"STOCK"}){
-    const identity=tenantContext.getStore();if(!identity?.roles.includes("ADMIN"))throw new ForbiddenException("Somente administradores podem criar usuários");const tenantId=currentTenantId(),email=input.email.trim().toLowerCase();
-    if(process.env.DEMO_MODE!=="false")return this.store.addUser(tenantId,{...input,email});
+  async createUser(input:{name:string;username:string;password:string;role:"ADMIN"|"MANAGER"|"CASHIER"|"STOCK"}){
+    const identity=tenantContext.getStore();if(!identity?.roles.some(role=>role==="ADMIN"||role==="MANAGER"))throw new ForbiddenException("Seu perfil não pode criar usuários");if(identity.roles.includes("MANAGER")&&!identity.roles.includes("ADMIN")&&!(["CASHIER","STOCK"] as string[]).includes(input.role))throw new ForbiddenException("Gerentes podem criar somente usuários de caixa ou estoque");const tenantId=currentTenantId(),username=input.username.trim().toLowerCase();if(!/^[a-z0-9._-]{3,30}$/.test(username))throw new BadRequestException("Nome de acesso deve ter de 3 a 30 caracteres: letras minúsculas, números, ponto, hífen ou sublinhado");const email=`${username}@acesso.vendamais-app.com`;
+    if(process.env.DEMO_MODE!=="false")return this.store.addUser(tenantId,{...input,username});
     const tenant=await prisma.tenant.findUniqueOrThrow({where:{id:tenantId},select:{status:true}}),count=await prisma.user.count({where:{tenantId}}),limit=tenant.status==="TRIAL"?2:50;if(count>=limit)throw new BadRequestException(`Limite de ${limit} usuários atingido para este plano`);
     const permissions={ADMIN:["*"],MANAGER:["sales:*","products:*","inventory:*","cash:*"],CASHIER:["sales:create","sales:read","cash:read"],STOCK:["products:read","inventory:*"]}[input.role];
-    try{return await withTenant(tenantId,async tx=>{const role=await tx.role.upsert({where:{tenantId_name:{tenantId,name:input.role}},update:{permissions},create:{tenantId,name:input.role,permissions}});const user=await tx.user.create({data:{tenantId,name:input.name.trim(),email,passwordHash:hashPassword(input.password),status:"ACTIVE",roles:{create:{roleId:role.id}}},select:{id:true,name:true,email:true,status:true,createdAt:true}});return{...user,roles:[input.role]}})}catch(error:any){if(error?.code==="P2002")throw new BadRequestException("Este e-mail já está cadastrado");throw error}
+    try{return await withTenant(tenantId,async tx=>{const role=await tx.role.upsert({where:{tenantId_name:{tenantId,name:input.role}},update:{permissions},create:{tenantId,name:input.role,permissions}});const user=await tx.user.create({data:{tenantId,name:input.name.trim(),email,passwordHash:hashPassword(input.password),status:"ACTIVE",roles:{create:{roleId:role.id}}},select:{id:true,name:true,email:true,status:true,createdAt:true}});return{...user,access:username,roles:[input.role]}})}catch(error:any){if(error?.code==="P2002")throw new BadRequestException("Este nome de acesso já está em uso");throw error}
   }
   async changePassword(input:{currentPassword:string;newPassword:string}){
     const tenantId=currentTenantId(),userId=currentUserId();

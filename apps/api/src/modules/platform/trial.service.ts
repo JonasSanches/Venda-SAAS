@@ -39,9 +39,10 @@ export class TrialService {
     }catch(error:unknown){if(typeof error==="object"&&error&&"code" in error&&error.code==="P2002")throw new BadRequestException("CNPJ ou e-mail já possui uma conta");throw error}
   }
 
-  async findUser(email:string){
-    if(this.demoMode){const trial=this.trials.find(t=>t.user.email.toLowerCase()===email.toLowerCase());return trial?{user:trial.user,tenant:trial}:null}
-    const user=await prisma.user.findUnique({where:{email:email.trim().toLowerCase()},include:{tenant:true,roles:{include:{role:true}}}});
+  async findUser(access:string){
+    const value=access.trim().toLowerCase(),email=value.includes("@")?value:`${value}@acesso.vendamais-app.com`;
+    if(this.demoMode){const trial=this.trials.find(t=>t.user.email.toLowerCase()===email);return trial?{user:trial.user,tenant:trial}:null}
+    const user=await prisma.user.findUnique({where:{email},include:{tenant:true,roles:{include:{role:true}}}});
     return user?{user:{...user,roles:user.roles.map(item=>item.role.name)},tenant:user.tenant}:null;
   }
 
@@ -60,7 +61,7 @@ export class TrialService {
   async getDetail(id:string){
     if(this.demoMode){const t=this.requireDemo(id);this.refreshDemo(t);return{...this.publicDemo(t),users:[this.publicDemo(t).user],branches:[t.branch]}}
     const tenant=await prisma.tenant.findUnique({where:{id},include:tenantDetailInclude});if(!tenant)throw new BadRequestException("Conta não encontrada");
-    return{...this.publicTenant(tenant),users:tenant.users.map(user=>({id:user.id,name:user.name,email:user.email,status:user.status,createdAt:user.createdAt,roles:user.roles.map(item=>item.role.name)})),branches:tenant.branches.map(branch=>({id:branch.id,name:branch.name,taxId:branch.taxId,state:branch.state,cityCode:branch.cityCode,stateRegistration:branch.stateRegistration,taxRegime:branch.taxRegime,createdAt:branch.createdAt}))};
+    return{...this.publicTenant(tenant),users:tenant.users.map(user=>({id:user.id,name:user.name,email:user.email,access:user.email.endsWith("@acesso.vendamais-app.com")?user.email.replace("@acesso.vendamais-app.com",""):user.email,status:user.status,createdAt:user.createdAt,roles:user.roles.map(item=>item.role.name)})),branches:tenant.branches.map(branch=>({id:branch.id,name:branch.name,taxId:branch.taxId,state:branch.state,cityCode:branch.cityCode,stateRegistration:branch.stateRegistration,taxRegime:branch.taxRegime,createdAt:branch.createdAt}))};
   }
 
   async resetTenantUserPassword(id:string,userId:string,newPassword:string){

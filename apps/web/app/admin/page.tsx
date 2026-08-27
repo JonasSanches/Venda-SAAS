@@ -102,8 +102,36 @@ export default function Admin() {
       setError((err as Error).message);
     }
   }
-  async function openDetail(id:string){try{setDetail(await call(`/platform/trials/${id}`));setError("")}catch(err){setError((err as Error).message)}}
-  async function resetClientPassword(e:FormEvent<HTMLFormElement>,tenantId:string,userId:string){e.preventDefault();const target=e.currentTarget,f=new FormData(target),newPassword=String(f.get("newPassword")??"");try{await call(`/platform/trials/${tenantId}/users/${userId}/password`,{newPassword});target.reset();setMessage("Senha provisória definida. Oriente o usuário a alterá-la depois de entrar.");setError("")}catch(err){setError((err as Error).message)}}
+  async function openDetail(id: string) {
+    try {
+      setDetail(await call(`/platform/trials/${id}`));
+      setError("");
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+  async function resetClientPassword(
+    e: FormEvent<HTMLFormElement>,
+    tenantId: string,
+    userId: string,
+  ) {
+    e.preventDefault();
+    const target = e.currentTarget,
+      f = new FormData(target),
+      newPassword = String(f.get("newPassword") ?? "");
+    try {
+      await call(`/platform/trials/${tenantId}/users/${userId}/password`, {
+        newPassword,
+      });
+      target.reset();
+      setMessage(
+        "Senha provisória definida. Oriente o usuário a alterá-la depois de entrar.",
+      );
+      setError("");
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
   function goHome() {
     localStorage.removeItem("varejo-session");
     location.href = "/";
@@ -216,7 +244,12 @@ export default function Admin() {
                 : "—"}
             </small>
             <button onClick={() => extend(t.tenantId)}>Estender dias</button>
-            <button className="secondary" onClick={() => openDetail(t.tenantId)}>Ver cadastro completo</button>
+            <button
+              className="secondary"
+              onClick={() => openDetail(t.tenantId)}
+            >
+              Ver cadastro completo
+            </button>
             {t.status !== "ACTIVE" && (
               <button
                 onClick={async () => {
@@ -230,9 +263,108 @@ export default function Admin() {
           </article>
         ))}
       </div>
-      {detail&&<div className="modal-backdrop" role="dialog" aria-modal="true"><section className="client-detail"><header><div><small>CADASTRO DO CLIENTE</small><h2>{detail.name}</h2></div><button className="secondary" onClick={()=>setDetail(null)}>Fechar</button></header><div className="client-data"><div><small>CNPJ</small><strong>{detail.document||"—"}</strong></div><div><small>Telefone</small><strong>{detail.phone||"—"}</strong></div><div><small>Cidade/UF</small><strong>{detail.city||"—"} · {detail.state||"—"}</strong></div><div><small>Segmento</small><strong>{segmentName(detail.segment)}</strong></div><div><small>Status</small><strong>{detail.status}</strong></div><div><small>Início do teste</small><strong>{date(detail.startsAt)}</strong></div><div><small>Vencimento</small><strong>{date(detail.expiresAt)}</strong></div><div><small>Limites do teste</small><strong>{detail.limits?.users??"—"} usuários · {detail.limits?.branches??"—"} filial</strong></div></div><h3>Filiais</h3><div className="detail-list">{detail.branches?.map((branch:any)=><article key={branch.id}><strong>{branch.name}</strong><span>{branch.state} · IE: {branch.stateRegistration||"não informada"} · Município IBGE: {branch.cityCode||"não informado"}</span></article>)}</div><h3>Usuários da empresa</h3><div className="detail-list">{detail.users?.map((user:any)=><article key={user.id}><div><strong>{user.name}</strong><span>{user.email} · {user.roles?.join(", ")} · {user.status}</span></div><form onSubmit={e=>resetClientPassword(e,detail.tenantId,user.id)}><input name="newPassword" type="password" minLength={12} placeholder="Nova senha provisória" required/><button>Trocar senha</button></form></article>)}</div></section></div>}
+      {detail && (
+        <div className="modal-backdrop" role="dialog" aria-modal="true">
+          <section className="client-detail">
+            <header>
+              <div>
+                <small>CADASTRO DO CLIENTE</small>
+                <h2>{detail.name}</h2>
+              </div>
+              <button className="secondary" onClick={() => setDetail(null)}>
+                Fechar
+              </button>
+            </header>
+            <div className="client-data">
+              <div>
+                <small>CNPJ</small>
+                <strong>{detail.document || "—"}</strong>
+              </div>
+              <div>
+                <small>Telefone</small>
+                <strong>{detail.phone || "—"}</strong>
+              </div>
+              <div>
+                <small>Cidade/UF</small>
+                <strong>
+                  {detail.city || "—"} · {detail.state || "—"}
+                </strong>
+              </div>
+              <div>
+                <small>Segmento</small>
+                <strong>{segmentName(detail.segment)}</strong>
+              </div>
+              <div>
+                <small>Status</small>
+                <strong>{detail.status}</strong>
+              </div>
+              <div>
+                <small>Início do teste</small>
+                <strong>{date(detail.startsAt)}</strong>
+              </div>
+              <div>
+                <small>Vencimento</small>
+                <strong>{date(detail.expiresAt)}</strong>
+              </div>
+              <div>
+                <small>Limites do teste</small>
+                <strong>
+                  {detail.limits?.users ?? "—"} usuários ·{" "}
+                  {detail.limits?.branches ?? "—"} filial
+                </strong>
+              </div>
+            </div>
+            <h3>Filiais</h3>
+            <div className="detail-list">
+              {detail.branches?.map((branch: any) => (
+                <article key={branch.id}>
+                  <strong>{branch.name}</strong>
+                  <span>
+                    {branch.state} · IE:{" "}
+                    {branch.stateRegistration || "não informada"} · Município
+                    IBGE: {branch.cityCode || "não informado"}
+                  </span>
+                </article>
+              ))}
+            </div>
+            <h3>Usuários da empresa</h3>
+            <div className="detail-list">
+              {detail.users?.map((user: any) => (
+                <article key={user.id}>
+                  <div>
+                    <strong>{user.name}</strong>
+                    <span>
+                        {user.access ?? user.email} · {user.roles?.join(", ")} · {user.status}
+                    </span>
+                  </div>
+                  <form
+                    onSubmit={(e) =>
+                      resetClientPassword(e, detail.tenantId, user.id)
+                    }
+                  >
+                    <input
+                      name="newPassword"
+                      type="password"
+                      minLength={12}
+                      placeholder="Nova senha provisória"
+                      required
+                    />
+                    <button>Trocar senha</button>
+                  </form>
+                </article>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
-const date=(value?:string)=>value?new Date(value).toLocaleString("pt-BR"):"—";
-const segmentName=(value?:string)=>({RESTAURANT:"Restaurante",BAR:"Bar",WINERY:"Adega",RETAIL:"Loja"}[value??""]??value??"—");
+const date = (value?: string) =>
+  value ? new Date(value).toLocaleString("pt-BR") : "—";
+const segmentName = (value?: string) =>
+  ({ RESTAURANT: "Restaurante", BAR: "Bar", WINERY: "Adega", RETAIL: "Loja" })[
+    value ?? ""
+  ] ??
+  value ??
+  "—";
