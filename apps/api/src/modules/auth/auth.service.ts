@@ -16,6 +16,7 @@ export class AuthService {
     const databaseUser=process.env.DEMO_MODE==="false"?await this.trials.findUser(access):null;
     const trial=process.env.DEMO_MODE==="false"?databaseUser:await this.trials.findUser(access);const user = process.env.DEMO_MODE==="false"?databaseUser?.user:(this.store.findUser(access)??trial?.user);
     if (!user || !passwordMatches(password, user.passwordHash)) throw new UnauthorizedException("E-mail ou senha inválidos");
+    if(user.status==="BLOCKED")throw new ForbiddenException("Usuário bloqueado. Procure o administrador.");
     if(trial)await this.trials.assertLogin(user.tenantId);
     const payload: TokenPayload = { tenantId: user.tenantId, userId: user.id, roles: user.roles, exp: Math.floor(Date.now() / 1000) + 8 * 60 * 60 };
     const body = `${encode({ alg: "HS256", typ: "JWT" })}.${encode(payload)}`;
@@ -32,6 +33,7 @@ export class AuthService {
       return parsed;
     } catch { throw new UnauthorizedException("Sessão inválida ou expirada"); }
   }
+  async assertActive(tenantId:string,userId:string){if(process.env.DEMO_MODE!=="false")return;const user=await prisma.user.findFirst({where:{id:userId,tenantId},select:{status:true}});if(!user||user.status==="BLOCKED")throw new UnauthorizedException("Usuário bloqueado ou removido")}
   async listUsers(){
     const tenantId=currentTenantId();
     if(process.env.DEMO_MODE!=="false")return this.store.users(tenantId);

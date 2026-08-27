@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, NotFoundException } from "@nestjs/comm
 import { randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-export type DemoUser={id:string;tenantId:string;name:string;email:string;passwordHash:string;roles:string[]};
+export type DemoUser={id:string;tenantId:string;name:string;email:string;passwordHash:string;roles:string[];status?:"ACTIVE"|"BLOCKED"};
 export type DemoProduct={id:string;tenantId:string;sku:string;name:string;price:number;ncm?:string;cest?:string;cfop?:string;csosn?:string;pisCst?:string;cofinsCst?:string;active:boolean;createdAt:string};
 export type DemoMovement={id:string;tenantId:string;productId:string;type:"ENTRY"|"SALE"|"ADJUSTMENT"|"REVERSAL";quantity:number;note:string;createdAt:string};
 export type DemoOrder={id:string;tenantId:string;cashSessionId?:string;number:number;items:Array<{productId:string;name:string;quantity:number;unitPrice:number;total:number}>;paymentMethod:string;total:number;status:"PAID"|"CANCELLED";createdAt:string;cancelledAt?:string;cancelReason?:string};

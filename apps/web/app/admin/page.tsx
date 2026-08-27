@@ -22,7 +22,8 @@ export default function Admin() {
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
     [showUser, setShowUser] = useState(false),
-    [detail, setDetail] = useState<any | null>(null);
+    [detail, setDetail] = useState<any | null>(null),
+    [audit, setAudit] = useState<any[]>([]);
   async function call(path: string, body?: object) {
     if (!session) throw Error("Sessão expirada");
     const r = await fetch(API + path, {
@@ -104,7 +105,63 @@ export default function Admin() {
   }
   async function openDetail(id: string) {
     try {
-      setDetail(await call(`/platform/trials/${id}`));
+      const [data, logs] = await Promise.all([
+        call(`/platform/trials/${id}`),
+        call(`/platform/trials/${id}/audit`),
+      ]);
+      setDetail(data);
+      setAudit(logs);
+      setError("");
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+  async function refreshDetail(id: string) {
+    const [data, logs] = await Promise.all([
+      call(`/platform/trials/${id}`),
+      call(`/platform/trials/${id}/audit`),
+    ]);
+    setDetail(data);
+    setAudit(logs);
+    await load();
+  }
+  async function updateClient(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    try {
+      await call(`/platform/trials/${detail.tenantId}/update`, {
+        name: f.get("name"),
+        phone: f.get("phone"),
+        city: f.get("city"),
+        state: f.get("state"),
+        segment: f.get("segment"),
+      });
+      await refreshDetail(detail.tenantId);
+      setMessage("Cadastro atualizado com sucesso.");
+      setError("");
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+  async function changeClientStatus(status: string) {
+    if (!confirm(`Confirma a alteração da conta para ${status}?`)) return;
+    try {
+      await call(`/platform/trials/${detail.tenantId}/status`, { status });
+      await refreshDetail(detail.tenantId);
+      setMessage("Situação da conta atualizada.");
+      setError("");
+    } catch (err) {
+      setError((err as Error).message);
+    }
+  }
+  async function changeUser(userId: string, path: string, body: object) {
+    try {
+      await call(
+        `/platform/trials/${detail.tenantId}/users/${userId}/${path}`,
+        body,
+      );
+      await refreshDetail(detail.tenantId);
+      setMessage("Usuário atualizado com sucesso.");
       setError("");
     } catch (err) {
       setError((err as Error).message);
@@ -123,6 +180,7 @@ export default function Admin() {
       await call(`/platform/trials/${tenantId}/users/${userId}/password`, {
         newPassword,
       });
+      await refreshDetail(tenantId);
       target.reset();
       setMessage(
         "Senha provisória definida. Oriente o usuário a alterá-la depois de entrar.",
@@ -248,7 +306,7 @@ export default function Admin() {
               className="secondary"
               onClick={() => openDetail(t.tenantId)}
             >
-              Ver cadastro completo
+              Gerenciar cliente
             </button>
             {t.status !== "ACTIVE" && (
               <button
@@ -314,6 +372,77 @@ export default function Admin() {
                 </strong>
               </div>
             </div>
+            <h3>Editar empresa</h3>
+            <form className="client-edit-form" onSubmit={updateClient}>
+              <label>
+                Nome da empresa
+                <input
+                  name="name"
+                  defaultValue={detail.name}
+                  minLength={2}
+                  required
+                />
+              </label>
+              <label>
+                Telefone
+                <input
+                  name="phone"
+                  defaultValue={detail.phone}
+                  minLength={10}
+                  required
+                />
+              </label>
+              <label>
+                Cidade
+                <input
+                  name="city"
+                  defaultValue={detail.city}
+                  minLength={2}
+                  required
+                />
+              </label>
+              <label>
+                Estado
+                <select name="state" defaultValue={detail.state}>
+                  <option value="SP">SP</option>
+                  <option value="RJ">RJ</option>
+                </select>
+              </label>
+              <label>
+                Segmento
+                <select name="segment" defaultValue={detail.segment}>
+                  <option value="RESTAURANT">Restaurante</option>
+                  <option value="BAR">Bar</option>
+                  <option value="WINERY">Adega</option>
+                  <option value="RETAIL">Loja</option>
+                </select>
+              </label>
+              <button>Salvar alterações</button>
+            </form>
+            <h3>Controle da conta</h3>
+            <div className="account-controls">
+              <button onClick={() => changeClientStatus("ACTIVE")}>
+                Ativar conta
+              </button>
+              <button
+                className="secondary"
+                onClick={() => changeClientStatus("TRIAL")}
+              >
+                Voltar para teste
+              </button>
+              <button
+                className="danger"
+                onClick={() => changeClientStatus("SUSPENDED")}
+              >
+                Suspender acesso
+              </button>
+              <button
+                className="secondary"
+                onClick={() => extend(detail.tenantId)}
+              >
+                Estender teste
+              </button>
+            </div>
             <h3>Filiais</h3>
             <div className="detail-list">
               {detail.branches?.map((branch: any) => (
@@ -334,8 +463,34 @@ export default function Admin() {
                   <div>
                     <strong>{user.name}</strong>
                     <span>
-                        {user.access ?? user.email} · {user.roles?.join(", ")} · {user.status}
+                      {user.access ?? user.email} · {user.roles?.join(", ")} ·{" "}
+                      {user.status}
                     </span>
+                    <div className="admin-user-controls">
+                      <select
+                        aria-label="Perfil do usuário"
+                        value={user.roles?.[0] ?? "CASHIER"}
+                        onChange={(e) =>
+                          changeUser(user.id, "role", { role: e.target.value })
+                        }
+                      >
+                        <option value="ADMIN">Administrador</option>
+                        <option value="MANAGER">Gerente</option>
+                        <option value="CASHIER">Caixa</option>
+                        <option value="STOCK">Estoque</option>
+                      </select>
+                      <button
+                        className={user.status === "BLOCKED" ? "" : "danger"}
+                        onClick={() =>
+                          changeUser(user.id, "status", {
+                            status:
+                              user.status === "BLOCKED" ? "ACTIVE" : "BLOCKED",
+                          })
+                        }
+                      >
+                        {user.status === "BLOCKED" ? "Desbloquear" : "Bloquear"}
+                      </button>
+                    </div>
                   </div>
                   <form
                     onSubmit={(e) =>
@@ -354,6 +509,22 @@ export default function Admin() {
                 </article>
               ))}
             </div>
+            <h3>Histórico administrativo</h3>
+            <div className="audit-list">
+              {audit.length === 0 ? (
+                <p>Nenhuma alteração administrativa registrada ainda.</p>
+              ) : (
+                audit.map((log) => (
+                  <article key={log.id}>
+                    <strong>{auditLabel(log.action)}</strong>
+                    <span>
+                      {date(log.createdAt)} · {log.resource}
+                      {log.resourceId ? ` · ${log.resourceId}` : ""}
+                    </span>
+                  </article>
+                ))
+              )}
+            </div>
           </section>
         </div>
       )}
@@ -368,3 +539,12 @@ const segmentName = (value?: string) =>
   ] ??
   value ??
   "—";
+const auditLabel = (action: string) =>
+  ({
+    TENANT_UPDATED: "Cadastro da empresa alterado",
+    TENANT_STATUS_CHANGED: "Situação da conta alterada",
+    PASSWORD_RESET: "Senha provisória redefinida",
+    USER_STATUS_CHANGED: "Situação do usuário alterada",
+    USER_ROLE_CHANGED: "Perfil do usuário alterado",
+    TRIAL_EXTENDED: "Período de teste estendido",
+  })[action] ?? action;
