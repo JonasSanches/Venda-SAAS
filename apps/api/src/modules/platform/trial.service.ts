@@ -8,6 +8,7 @@ import { hashPassword } from "../demo/demo-store.service";
 type TrialInput = { companyName:string; document:string; state:"SP"|"RJ"; city:string; segment:string; phone:string; logoDataUrl?:string; name:string; email:string; password:string };
 type DemoTrial = { tenantId:string; name:string; document:string; state:"SP"|"RJ"; city:string; segment:string; phone:string; logoDataUrl?:string; branch:{name:string;state:string}; status:"TRIAL"|"ACTIVE"|"EXPIRED"|"SUSPENDED"; startsAt:string; expiresAt:string; limits:{users:number;branches:number;sales:number}; user:{id:string;tenantId:string;name:string;email:string;passwordHash:string;roles:string[]} };
 const tenantInclude = { branches:{orderBy:{createdAt:"asc" as const}}, users:{take:1,orderBy:{createdAt:"asc" as const},include:{roles:{include:{role:true}}}} };
+const tenantDetailInclude = { branches:{orderBy:{createdAt:"asc" as const}}, users:{orderBy:{createdAt:"asc" as const},include:{roles:{include:{role:true}}}} };
 
 @Injectable()
 export class TrialService {
@@ -54,6 +55,18 @@ export class TrialService {
     if(this.demoMode){this.trials.forEach(item=>this.refreshDemo(item));return this.trials.map(item=>this.publicDemo(item))}
     await prisma.tenant.updateMany({where:{status:"TRIAL",trialExpiresAt:{lte:new Date()}},data:{status:"EXPIRED"}});
     const tenants=await prisma.tenant.findMany({where:{document:{not:"00000000000000"}},include:tenantInclude,orderBy:{createdAt:"desc"}});return tenants.map(item=>this.publicTenant(item));
+  }
+
+  async getDetail(id:string){
+    if(this.demoMode){const t=this.requireDemo(id);this.refreshDemo(t);return{...this.publicDemo(t),users:[this.publicDemo(t).user],branches:[t.branch]}}
+    const tenant=await prisma.tenant.findUnique({where:{id},include:tenantDetailInclude});if(!tenant)throw new BadRequestException("Conta não encontrada");
+    return{...this.publicTenant(tenant),users:tenant.users.map(user=>({id:user.id,name:user.name,email:user.email,status:user.status,createdAt:user.createdAt,roles:user.roles.map(item=>item.role.name)})),branches:tenant.branches.map(branch=>({id:branch.id,name:branch.name,taxId:branch.taxId,state:branch.state,cityCode:branch.cityCode,stateRegistration:branch.stateRegistration,taxRegime:branch.taxRegime,createdAt:branch.createdAt}))};
+  }
+
+  async resetTenantUserPassword(id:string,userId:string,newPassword:string){
+    if(this.demoMode){const t=this.requireDemo(id);if(t.user.id!==userId)throw new BadRequestException("Usuário não encontrado");t.user.passwordHash=hashPassword(newPassword);this.save();return{message:"Senha redefinida com sucesso"}}
+    const user=await prisma.user.findFirst({where:{id:userId,tenantId:id},select:{id:true}});if(!user)throw new BadRequestException("Usuário não encontrado nesta empresa");
+    await prisma.user.update({where:{id:user.id},data:{passwordHash:hashPassword(newPassword)}});return{message:"Senha redefinida com sucesso"};
   }
 
   async listPlatformUsers(){
