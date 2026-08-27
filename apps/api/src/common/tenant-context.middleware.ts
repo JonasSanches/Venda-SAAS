@@ -12,6 +12,6 @@ export class TenantContextMiddleware implements NestMiddleware {
     if (typeof tenantId !== "string" || typeof userId !== "string") {
       throw new UnauthorizedException("Authenticated tenant and user are required");
     }
-    tenantContext.run({ tenantId, userId, roles: [], requestId: String(request.id ?? randomUUID()) }, next);
+    tenantContext.run({ tenantId, userId, roles: [], branchId:typeof request.headers["x-branch-id"]==="string"?request.headers["x-branch-id"]:undefined, requestId: String(request.id ?? randomUUID()) }, next);
   }
 }

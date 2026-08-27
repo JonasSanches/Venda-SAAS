@@ -7,7 +7,7 @@ import { hashPassword } from "../demo/demo-store.service";
 
 type TrialInput = { companyName:string; document:string; state:"SP"|"RJ"; city:string; segment:string; phone:string; logoDataUrl?:string; name:string; email:string; password:string };
 type DemoTrial = { tenantId:string; name:string; document:string; state:"SP"|"RJ"; city:string; segment:string; phone:string; logoDataUrl?:string; branch:{name:string;state:string}; status:"TRIAL"|"ACTIVE"|"EXPIRED"|"SUSPENDED"; startsAt:string; expiresAt:string; limits:{users:number;branches:number;sales:number}; user:{id:string;tenantId:string;name:string;email:string;passwordHash:string;roles:string[]} };
-const tenantInclude = { branches:{take:1,orderBy:{createdAt:"asc" as const}}, users:{take:1,orderBy:{createdAt:"asc" as const},include:{roles:{include:{role:true}}}} };
+const tenantInclude = { branches:{orderBy:{createdAt:"asc" as const}}, users:{take:1,orderBy:{createdAt:"asc" as const},include:{roles:{include:{role:true}}}} };
 
 @Injectable()
 export class TrialService {
@@ -86,5 +86,5 @@ export class TrialService {
   private refreshDemo(t:DemoTrial){if(t.status==="TRIAL"&&new Date(t.expiresAt)<=new Date()){t.status="EXPIRED";this.save()}}
   private requireDemo(id:string){const t=this.trials.find(item=>item.tenantId===id);if(!t)throw new BadRequestException("Conta não encontrada");return t}
   private publicDemo(t:DemoTrial){const{passwordHash:_,...user}=t.user;return{...t,user}}
-  private publicTenant(t:any){const user=t.users?.[0],branch=t.branches?.[0];return{tenantId:t.id,name:t.name,document:t.document,state:t.state,city:t.city,segment:t.segment,phone:t.phone,logoDataUrl:t.logoDataUrl,branch:branch?{id:branch.id,name:branch.name,state:branch.state}:null,status:t.status,startsAt:t.trialStartsAt?.toISOString(),expiresAt:t.trialExpiresAt?.toISOString(),limits:{users:2,branches:1,sales:200},user:user?{id:user.id,tenantId:user.tenantId,name:user.name,email:user.email,roles:user.roles.map((item:any)=>item.role.name)}:null}}
+  private publicTenant(t:any){const user=t.users?.[0],branches=(t.branches??[]).map((branch:any)=>({id:branch.id,name:branch.name,state:branch.state})),branch=branches[0]??null;return{tenantId:t.id,name:t.name,document:t.document,state:t.state,city:t.city,segment:t.segment,phone:t.phone,logoDataUrl:t.logoDataUrl,branch,branches,status:t.status,startsAt:t.trialStartsAt?.toISOString(),expiresAt:t.trialExpiresAt?.toISOString(),limits:{users:2,branches:1,sales:200},user:user?{id:user.id,tenantId:user.tenantId,name:user.name,email:user.email,roles:user.roles.map((item:any)=>item.role.name)}:null}}
 }

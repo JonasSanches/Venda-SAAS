@@ -13,6 +13,7 @@ import { SalesModule } from "./modules/sales/sales.module";
 import { CashModule } from "./modules/cash/cash.module";
 import { CommercialModule } from "./modules/commercial/commercial.module";
 import { PlatformModule } from "./modules/platform/platform.module";
+import { BranchesModule } from "./modules/branches/branches.module";
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { PlatformModule } from "./modules/platform/platform.module";
     CashModule,
     CommercialModule,
     PlatformModule,
+    BranchesModule,
     FiscalModule
   ],
   controllers: [HealthController],
