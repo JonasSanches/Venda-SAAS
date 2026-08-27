@@ -80,7 +80,7 @@ function trialDays(expiresAt?: string) {
 function TrialRemaining({ status, expiresAt }: { status?: string; expiresAt?: string }) {
   const days = trialDays(expiresAt);
   if (status !== "TRIAL" || days === null) return null;
-  return <strong className="trial-remaining">Você ainda tem {days} {days === 1 ? "dia" : "dias"}</strong>;
+  return <strong className="trial-remaining">Você ainda tem {days} {days === 1 ? "dia grátis" : "dias grátis"}.</strong>;
 }
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
