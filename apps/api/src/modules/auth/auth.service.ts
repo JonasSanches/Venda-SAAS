@@ -3,7 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma, withTenant } from "@varejo/database";
 import { DemoStore, hashPassword, passwordMatches } from "../demo/demo-store.service";
 import { TrialService } from "../platform/trial.service";
-import { currentTenantId, tenantContext } from "../../common/tenant-context";
+import { currentTenantId, currentUserId, tenantContext } from "../../common/tenant-context";
 
 type TokenPayload = { tenantId: string; userId: string; roles: string[]; exp: number };
 const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -48,5 +48,14 @@ export class AuthService {
     const tenant=await prisma.tenant.findUniqueOrThrow({where:{id:tenantId},select:{status:true}}),count=await prisma.user.count({where:{tenantId}}),limit=tenant.status==="TRIAL"?2:50;if(count>=limit)throw new BadRequestException(`Limite de ${limit} usuários atingido para este plano`);
     const permissions={ADMIN:["*"],MANAGER:["sales:*","products:*","inventory:*","cash:*"],CASHIER:["sales:create","sales:read","cash:read"],STOCK:["products:read","inventory:*"]}[input.role];
     try{return await withTenant(tenantId,async tx=>{const role=await tx.role.upsert({where:{tenantId_name:{tenantId,name:input.role}},update:{permissions},create:{tenantId,name:input.role,permissions}});const user=await tx.user.create({data:{tenantId,name:input.name.trim(),email,passwordHash:hashPassword(input.password),status:"ACTIVE",roles:{create:{roleId:role.id}}},select:{id:true,name:true,email:true,status:true,createdAt:true}});return{...user,roles:[input.role]}})}catch(error:any){if(error?.code==="P2002")throw new BadRequestException("Este e-mail já está cadastrado");throw error}
+  }
+  async changePassword(input:{currentPassword:string;newPassword:string}){
+    const tenantId=currentTenantId(),userId=currentUserId();
+    if(input.currentPassword===input.newPassword)throw new BadRequestException("A nova senha deve ser diferente da atual");
+    if(process.env.DEMO_MODE!=="false")return this.store.changePassword(tenantId,userId,input.currentPassword,input.newPassword);
+    const user=await prisma.user.findFirst({where:{id:userId,tenantId},select:{id:true,passwordHash:true}});
+    if(!user||!passwordMatches(input.currentPassword,user.passwordHash))throw new BadRequestException("Senha atual incorreta");
+    await prisma.user.update({where:{id:user.id},data:{passwordHash:hashPassword(input.newPassword)}});
+    return{message:"Senha alterada com sucesso"};
   }
 }

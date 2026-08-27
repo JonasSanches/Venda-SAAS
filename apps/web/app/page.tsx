@@ -94,6 +94,7 @@ export default function Home() {
   });
   const [page, setPage] = useState("Visão geral");
   const [error, setError] = useState("");
+  const [passwordOpen, setPasswordOpen] = useState(false);
   const refresh = useCallback(async (s: Session) => {
     try {
       const [p, stats] = await Promise.all([
@@ -201,6 +202,9 @@ export default function Home() {
               ),
             )}
           </select>
+          <button className="account-action" onClick={() => setPasswordOpen(true)}>
+            Alterar minha senha
+          </button>
           <button
             onClick={() => {
               localStorage.removeItem("varejo-session");
@@ -223,6 +227,7 @@ export default function Home() {
           <div className="profile">
             <span>{session.user.name}</span>
             <small>{summary.cashOpen ? "Caixa aberto" : "Caixa fechado"}</small>
+            <button className="mobile-password" onClick={() => setPasswordOpen(true)}>Alterar senha</button>
           </div>
         </header>
         {error && <div className="error">{error}</div>}
@@ -250,8 +255,14 @@ export default function Home() {
           <Overview summary={summary} onNavigate={setPage} page={page} />
         )}
       </section>
+      {passwordOpen && <ChangePassword token={session.accessToken} onClose={() => setPasswordOpen(false)} />}
     </main>
   );
+}
+function ChangePassword({token,onClose}:{token:string;onClose:()=>void}){
+  const[error,setError]=useState(""),[loading,setLoading]=useState(false);
+  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const form=new FormData(e.currentTarget),currentPassword=String(form.get("currentPassword")??""),newPassword=String(form.get("newPassword")??""),confirmation=String(form.get("confirmation")??"");if(newPassword!==confirmation){setError("A confirmação não corresponde à nova senha");return}setLoading(true);try{await request("/auth/password",token,{method:"PATCH",body:JSON.stringify({currentPassword,newPassword})});alert("Senha alterada com sucesso.");onClose()}catch(err){setError((err as Error).message)}finally{setLoading(false)}}
+  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Alterar minha senha"><form className="password-modal" onSubmit={submit}><div className="modal-title"><div><small>SEGURANÇA DA CONTA</small><h2>Alterar minha senha</h2></div><button type="button" className="secondary" onClick={onClose}>Fechar</button></div>{error&&<div className="error">{error}</div>}<label>Senha atual<input name="currentPassword" type="password" autoComplete="current-password" minLength={8} required/></label><label>Nova senha<input name="newPassword" type="password" autoComplete="new-password" minLength={12} required/><small>Utilize pelo menos 12 caracteres.</small></label><label>Confirmar nova senha<input name="confirmation" type="password" autoComplete="new-password" minLength={12} required/></label><button disabled={loading}>{loading?"Alterando...":"Salvar nova senha"}</button></form></div>
 }
 function Login({ onLogin }: { onLogin: (s: Session) => void }) {
   const [error, setError] = useState("");

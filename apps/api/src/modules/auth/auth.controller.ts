@@ -1,9 +1,9 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, Patch, Post } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Public } from "../../common/public.decorator";
 import { currentTenantId, tenantContext } from "../../common/tenant-context";
 import { DemoStore } from "../demo/demo-store.service";
-import { CreateTenantUserDto, LoginDto } from "./auth.dto";
+import { ChangePasswordDto, CreateTenantUserDto, LoginDto } from "./auth.dto";
 import { AuthService } from "./auth.service";
 import { TrialService } from "../platform/trial.service";
 
@@ -14,4 +14,5 @@ export class AuthController {
   @Get("me") async me() { const id=currentTenantId();const tenant=await this.trials.get(id);return { identity: tenantContext.getStore(), tenant: tenant??this.store.tenant(), users: tenant?.user?[tenant.user]:this.store.users(id) }; }
   @Get("users") users(){return this.auth.listUsers()}
   @Post("users") createUser(@Body()input:CreateTenantUserDto){return this.auth.createUser(input)}
+  @Patch("password") changePassword(@Body()input:ChangePasswordDto){return this.auth.changePassword(input)}
 }

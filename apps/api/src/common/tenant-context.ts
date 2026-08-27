@@ -10,3 +10,8 @@ export function currentTenantId(): string {
   return tenantId;
 }
 export function currentBranchId():string|undefined{return tenantContext.getStore()?.branchId}
+export function currentUserId(): string {
+  const userId = tenantContext.getStore()?.userId;
+  if (!userId) throw new Error("User context is unavailable");
+  return userId;
+}
