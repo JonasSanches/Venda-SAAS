@@ -1,0 +1,11 @@
+[Unit]
+Description=VendaMais automatic deployment
+Wants=network-online.target docker.service
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/vendamais-app
+ExecStart=/usr/bin/bash /opt/vendamais-app/deploy/vps/auto-deploy.sh
+TimeoutStartSec=20min
+

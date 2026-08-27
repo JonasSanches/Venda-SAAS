@@ -1,0 +1,12 @@
+[Unit]
+Description=Check VendaMais updates from GitHub
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+RandomizedDelaySec=20
+Persistent=true
+Unit=vendamais-deploy.service
+
+[Install]
+WantedBy=timers.target

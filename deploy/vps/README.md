@@ -11,3 +11,24 @@ Requisitos: Ubuntu 22.04, Docker Engine, Docker Compose, Git e portas 22, 80 e 4
 7. Consulte `docker compose -f deploy/vps/docker-compose.yml ps` e os logs da API.
 
 O Caddy provisiona e renova automaticamente o certificado HTTPS depois que o DNS estiver propagado.
+
+## Atualização automática
+
+O timer `vendamais-deploy.timer` consulta a branch `main` a cada dois minutos. Uma
+nova revisão só é marcada como implantada depois que a API fica saudável. Instale
+uma única vez, como root, com:
+
+```bash
+cd /opt/vendamais-app
+git pull
+bash deploy/vps/install-auto-deploy.sh
+```
+
+Consulte o histórico com:
+
+```bash
+journalctl -u vendamais-deploy.service -n 100 --no-pager
+```
+
+Migrações de banco continuam sendo uma etapa explícita e devem ser aplicadas antes
+de versões que alterem o schema.
