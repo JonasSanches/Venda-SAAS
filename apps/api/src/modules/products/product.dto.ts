@@ -1,11 +1,18 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNumber, IsOptional, IsString, Length, Min } from "class-validator";
+import { Type } from "class-transformer";
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsNumber, IsOptional, IsString, Length, Min, ValidateNested } from "class-validator";
 
 export class CreateProductDto {
   @ApiProperty() @IsString() @Length(1, 64) sku!: string;
   @ApiProperty() @IsString() @Length(2, 160) name!: string;
   @ApiProperty() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) price!: number;
   @ApiProperty({ required: false }) @IsOptional() @IsString() @Length(8, 8) ncm?: string;
+}
+export class ImportProductDto extends CreateProductDto {
+  @ApiProperty() @IsNumber({ maxDecimalPlaces: 3 }) @Min(0) quantity!: number;
+}
+export class ImportProductsDto {
+  @ApiProperty({ type: [ImportProductDto] }) @IsArray() @ArrayMinSize(1) @ArrayMaxSize(200) @ValidateNested({ each:true }) @Type(()=>ImportProductDto) items!: ImportProductDto[];
 }
 export class ProductFiscalDto {
   @ApiProperty() @IsString() @Length(8, 8) ncm!: string;
