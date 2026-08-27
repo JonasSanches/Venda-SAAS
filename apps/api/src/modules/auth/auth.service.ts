@@ -1,7 +1,9 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { DemoStore, passwordMatches } from "../demo/demo-store.service";
+import { prisma, withTenant } from "@varejo/database";
+import { DemoStore, hashPassword, passwordMatches } from "../demo/demo-store.service";
 import { TrialService } from "../platform/trial.service";
+import { currentTenantId, tenantContext } from "../../common/tenant-context";
 
 type TokenPayload = { tenantId: string; userId: string; roles: string[]; exp: number };
 const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");
@@ -29,5 +31,22 @@ export class AuthService {
       if (parsed.exp < Date.now() / 1000) throw new Error();
       return parsed;
     } catch { throw new UnauthorizedException("Sessão inválida ou expirada"); }
+  }
+  async listUsers(){
+    const tenantId=currentTenantId();
+    if(process.env.DEMO_MODE!=="false")return this.store.users(tenantId);
+    const users=await withTenant(tenantId,tx=>tx.user.findMany({
+      where:{tenantId},
+      select:{id:true,name:true,email:true,status:true,createdAt:true,roles:{select:{role:{select:{name:true}}}}},
+      orderBy:{createdAt:"asc"}
+    }));
+    return users.map(user=>({...user,roles:user.roles.map(item=>item.role.name)}));
+  }
+  async createUser(input:{name:string;email:string;password:string;role:"ADMIN"|"MANAGER"|"CASHIER"|"STOCK"}){
+    const identity=tenantContext.getStore();if(!identity?.roles.includes("ADMIN"))throw new ForbiddenException("Somente administradores podem criar usuários");const tenantId=currentTenantId(),email=input.email.trim().toLowerCase();
+    if(process.env.DEMO_MODE!=="false")return this.store.addUser(tenantId,{...input,email});
+    const tenant=await prisma.tenant.findUniqueOrThrow({where:{id:tenantId},select:{status:true}}),count=await prisma.user.count({where:{tenantId}}),limit=tenant.status==="TRIAL"?2:50;if(count>=limit)throw new BadRequestException(`Limite de ${limit} usuários atingido para este plano`);
+    const permissions={ADMIN:["*"],MANAGER:["sales:*","products:*","inventory:*","cash:*"],CASHIER:["sales:create","sales:read","cash:read"],STOCK:["products:read","inventory:*"]}[input.role];
+    try{return await withTenant(tenantId,async tx=>{const role=await tx.role.upsert({where:{tenantId_name:{tenantId,name:input.role}},update:{permissions},create:{tenantId,name:input.role,permissions}});const user=await tx.user.create({data:{tenantId,name:input.name.trim(),email,passwordHash:hashPassword(input.password),status:"ACTIVE",roles:{create:{roleId:role.id}}},select:{id:true,name:true,email:true,status:true,createdAt:true}});return{...user,roles:[input.role]}})}catch(error:any){if(error?.code==="P2002")throw new BadRequestException("Este e-mail já está cadastrado");throw error}
   }
 }

@@ -3,7 +3,7 @@ import { ApiTags } from "@nestjs/swagger";
 import { Public } from "../../common/public.decorator";
 import { currentTenantId, tenantContext } from "../../common/tenant-context";
 import { DemoStore } from "../demo/demo-store.service";
-import { LoginDto } from "./auth.dto";
+import { CreateTenantUserDto, LoginDto } from "./auth.dto";
 import { AuthService } from "./auth.service";
 import { TrialService } from "../platform/trial.service";
 
@@ -12,4 +12,6 @@ export class AuthController {
   constructor(private readonly auth: AuthService, private readonly store: DemoStore,private readonly trials:TrialService) {}
   @Public() @Post("login") login(@Body() input: LoginDto) { return this.auth.login(input.email, input.password); }
   @Get("me") async me() { const id=currentTenantId();const tenant=await this.trials.get(id);return { identity: tenantContext.getStore(), tenant: tenant??this.store.tenant(), users: tenant?.user?[tenant.user]:this.store.users(id) }; }
+  @Get("users") users(){return this.auth.listUsers()}
+  @Post("users") createUser(@Body()input:CreateTenantUserDto){return this.auth.createUser(input)}
 }
