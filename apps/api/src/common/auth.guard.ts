@@ -15,6 +15,7 @@ export class AuthGuard implements CanActivate {
     const authorization = request.headers.authorization;
     if (!authorization?.startsWith("Bearer ")) throw new UnauthorizedException("Sessão necessária");
     const identity = this.auth.verifyToken(authorization.slice(7));
+    (request as FastifyRequest & {identity?:typeof identity}).identity=identity;
     const branchHeader=request.headers["x-branch-id"];
     tenantContext.enterWith({ ...identity, branchId:typeof branchHeader==="string"?branchHeader:undefined, requestId: String(request.id) });
     await this.auth.assertActive(identity.tenantId,identity.userId);
@@ -24,8 +25,9 @@ export class AuthGuard implements CanActivate {
   }
 
   private assertRoleAccess(roles:string[],method:string,url:string){
-    if(roles.includes("PLATFORM_ADMIN")||roles.includes("ADMIN")||roles.includes("MANAGER"))return;
     const path=url.split("?")[0],read=method==="GET";
+    if((path.startsWith("/api/platform/trials")||path.startsWith("/api/platform/users"))&&!roles.includes("PLATFORM_ADMIN"))throw new ForbiddenException("Acesso exclusivo da plataforma");
+    if(roles.includes("PLATFORM_ADMIN")||roles.includes("ADMIN")||roles.includes("MANAGER"))return;
     if(path==="/api/auth/me"||path==="/api/platform/trial"||path==="/api/sales/summary")return;
     if(roles.includes("CASHIER")&&((read&&(path.startsWith("/api/products")||path.startsWith("/api/inventory")))||path.startsWith("/api/sales")||path.startsWith("/api/cash")))return;
     if(roles.includes("STOCK")&&(path.startsWith("/api/products")||path.startsWith("/api/inventory")))return;
