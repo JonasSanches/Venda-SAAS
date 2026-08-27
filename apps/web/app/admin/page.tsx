@@ -270,6 +270,10 @@ export default function Admin() {
           <span>Expirados</span>
           <strong>{items.filter((x) => x.status === "EXPIRED").length}</strong>
         </article>
+        <article>
+          <span>Aguardando aprovação</span>
+          <strong>{items.filter((x) => x.status === "PENDING").length}</strong>
+        </article>
       </div>
       <div className="toolbar">
         <input
@@ -301,14 +305,16 @@ export default function Admin() {
                 ? new Date(t.expiresAt).toLocaleDateString("pt-BR")
                 : "—"}
             </small>
-            <button onClick={() => extend(t.tenantId)}>Estender dias</button>
+            {t.status !== "PENDING" && (
+              <button onClick={() => extend(t.tenantId)}>Estender dias</button>
+            )}
             <button
               className="secondary"
               onClick={() => openDetail(t.tenantId)}
             >
               Gerenciar cliente
             </button>
-            {t.status !== "ACTIVE" && (
+            {t.status !== "ACTIVE" && t.status !== "PENDING" && (
               <button
                 onClick={async () => {
                   await call(`/platform/trials/${t.tenantId}/activate`, {});
@@ -316,6 +322,16 @@ export default function Admin() {
                 }}
               >
                 Ativar plano
+              </button>
+            )}
+            {t.status === "PENDING" && (
+              <button
+                onClick={async () => {
+                  await call(`/platform/trials/${t.tenantId}/approve`, {});
+                  await load();
+                }}
+              >
+                Liberar 7 dias grátis
               </button>
             )}
           </article>
@@ -547,4 +563,5 @@ const auditLabel = (action: string) =>
     USER_STATUS_CHANGED: "Situação do usuário alterada",
     USER_ROLE_CHANGED: "Perfil do usuário alterado",
     TRIAL_EXTENDED: "Período de teste estendido",
+    TRIAL_APPROVED: "Teste gratuito aprovado",
   })[action] ?? action;

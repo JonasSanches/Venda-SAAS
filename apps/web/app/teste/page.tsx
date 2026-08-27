@@ -1,1 +1,118 @@
-"use client";import{FormEvent,useState}from"react";const API=process.env.NEXT_PUBLIC_API_URL??"http://localhost:3101/api";const dataUrl=(f:File)=>new Promise<string>((ok,no)=>{const r=new FileReader();r.onload=()=>ok(String(r.result));r.onerror=no;r.readAsDataURL(f)});export default function Trial(){const[msg,setMsg]=useState("");async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const target=e.currentTarget,f=new FormData(target);if(f.get("password")!==f.get("confirm"))return setMsg("As senhas não coincidem");const file=f.get("logoFile")as File;if(file.size>500000)return setMsg("O logo deve ter no máximo 500 KB");const body:any=Object.fromEntries(f);delete body.confirm;delete body.logoFile;if(file.size)body.logoDataUrl=await dataUrl(file);const r=await fetch(API+"/platform/trials",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)}),j=await r.json();if(!r.ok)return setMsg(Array.isArray(j.message)?j.message.join(", "):j.message);setMsg("Conta criada! Entre com seu e-mail e senha.");target.reset()}return <div className="trial-page"><section><div className="brand dark"><span>V</span>VarejoOS</div><h1>Teste grátis por 7 dias</h1><p>Personalize a plataforma para sua empresa.</p></section><form onSubmit={submit}><h2>Crie sua conta</h2>{msg&&<div className="notice">{msg}</div>}<fieldset><legend>Empresa</legend><label>Nome<input name="companyName" required/></label><label>CNPJ<input name="document" minLength={14} required/></label><label>Logo<input name="logoFile" type="file" accept="image/png,image/jpeg,image/webp"/><small>PNG, JPG ou WebP; máximo 500 KB.</small></label><label>Segmento<select name="segment"><option value="RESTAURANT">Restaurante</option><option value="BAR">Bar</option><option value="WINERY">Adega</option><option value="RETAIL">Loja/varejo</option></select></label><label>Cidade<input name="city" required/></label><label>UF<select name="state"><option>SP</option><option>RJ</option></select></label></fieldset><fieldset><legend>Responsável</legend><label>Nome<input name="name" required/></label><label>WhatsApp<input name="phone" minLength={10} required/></label><label>E-mail<input name="email" type="email" required/></label><label>Senha<input name="password" type="password" minLength={8} required/></label><label>Confirmar<input name="confirm" type="password" minLength={8} required/></label></fieldset><button>Criar teste gratuito</button><a href="/">Voltar ao login</a></form></div>}
+"use client";
+import { FormEvent, useState } from "react";
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
+const dataUrl = (f: File) =>
+  new Promise<string>((ok, no) => {
+    const r = new FileReader();
+    r.onload = () => ok(String(r.result));
+    r.onerror = no;
+    r.readAsDataURL(f);
+  });
+export default function Trial() {
+  const [msg, setMsg] = useState("");
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const target = e.currentTarget,
+      f = new FormData(target);
+    if (f.get("password") !== f.get("confirm"))
+      return setMsg("As senhas não coincidem");
+    const file = f.get("logoFile") as File;
+    if (file.size > 500000) return setMsg("O logo deve ter no máximo 500 KB");
+    const body: any = Object.fromEntries(f);
+    delete body.confirm;
+    delete body.logoFile;
+    if (file.size) body.logoDataUrl = await dataUrl(file);
+    const r = await fetch(API + "/platform/trials", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      }),
+      j = await r.json();
+    if (!r.ok)
+      return setMsg(
+        Array.isArray(j.message) ? j.message.join(", ") : j.message,
+      );
+    setMsg("Cadastro recebido! Aguarde a liberação. Seus 7 dias grátis começarão somente após a aprovação.");
+    target.reset();
+  }
+  return (
+    <div className="trial-page">
+      <section>
+        <div className="brand dark">
+          <span>V</span>VarejoOS
+        </div>
+        <h1>Teste grátis por 7 dias</h1>
+        <p>Personalize a plataforma para sua empresa.</p>
+      </section>
+      <form onSubmit={submit}>
+        <h2>Crie sua conta</h2>
+        {msg && <div className="notice">{msg}</div>}
+        <fieldset>
+          <legend>Empresa</legend>
+          <label>
+            Nome
+            <input name="companyName" required />
+          </label>
+          <label>
+            CNPJ
+            <input name="document" minLength={14} required />
+          </label>
+          <label>
+            Logo
+            <input
+              name="logoFile"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+            />
+            <small>PNG, JPG ou WebP; máximo 500 KB.</small>
+          </label>
+          <label>
+            Segmento
+            <select name="segment">
+              <option value="RESTAURANT">Restaurante</option>
+              <option value="BAR">Bar</option>
+              <option value="WINERY">Adega</option>
+              <option value="RETAIL">Loja/varejo</option>
+            </select>
+          </label>
+          <label>
+            Cidade
+            <input name="city" required />
+          </label>
+          <label>
+            UF
+            <select name="state">
+              <option>SP</option>
+              <option>RJ</option>
+            </select>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Responsável</legend>
+          <label>
+            Nome
+            <input name="name" required />
+          </label>
+          <label>
+            WhatsApp
+            <input name="phone" minLength={10} required />
+          </label>
+          <label>
+            E-mail
+            <input name="email" type="email" required />
+          </label>
+          <label>
+            Senha
+            <input name="password" type="password" minLength={8} required />
+          </label>
+          <label>
+            Confirmar
+            <input name="confirm" type="password" minLength={8} required />
+          </label>
+        </fieldset>
+        <button>Criar teste gratuito</button>
+        <a href="/">Voltar ao login</a>
+      </form>
+    </div>
+  );
+}

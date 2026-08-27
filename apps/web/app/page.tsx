@@ -77,10 +77,20 @@ function trialDays(expiresAt?: string) {
   if (!Number.isFinite(end)) return null;
   return Math.max(0, Math.ceil((end - Date.now()) / 86_400_000));
 }
-function TrialRemaining({ status, expiresAt }: { status?: string; expiresAt?: string }) {
+function TrialRemaining({
+  status,
+  expiresAt,
+}: {
+  status?: string;
+  expiresAt?: string;
+}) {
   const days = trialDays(expiresAt);
   if (status !== "TRIAL" || days === null) return null;
-  return <strong className="trial-remaining">Você ainda tem {days} {days === 1 ? "dia grátis" : "dias grátis"}.</strong>;
+  return (
+    <strong className="trial-remaining">
+      Você ainda tem {days} {days === 1 ? "dia grátis" : "dias grátis"}.
+    </strong>
+  );
 }
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
@@ -202,7 +212,10 @@ export default function Home() {
               ),
             )}
           </select>
-          <button className="account-action" onClick={() => setPasswordOpen(true)}>
+          <button
+            className="account-action"
+            onClick={() => setPasswordOpen(true)}
+          >
             Alterar minha senha
           </button>
           <button
@@ -220,14 +233,22 @@ export default function Home() {
           <div>
             <div className="environment-line">
               <small>AMBIENTE DE DEMONSTRAÇÃO</small>
-              <TrialRemaining status={session.tenant.status} expiresAt={session.tenant.expiresAt} />
+              <TrialRemaining
+                status={session.tenant.status}
+                expiresAt={session.tenant.expiresAt}
+              />
             </div>
             <h1>{page}</h1>
           </div>
           <div className="profile">
             <span>{session.user.name}</span>
             <small>{summary.cashOpen ? "Caixa aberto" : "Caixa fechado"}</small>
-            <button className="mobile-password" onClick={() => setPasswordOpen(true)}>Alterar senha</button>
+            <button
+              className="mobile-password"
+              onClick={() => setPasswordOpen(true)}
+            >
+              Alterar senha
+            </button>
           </div>
         </header>
         {error && <div className="error">{error}</div>}
@@ -255,14 +276,103 @@ export default function Home() {
           <Overview summary={summary} onNavigate={setPage} page={page} />
         )}
       </section>
-      {passwordOpen && <ChangePassword token={session.accessToken} onClose={() => setPasswordOpen(false)} />}
+      {passwordOpen && (
+        <ChangePassword
+          token={session.accessToken}
+          onClose={() => setPasswordOpen(false)}
+        />
+      )}
     </main>
   );
 }
-function ChangePassword({token,onClose}:{token:string;onClose:()=>void}){
-  const[error,setError]=useState(""),[loading,setLoading]=useState(false);
-  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();const form=new FormData(e.currentTarget),currentPassword=String(form.get("currentPassword")??""),newPassword=String(form.get("newPassword")??""),confirmation=String(form.get("confirmation")??"");if(newPassword!==confirmation){setError("A confirmação não corresponde à nova senha");return}setLoading(true);try{await request("/auth/password",token,{method:"PATCH",body:JSON.stringify({currentPassword,newPassword})});alert("Senha alterada com sucesso.");onClose()}catch(err){setError((err as Error).message)}finally{setLoading(false)}}
-  return <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Alterar minha senha"><form className="password-modal" onSubmit={submit}><div className="modal-title"><div><small>SEGURANÇA DA CONTA</small><h2>Alterar minha senha</h2></div><button type="button" className="secondary" onClick={onClose}>Fechar</button></div>{error&&<div className="error">{error}</div>}<label>Senha atual<input name="currentPassword" type="password" autoComplete="current-password" minLength={8} required/></label><label>Nova senha<input name="newPassword" type="password" autoComplete="new-password" minLength={12} required/><small>Utilize pelo menos 12 caracteres.</small></label><label>Confirmar nova senha<input name="confirmation" type="password" autoComplete="new-password" minLength={12} required/></label><button disabled={loading}>{loading?"Alterando...":"Salvar nova senha"}</button></form></div>
+function ChangePassword({
+  token,
+  onClose,
+}: {
+  token: string;
+  onClose: () => void;
+}) {
+  const [error, setError] = useState(""),
+    [loading, setLoading] = useState(false);
+  async function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget),
+      currentPassword = String(form.get("currentPassword") ?? ""),
+      newPassword = String(form.get("newPassword") ?? ""),
+      confirmation = String(form.get("confirmation") ?? "");
+    if (newPassword !== confirmation) {
+      setError("A confirmação não corresponde à nova senha");
+      return;
+    }
+    setLoading(true);
+    try {
+      await request("/auth/password", token, {
+        method: "PATCH",
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      alert("Senha alterada com sucesso.");
+      onClose();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+  return (
+    <div
+      className="modal-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Alterar minha senha"
+    >
+      <form className="password-modal" onSubmit={submit}>
+        <div className="modal-title">
+          <div>
+            <small>SEGURANÇA DA CONTA</small>
+            <h2>Alterar minha senha</h2>
+          </div>
+          <button type="button" className="secondary" onClick={onClose}>
+            Fechar
+          </button>
+        </div>
+        {error && <div className="error">{error}</div>}
+        <label>
+          Senha atual
+          <input
+            name="currentPassword"
+            type="password"
+            autoComplete="current-password"
+            minLength={8}
+            required
+          />
+        </label>
+        <label>
+          Nova senha
+          <input
+            name="newPassword"
+            type="password"
+            autoComplete="new-password"
+            minLength={12}
+            required
+          />
+          <small>Utilize pelo menos 12 caracteres.</small>
+        </label>
+        <label>
+          Confirmar nova senha
+          <input
+            name="confirmation"
+            type="password"
+            autoComplete="new-password"
+            minLength={12}
+            required
+          />
+        </label>
+        <button disabled={loading}>
+          {loading ? "Alterando..." : "Salvar nova senha"}
+        </button>
+      </form>
+    </div>
+  );
 }
 function Login({ onLogin }: { onLogin: (s: Session) => void }) {
   const [error, setError] = useState("");
@@ -288,7 +398,32 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
     }
   }
   return (
-    <div className="login">
+    <div className="login login-commercial">
+      <section className="login-offer">
+        <div className="brand dark">
+          <span>V</span> VendaMais
+        </div>
+        <small>SISTEMA DE VENDAS E GESTÃO</small>
+        <h1>Tenha o controle do seu negócio na palma da mão.</h1>
+        <p>
+          Venda com agilidade e acompanhe estoque, caixa, produtos, usuários e
+          filiais em um só lugar.
+        </p>
+        <ul>
+          <li>PDV simples para vendas rápidas</li>
+          <li>Estoque atualizado automaticamente</li>
+          <li>Controle de caixa e diferentes formas de pagamento</li>
+          <li>Acesso seguro no computador e no celular</li>
+        </ul>
+        <div className="free-trial-call">
+          <strong>Experimente grátis por 7 dias</strong>
+          <span>
+            Cadastre sua empresa sem compromisso. Após nossa liberação, seus 7
+            dias começam a contar.
+          </span>
+          <a href="/teste">Quero testar grátis</a>
+        </div>
+      </section>
       <form onSubmit={submit}>
         <div className="brand dark">
           <span>V</span> VarejoOS
@@ -301,7 +436,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <input
             name="access"
             type="text"
-            defaultValue="admin@demo.com"
+            placeholder="seu@email.com ou seu acesso"
             required
           />
         </label>
@@ -310,12 +445,15 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <input
             name="password"
             type="password"
-            defaultValue="Demo@123"
+            placeholder="Sua senha"
             required
           />
         </label>
         <button disabled={loading}>{loading ? "Entrando..." : "Entrar"}</button>
-        <small>Conta de teste preenchida automaticamente.</small>
+        <small>
+          Ainda não tem acesso?{" "}
+          <a href="/teste">Solicite seus 7 dias grátis.</a>
+        </small>
       </form>
     </div>
   );
@@ -1049,7 +1187,14 @@ function Users({ token, roles }: { token: string; roles: string[] }) {
           </label>
           <label>
             Nome de acesso
-            <input name="username" minLength={3} maxLength={30} pattern="[a-z0-9._-]+" placeholder="Ex.: carlos.caixa" required />
+            <input
+              name="username"
+              minLength={3}
+              maxLength={30}
+              pattern="[a-z0-9._-]+"
+              placeholder="Ex.: carlos.caixa"
+              required
+            />
           </label>
           <label>
             Senha provisória
@@ -1060,8 +1205,12 @@ function Users({ token, roles }: { token: string; roles: string[] }) {
             <select name="role">
               <option value="CASHIER">Caixa</option>
               <option value="STOCK">Estoque</option>
-              {roles.includes("ADMIN") && <option value="MANAGER">Gerente</option>}
-              {roles.includes("ADMIN") && <option value="ADMIN">Administrador</option>}
+              {roles.includes("ADMIN") && (
+                <option value="MANAGER">Gerente</option>
+              )}
+              {roles.includes("ADMIN") && (
+                <option value="ADMIN">Administrador</option>
+              )}
             </select>
           </label>
           <button>Criar usuário</button>
