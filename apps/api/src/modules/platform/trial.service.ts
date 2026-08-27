@@ -56,6 +56,20 @@ export class TrialService {
     const tenants=await prisma.tenant.findMany({where:{document:{not:"00000000000000"}},include:tenantInclude,orderBy:{createdAt:"desc"}});return tenants.map(item=>this.publicTenant(item));
   }
 
+  async listPlatformUsers(){
+    return prisma.user.findMany({where:{tenantId:"10000000-0000-4000-8000-000000000001"},select:{id:true,name:true,email:true,status:true,createdAt:true},orderBy:{createdAt:"asc"}});
+  }
+
+  async createPlatformUser(input:{name:string;email:string;password:string}){
+    const tenantId="10000000-0000-4000-8000-000000000001",email=input.email.trim().toLowerCase();
+    if(await prisma.user.findUnique({where:{email}}))throw new BadRequestException("Este e-mail já está cadastrado");
+    return prisma.$transaction(async tx=>{
+      await tx.$executeRaw`SELECT set_config('app.tenant_id', ${tenantId}, true)`;
+      const role=await tx.role.findUniqueOrThrow({where:{tenantId_name:{tenantId,name:"PLATFORM_ADMIN"}}});
+      return tx.user.create({data:{tenantId,name:input.name.trim(),email,passwordHash:hashPassword(input.password),status:"ACTIVE",roles:{create:{roleId:role.id}}},select:{id:true,name:true,email:true,status:true,createdAt:true}});
+    });
+  }
+
   async activate(id:string){if(this.demoMode){const t=this.requireDemo(id);t.status="ACTIVE";this.save();return this.publicDemo(t)}await prisma.tenant.update({where:{id},data:{status:"ACTIVE"}});return this.get(id)}
   async extend(id:string,days:number){
     if(!Number.isInteger(days)||days<1||days>365)throw new BadRequestException("Informe entre 1 e 365 dias");
