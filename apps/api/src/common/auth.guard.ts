@@ -15,10 +15,10 @@ export class AuthGuard implements CanActivate {
     const authorization = request.headers.authorization;
     if (!authorization?.startsWith("Bearer ")) throw new UnauthorizedException("Sessão necessária");
     const identity = this.auth.verifyToken(authorization.slice(7));
-    await this.auth.assertActive(identity.tenantId,identity.userId);
-    this.assertRoleAccess(identity.roles,request.method,request.url);
     const branchHeader=request.headers["x-branch-id"];
     tenantContext.enterWith({ ...identity, branchId:typeof branchHeader==="string"?branchHeader:undefined, requestId: String(request.id) });
+    await this.auth.assertActive(identity.tenantId,identity.userId);
+    this.assertRoleAccess(identity.roles,request.method,request.url);
     if(request.method!=="GET")await this.trials.assertWritable(identity.tenantId);
     return true;
   }
