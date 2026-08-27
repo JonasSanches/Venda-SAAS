@@ -13,7 +13,14 @@ for (const line of localEnv.split(/\r?\n/)) {
 const email = process.env.PLATFORM_ADMIN_EMAIL?.trim().toLowerCase();
 const password = process.env.PLATFORM_ADMIN_PASSWORD;
 const name = process.env.PLATFORM_ADMIN_NAME?.trim() || "Administrador da Plataforma";
-if (!email || !password || password.length < 12 || password.startsWith("change-me")) {
+if (
+  !email ||
+  email === "admin@example.com" ||
+  !password ||
+  password.length < 12 ||
+  password.startsWith("change-me") ||
+  password === "replace-with-a-strong-password"
+) {
   throw new Error("Defina PLATFORM_ADMIN_EMAIL e uma PLATFORM_ADMIN_PASSWORD segura com no mínimo 12 caracteres no .env");
 }
 
@@ -41,6 +48,9 @@ try {
       ? await tx.user.update({ where: { id: existing.id }, data: { name, passwordHash: hashPassword(password), status: "ACTIVE" } })
       : await tx.user.create({ data: { tenantId, name, email, passwordHash: hashPassword(password), status: "ACTIVE" } });
     await tx.userRole.upsert({ where: { userId_roleId: { userId: user.id, roleId: role.id } }, update: {}, create: { userId: user.id, roleId: role.id } });
+    await tx.user.deleteMany({
+      where: { tenantId, email: "admin@example.com", id: { not: user.id } }
+    });
   });
   console.log(`Administrador da plataforma configurado: ${email}`);
 } finally {
