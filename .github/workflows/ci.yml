@@ -18,6 +18,7 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm db:generate
       - run: pnpm --filter @varejo/api typecheck
       - run: pnpm --filter @varejo/web typecheck
       - run: pnpm --filter @varejo/api build
