@@ -32,14 +32,24 @@ export default function Trial() {
       return setMsg(
         Array.isArray(j.message) ? j.message.join(", ") : j.message,
       );
-    setMsg("Cadastro recebido! Aguarde a liberação. Seus 7 dias grátis começarão somente após a aprovação.");
+    setMsg(
+      "Cadastro recebido! Aguarde a liberação. Seus 7 dias grátis começarão somente após a aprovação.",
+    );
     target.reset();
   }
   return (
     <div className="trial-page">
       <section>
         <div className="brand dark">
-          <span>V</span>VarejoOS
+          <span>V</span>Venda Mais{" "}
+          <a
+            className="omega-credit"
+            href="https://omega-ia.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            by Omega
+          </a>
         </div>
         <h1>Teste grátis por 7 dias</h1>
         <p>Personalize a plataforma para sua empresa.</p>

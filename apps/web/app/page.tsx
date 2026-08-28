@@ -178,7 +178,7 @@ export default function Home() {
     <main>
       <aside>
         <div className="brand">
-          <span>V</span> VarejoOS
+          <span>V</span> Venda Mais <OmegaCredit />
         </div>
         <nav>
           {pagesFor(session.user.roles).map((name) => (
@@ -398,64 +398,129 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
     }
   }
   return (
-    <div className="login login-commercial">
-      <section className="login-offer">
-        <div className="brand dark">
-          <span>V</span> VendaMais
+    <div className="public-home">
+      <header className="public-header">
+        <div className="public-brand">
+          <a className="public-logo" href="/">
+            <span>V</span>
+            <strong>Venda Mais</strong>
+          </a>
+          <OmegaCredit />
         </div>
-        <small>SISTEMA DE VENDAS E GESTÃO</small>
-        <h1>Tenha o controle do seu negócio na palma da mão.</h1>
-        <p>
-          Venda com agilidade e acompanhe estoque, caixa, produtos, usuários e
-          filiais em um só lugar.
-        </p>
-        <ul>
-          <li>PDV simples para vendas rápidas</li>
-          <li>Estoque atualizado automaticamente</li>
-          <li>Controle de caixa e diferentes formas de pagamento</li>
-          <li>Acesso seguro no computador e no celular</li>
-        </ul>
-        <div className="free-trial-call">
-          <strong>Experimente grátis por 7 dias</strong>
-          <span>
-            Cadastre sua empresa sem compromisso. Após nossa liberação, seus 7
-            dias começam a contar.
-          </span>
-          <a href="/teste">Quero testar grátis</a>
+        <nav aria-label="Navegação principal">
+          <a href="#beneficios">Benefícios</a>
+          <a href="#suporte">Suporte 24h</a>
+          <a href="/teste">Teste grátis</a>
+          <a className="header-login" href="#entrar">
+            Entrar
+          </a>
+        </nav>
+      </header>
+      <div className="login login-commercial">
+        <section className="login-offer">
+          <div className="brand dark">
+            <span>V</span> Venda Mais <OmegaCredit />
+          </div>
+          <small>SISTEMA DE VENDAS E GESTÃO</small>
+          <h1>Tenha o controle do seu negócio na palma da mão.</h1>
+          <p>
+            Venda com agilidade e acompanhe estoque, caixa, produtos, usuários e
+            filiais em um só lugar.
+          </p>
+          <ul id="beneficios">
+            <li>PDV simples para vendas rápidas</li>
+            <li>Estoque atualizado automaticamente</li>
+            <li>Controle de caixa e diferentes formas de pagamento</li>
+            <li>Acesso seguro no computador e no celular</li>
+          </ul>
+          <div className="free-trial-call">
+            <strong>Experimente grátis por 7 dias</strong>
+            <span>
+              Cadastre sua empresa sem compromisso. Após nossa liberação, seus 7
+              dias começam a contar.
+            </span>
+            <a href="/teste">Quero testar grátis</a>
+          </div>
+          <div className="support-call" id="suporte">
+            <span>24h</span>
+            <div>
+              <strong>Suporte quando você precisar</strong>
+              <p>
+                Atendimento contínuo para orientar sua equipe e acompanhar
+                situações importantes da operação.
+              </p>
+            </div>
+          </div>
+        </section>
+        <form id="entrar" onSubmit={submit}>
+          <div className="brand dark">
+            <span>V</span> Venda Mais <OmegaCredit />
+          </div>
+          <h1>Entre na sua conta</h1>
+          <p>Acesse a operação da sua empresa.</p>
+          {error && <div className="error">{error}</div>}
+          <label>
+            E-mail ou nome de acesso
+            <input
+              name="access"
+              type="text"
+              placeholder="seu@email.com ou seu acesso"
+              required
+            />
+          </label>
+          <label>
+            Senha
+            <input
+              name="password"
+              type="password"
+              placeholder="Sua senha"
+              required
+            />
+          </label>
+          <button disabled={loading}>
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
+          <small>
+            Ainda não tem acesso?{" "}
+            <a href="/teste">Solicite seus 7 dias grátis.</a>
+          </small>
+        </form>
+      </div>
+      <footer className="public-footer">
+        <div>
+          <strong>
+            Venda Mais <OmegaCredit />
+          </strong>
+          <p>Gestão de vendas para restaurantes, bares, adegas e lojas.</p>
         </div>
-      </section>
-      <form onSubmit={submit}>
-        <div className="brand dark">
-          <span>V</span> VarejoOS
+        <div>
+          <strong>Recursos</strong>
+          <a href="#beneficios">PDV e estoque</a>
+          <a href="/teste">Teste grátis</a>
         </div>
-        <h1>Entre na sua conta</h1>
-        <p>Acesse a operação da sua empresa.</p>
-        {error && <div className="error">{error}</div>}
-        <label>
-          E-mail ou nome de acesso
-          <input
-            name="access"
-            type="text"
-            placeholder="seu@email.com ou seu acesso"
-            required
-          />
-        </label>
-        <label>
-          Senha
-          <input
-            name="password"
-            type="password"
-            placeholder="Sua senha"
-            required
-          />
-        </label>
-        <button disabled={loading}>{loading ? "Entrando..." : "Entrar"}</button>
+        <div>
+          <strong>Atendimento</strong>
+          <a href="#suporte">Suporte 24 horas</a>
+          <span>Ambiente seguro e monitorado</span>
+        </div>
         <small>
-          Ainda não tem acesso?{" "}
-          <a href="/teste">Solicite seus 7 dias grátis.</a>
+          © {new Date().getFullYear()} Venda Mais. Todos os direitos
+          reservados.
         </small>
-      </form>
+      </footer>
     </div>
+  );
+}
+function OmegaCredit() {
+  return (
+    <a
+      className="omega-credit"
+      href="https://omega-ia.com"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      by Omega
+    </a>
   );
 }
 function Overview({
