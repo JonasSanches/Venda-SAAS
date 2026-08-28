@@ -40,6 +40,12 @@ git pull --ff-only origin main
 
 # Build first: a compilation error leaves the currently running containers intact.
 docker compose -f "$COMPOSE_FILE" build api web
+
+# Apply committed migrations with the newly built API image before replacing the
+# running containers. If the database is unavailable, the current version stays up.
+docker compose -f "$COMPOSE_FILE" run --rm --no-deps api \
+  corepack pnpm --filter @varejo/database exec prisma migrate deploy --schema prisma/schema.prisma
+
 docker compose -f "$COMPOSE_FILE" up -d
 
 for _ in {1..24}; do

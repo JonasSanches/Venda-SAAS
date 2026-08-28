@@ -437,6 +437,7 @@ export default function Admin() {
             </form>
             <h3>Controle da conta</h3>
             <div className="account-controls">
+              <a className="payment-link" href={`/pagamento?cliente=${detail.tenantId}`} target="_blank" rel="noopener noreferrer">Gerar pagamento</a>
               <button onClick={() => changeClientStatus("ACTIVE")}>
                 Ativar conta
               </button>

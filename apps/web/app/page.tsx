@@ -486,6 +486,12 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           </small>
         </form>
       </div>
+      <section className="value-section" aria-labelledby="valor-venda-mais">
+        <div className="value-intro"><small>CONTROLE QUE GERA VALOR</small><h2 id="valor-venda-mais">Transforme cada venda em informação para decidir melhor.</h2><p>O Venda Mais reúne a operação em painéis simples: o caixa registra, o estoque acompanha, a gestão compara e você controla acessos, filiais e resultados de onde estiver.</p></div>
+        <div className="value-numbers"><article><strong>R$ 105 mil</strong><span>em vendas acompanhadas por mês</span><p>Exemplo: 100 vendas por dia, com ticket médio de R$ 35, durante 30 dias.</p></article><article><strong>R$ 2,1 mil</strong><span>de valor potencialmente preservado</span><p>Simulação ilustrativa de uma redução de 2% em perdas sobre R$ 105 mil.</p></article><article><strong>7,5 horas</strong><span>liberadas no fechamento mensal</span><p>Exemplo de economia de 15 minutos por dia com caixa e indicadores organizados.</p></article></div>
+        <small className="simulation-note">Os números são exemplos ilustrativos e não representam garantia de faturamento ou economia.</small>
+        <div className="feature-panels"><article><b>01</b><h3>Venda e recebimento</h3><p>PDV ágil, carrinho, formas de pagamento, histórico e baixa automática do estoque.</p></article><article><b>02</b><h3>Gestão por painéis</h3><p>Faturamento, quantidade de vendas, produtos e estoque reunidos para leitura rápida.</p></article><article><b>03</b><h3>Controle operacional</h3><p>Caixa, entradas, retiradas, ajustes, filiais e perfis de acesso separados por responsabilidade.</p></article><article><b>04</b><h3>Acesso seguro</h3><p>Contas individuais, permissões por função, bloqueio administrativo e histórico de alterações.</p></article><article><b>05</b><h3>Suporte 24 horas</h3><p>Acompanhamento contínuo para dúvidas e situações importantes da operação.</p></article><article><b>06</b><h3>Em qualquer tela</h3><p>Use pelo computador, tablet ou celular, mantendo as informações centralizadas.</p></article></div>
+      </section>
       <footer className="public-footer">
         <div>
           <strong>

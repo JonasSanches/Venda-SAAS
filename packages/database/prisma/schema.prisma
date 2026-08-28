@@ -86,7 +86,27 @@ model Tenant {
   cashMovements CashMovement[]
   parties Party[]
   fiscalSettings FiscalSettings?
+  billingPayments BillingPayment[]
   @@map("tenants")
+}
+
+model BillingPayment {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @db.Uuid @map("tenant_id")
+  externalReference String   @unique @map("external_reference")
+  providerPaymentId String?  @map("provider_payment_id")
+  preferenceId      String?  @map("preference_id")
+  status            String   @default("PENDING")
+  paymentMethod     String?  @map("payment_method")
+  amount            Decimal  @db.Decimal(14, 2)
+  checkoutUrl       String?  @map("checkout_url")
+  paidAt            DateTime? @map("paid_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  tenant            Tenant   @relation(fields: [tenantId], references: [id])
+  @@index([tenantId, createdAt])
+  @@index([status])
+  @@map("billing_payments")
 }
 
 model Branch {
