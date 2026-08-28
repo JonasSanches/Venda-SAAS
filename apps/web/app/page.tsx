@@ -130,6 +130,39 @@ export default function Home() {
   useEffect(() => {
     if (session && !isPlatformAdmin) void refresh(session);
   }, [session, isPlatformAdmin, refresh]);
+  useEffect(() => {
+    if (!session?.accessToken || isPlatformAdmin) return;
+    let active = true;
+    const syncTrial = async () => {
+      try {
+        const tenant = await request<Session["tenant"]>(
+          "/platform/trial",
+          session.accessToken,
+        );
+        if (!active) return;
+        setSession((current) => {
+          if (!current) return current;
+          const selectedBranch = current.tenant.branch;
+          const branch =
+            tenant.branches?.find((item) => item.id === selectedBranch?.id) ??
+            tenant.branch;
+          const next = { ...current, tenant: { ...tenant, branch } };
+          localStorage.setItem("varejo-session", JSON.stringify(next));
+          return next;
+        });
+      } catch (e) {
+        if (active) setError((e as Error).message);
+      }
+    };
+    void syncTrial();
+    const timer = window.setInterval(syncTrial, 60_000);
+    window.addEventListener("focus", syncTrial);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", syncTrial);
+    };
+  }, [session?.accessToken, isPlatformAdmin]);
   if (!session)
     return (
       <Login
