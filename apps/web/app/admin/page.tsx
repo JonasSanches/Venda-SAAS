@@ -78,11 +78,19 @@ export default function Admin() {
     if (session) void load();
   }, [session]);
   async function extend(id: string) {
-    const days = Number(prompt("Quantos dias deseja acrescentar?", "7"));
-    if (days > 0) {
+    const value = prompt(
+      "Ajuste os dias do teste. Use um número positivo para acrescentar ou negativo para retirar (ex.: 7 ou -3).",
+      "7",
+    );
+    if (value === null) return;
+    const days = Number(value);
+    if (Number.isInteger(days) && days !== 0 && days >= -365 && days <= 365) {
       await call(`/platform/trials/${id}/extend`, { days });
       await load();
+      if (detail?.tenantId === id) await openDetail(id);
+      return;
     }
+    alert("Informe um número inteiro de -365 a 365, exceto zero.");
   }
   async function createUser(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -306,7 +314,7 @@ export default function Admin() {
                 : "—"}
             </small>
             {t.status !== "PENDING" && (
-              <button onClick={() => extend(t.tenantId)}>Estender dias</button>
+              <button onClick={() => extend(t.tenantId)}>Ajustar dias de teste</button>
             )}
             <button
               className="secondary"
@@ -457,7 +465,7 @@ export default function Admin() {
                 className="secondary"
                 onClick={() => extend(detail.tenantId)}
               >
-                Estender teste
+                Ajustar dias de teste
               </button>
             </div>
             <h3>Filiais</h3>
