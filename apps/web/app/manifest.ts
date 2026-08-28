@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Venda Mais by Omega",
     short_name: "Venda Mais",
-    description: "Gestão de vendas, estoque, caixa e filiais.",
+    description: "Sistema de vendas e gestão de estoque.",
     start_url: "/",
     display: "standalone",
     background_color: "#f7f8f6",

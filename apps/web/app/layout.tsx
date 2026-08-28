@@ -4,7 +4,7 @@ import "./functional.css";
 import { TenantBranding } from "./tenant-branding";
 export const metadata: Metadata = {
   title: "Venda Mais",
-  description: "Gestão de vendas, estoque e fiscal",
+  description: "Sistema de vendas e gestão de estoque",
   applicationName: "Venda Mais by Omega",
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],

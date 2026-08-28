@@ -421,7 +421,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <div className="brand dark">
             <span>V</span> Venda Mais <OmegaCredit />
           </div>
-          <small>SISTEMA DE VENDAS E GESTÃO</small>
+        <small>SISTEMA DE VENDAS E GESTÃO DE ESTOQUE</small>
           <h1>Tenha o controle do seu negócio na palma da mão.</h1>
           <p>
             Venda com agilidade e acompanhe estoque, caixa, produtos, usuários e
@@ -491,7 +491,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <strong>
             Venda Mais <OmegaCredit />
           </strong>
-          <p>Gestão de vendas para restaurantes, bares, adegas e lojas.</p>
+          <p>Sistema de vendas e gestão de estoque para restaurantes, bares, adegas e lojas.</p>
         </div>
         <div>
           <strong>Recursos</strong>
