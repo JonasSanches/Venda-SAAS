@@ -441,7 +441,9 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <OmegaCredit />
         </div>
         <nav aria-label="Navegação principal">
-          <a href="#beneficios">Benefícios</a>
+          <a href="#recursos">Recursos</a>
+          <a href="#segmentos">Para quem é</a>
+          <a href="#como-funciona">Como funciona</a>
           <a href="#suporte">Suporte 24h</a>
           <a href="/teste">Teste grátis</a>
           <a className="header-login" href="#entrar">
@@ -454,17 +456,17 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <div className="brand dark">
             <span>V</span> Venda Mais <OmegaCredit />
           </div>
-        <small>SISTEMA DE VENDAS E GESTÃO DE ESTOQUE</small>
-          <h1>Tenha o controle do seu negócio na palma da mão.</h1>
+        <small>VENDA MAIS • CONTROLE MAIS • DECIDA MELHOR</small>
+          <h1>Seu negócio vendendo rápido, com caixa e estoque sob controle.</h1>
           <p>
-            Venda com agilidade e acompanhe estoque, caixa, produtos, usuários e
-            filiais em um só lugar.
+            Um sistema simples para registrar vendas, acompanhar o que entra e
+            sai e enxergar os números da operação em um só lugar.
           </p>
           <ul id="beneficios">
-            <li>PDV simples para vendas rápidas</li>
-            <li>Estoque atualizado automaticamente</li>
-            <li>Controle de caixa e diferentes formas de pagamento</li>
-            <li>Acesso seguro no computador e no celular</li>
+            <li><strong>Venda sem complicação:</strong> PDV direto e rápido</li>
+            <li><strong>Evite surpresas:</strong> estoque baixado a cada venda</li>
+            <li><strong>Feche com segurança:</strong> entradas e retiradas no caixa</li>
+            <li><strong>Gerencie de qualquer lugar:</strong> computador ou celular</li>
           </ul>
           <div className="free-trial-call">
             <strong>Experimente grátis por 7 dias</strong>
@@ -519,12 +521,35 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           </small>
         </form>
       </div>
-      <section className="value-section" aria-labelledby="valor-venda-mais">
+      <section className="trust-strip" aria-label="Principais vantagens">
+        <span><b>7 dias grátis</b> para conhecer</span>
+        <span><b>Dados separados</b> por empresa</span>
+        <span><b>Suporte 24h</b> para sua operação</span>
+        <span><b>Acesso responsivo</b> no celular e computador</span>
+      </section>
+      <section className="segment-section" id="segmentos" aria-labelledby="segment-title">
+        <div className="section-heading"><small>FEITO PARA QUEM VENDE TODOS OS DIAS</small><h2 id="segment-title">Uma operação organizada, seja qual for o seu balcão.</h2><p>O Venda Mais se adapta à rotina de negócios que precisam vender com agilidade e manter produtos, equipe e caixa organizados.</p></div>
+        <div className="segment-grid"><article><span>01</span><h3>Restaurantes</h3><p>Registre pedidos e acompanhe vendas, produtos e movimentações do dia.</p></article><article><span>02</span><h3>Bares</h3><p>Ganhe velocidade no atendimento e veja o estoque baixar automaticamente.</p></article><article><span>03</span><h3>Adegas</h3><p>Controle variedade, quantidade, preços e acesso da equipe em uma única tela.</p></article><article><span>04</span><h3>Lojas</h3><p>Centralize catálogo, caixa, filiais e indicadores para decidir com mais clareza.</p></article></div>
+      </section>
+      <section className="value-section" id="recursos" aria-labelledby="valor-venda-mais">
         <div className="value-intro"><small>CONTROLE QUE GERA VALOR</small><h2 id="valor-venda-mais">Transforme cada venda em informação para decidir melhor.</h2><p>O Venda Mais reúne a operação em painéis simples: o caixa registra, o estoque acompanha, a gestão compara e você controla acessos, filiais e resultados de onde estiver.</p></div>
         <div className="value-numbers"><article><strong>R$ 105 mil</strong><span>em vendas acompanhadas por mês</span><p>Exemplo: 100 vendas por dia, com ticket médio de R$ 35, durante 30 dias.</p></article><article><strong>R$ 2,1 mil</strong><span>de valor potencialmente preservado</span><p>Simulação ilustrativa de uma redução de 2% em perdas sobre R$ 105 mil.</p></article><article><strong>7,5 horas</strong><span>liberadas no fechamento mensal</span><p>Exemplo de economia de 15 minutos por dia com caixa e indicadores organizados.</p></article></div>
         <small className="simulation-note">Os números são exemplos ilustrativos e não representam garantia de faturamento ou economia.</small>
         <div className="feature-panels"><article><b>01</b><h3>Venda e recebimento</h3><p>PDV ágil, carrinho, formas de pagamento, histórico e baixa automática do estoque.</p></article><article><b>02</b><h3>Gestão por painéis</h3><p>Faturamento, quantidade de vendas, produtos e estoque reunidos para leitura rápida.</p></article><article><b>03</b><h3>Controle operacional</h3><p>Caixa, entradas, retiradas, ajustes, filiais e perfis de acesso separados por responsabilidade.</p></article><article><b>04</b><h3>Acesso seguro</h3><p>Contas individuais, permissões por função, bloqueio administrativo e histórico de alterações.</p></article><article><b>05</b><h3>Suporte 24 horas</h3><p>Acompanhamento contínuo para dúvidas e situações importantes da operação.</p></article><article><b>06</b><h3>Em qualquer tela</h3><p>Use pelo computador, tablet ou celular, mantendo as informações centralizadas.</p></article></div>
       </section>
+      <section className="operation-section" id="como-funciona" aria-labelledby="operation-title">
+        <div className="section-heading"><small>DA VENDA À DECISÃO</small><h2 id="operation-title">Tudo conectado para você trabalhar com menos retrabalho.</h2></div>
+        <div className="operation-flow"><article><b>1</b><div><h3>Registre a venda</h3><p>O operador seleciona os produtos e a forma de pagamento no PDV.</p></div></article><i>→</i><article><b>2</b><div><h3>Atualize o estoque</h3><p>Os itens vendidos são baixados automaticamente, sem lançar duas vezes.</p></div></article><i>→</i><article><b>3</b><div><h3>Acompanhe o caixa</h3><p>Abertura, vendas, suprimentos e retiradas ficam reunidos para conferência.</p></div></article><i>→</i><article><b>4</b><div><h3>Decida pelos números</h3><p>O painel apresenta faturamento, vendas, produtos e unidades disponíveis.</p></div></article></div>
+      </section>
+      <section className="control-highlight">
+        <div><small>CONTROLE SEM PRENDER VOCÊ AO BALCÃO</small><h2>Veja sua operação de onde estiver.</h2><p>Separe usuários por função, administre filiais e consulte os principais indicadores em uma interface preparada para computador, tablet e celular.</p><ul><li>Administrador, gerente, caixa e estoque com acessos próprios</li><li>Dados e configurações isolados para cada empresa</li><li>Histórico de alterações administrativas</li><li>Monitoramento e suporte 24 horas</li></ul></div>
+        <aside><span>PAINEL EM TEMPO REAL</span><strong>Vendas + Estoque + Caixa</strong><p>Uma visão centralizada reduz conferências manuais e ajuda a identificar diferenças antes que elas cresçam.</p><a href="/teste">Começar meus 7 dias grátis</a></aside>
+      </section>
+      <section className="public-faq" aria-labelledby="faq-title">
+        <div className="section-heading"><small>PERGUNTAS FREQUENTES</small><h2 id="faq-title">Comece com tranquilidade.</h2></div>
+        <div><details open><summary>Preciso instalar alguma coisa?</summary><p>Não. O Venda Mais funciona pelo navegador no computador, tablet ou celular.</p></details><details><summary>Quando começam os 7 dias grátis?</summary><p>Depois do seu cadastro ser analisado e liberado, o período de teste começa a contar.</p></details><details><summary>Meus dados ficam misturados com os de outra empresa?</summary><p>Não. Cada empresa possui ambiente, usuários, dados e configurações independentes.</p></details><details><summary>Consigo controlar quem acessa o sistema?</summary><p>Sim. Você cria usuários e define funções como administrador, gerente, caixa ou estoque.</p></details></div>
+      </section>
+      <section className="final-cta"><small>PRONTO PARA ORGANIZAR SUA OPERAÇÃO?</small><h2>Teste o Venda Mais gratuitamente por 7 dias.</h2><p>Cadastre sua empresa sem compromisso e conheça o sistema com acompanhamento da nossa equipe.</p><a href="/teste">Quero testar o Venda Mais</a><span>Sem cobrança para solicitar o teste.</span></section>
       <footer className="public-footer">
         <div>
           <strong>
@@ -534,7 +559,8 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         </div>
         <div>
           <strong>Recursos</strong>
-          <a href="#beneficios">PDV e estoque</a>
+          <a href="#recursos">PDV e estoque</a>
+          <a href="#como-funciona">Como funciona</a>
           <a href="/teste">Teste grátis</a>
         </div>
         <div>
