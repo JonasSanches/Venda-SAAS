@@ -5,11 +5,18 @@ import { TenantBranding } from "./tenant-branding";
 export const metadata: Metadata = {
   title: "Venda Mais",
   description: "Gestão de vendas, estoque e fiscal",
+  applicationName: "Venda Mais by Omega",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: "/icon.svg",
+  },
+  manifest: "/manifest.webmanifest",
 };
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
+  themeColor: "#38b487",
 };
 export default function RootLayout({
   children,
