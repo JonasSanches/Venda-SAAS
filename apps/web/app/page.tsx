@@ -214,7 +214,7 @@ export default function Home() {
     <main>
       <aside>
         <div className="brand">
-          <span>V</span> Venda Mais <OmegaCredit />
+          <span>V</span> Venda+ <OmegaCredit />
         </div>
         <nav>
           {pagesFor(session.user.roles).map((name) => (
@@ -439,7 +439,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <div className="public-brand">
           <a className="public-logo" href="/">
             <span>V</span>
-            <strong>Venda Mais</strong>
+            <strong>Venda+</strong>
           </a>
           <OmegaCredit />
         </div>
@@ -458,9 +458,9 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       <div className="login login-commercial">
         <section className="login-offer">
           <div className="brand dark">
-            <span>V</span> Venda Mais <OmegaCredit />
+            <span>V</span> Venda+ <OmegaCredit />
           </div>
-        <small>VENDA MAIS • CONTROLE MAIS • DECIDA MELHOR</small>
+        <small>VENDA+ • CONTROLE MAIS • DECIDA MELHOR</small>
           <h1>Seu negócio vendendo rápido, com caixa e estoque sob controle.</h1>
           <p>
             Um sistema simples para registrar vendas, acompanhar o que entra e
@@ -488,13 +488,13 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
                 Atendimento contínuo para orientar sua equipe e acompanhar
                 situações importantes da operação.
               </p>
-              <a href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Venda%20Mais." target="_blank" rel="noopener noreferrer">WhatsApp: +55 11 97843-6640</a>
+              <a href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Venda%2B." target="_blank" rel="noopener noreferrer">WhatsApp: +55 11 97843-6640</a>
             </div>
           </div>
         </section>
         <form id="entrar" onSubmit={submit}>
           <div className="brand dark">
-            <span>V</span> Venda Mais <OmegaCredit />
+            <span>V</span> Venda+ <OmegaCredit />
           </div>
           <h1>Entre na sua conta</h1>
           <p>Acesse a operação da sua empresa.</p>
@@ -533,11 +533,11 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <span><b>Acesso responsivo</b> no celular e computador</span>
       </section>
       <section className="segment-section" id="segmentos" aria-labelledby="segment-title">
-        <div className="section-heading"><small>FEITO PARA QUEM VENDE TODOS OS DIAS</small><h2 id="segment-title">Uma operação organizada, seja qual for o seu balcão.</h2><p>O Venda Mais se adapta à rotina de negócios que precisam vender com agilidade e manter produtos, equipe e caixa organizados.</p></div>
+        <div className="section-heading"><small>FEITO PARA QUEM VENDE TODOS OS DIAS</small><h2 id="segment-title">Uma operação organizada, seja qual for o seu balcão.</h2><p>O Venda+ se adapta à rotina de negócios que precisam vender com agilidade e manter produtos, equipe e caixa organizados.</p></div>
         <div className="segment-grid"><article><span>01</span><h3>Restaurantes</h3><p>Registre pedidos e acompanhe vendas, produtos e movimentações do dia.</p></article><article><span>02</span><h3>Bares</h3><p>Ganhe velocidade no atendimento e veja o estoque baixar automaticamente.</p></article><article><span>03</span><h3>Adegas</h3><p>Controle variedade, quantidade, preços e acesso da equipe em uma única tela.</p></article><article><span>04</span><h3>Lojas</h3><p>Centralize catálogo, caixa, filiais e indicadores para decidir com mais clareza.</p></article><article><span>05</span><h3>Advogados e contratos</h3><p>Organize serviços, responsáveis, recebimentos e acessos conforme o fluxo do escritório.</p></article><article><span>06</span><h3>Consultórios</h3><p>Acompanhe serviços, recebimentos, equipe e unidades em um ambiente centralizado.</p></article><article><span>07</span><h3>Materiais para construção</h3><p>Controle um catálogo amplo, movimentações de estoque, caixa e diferentes usuários.</p></article><article><span>08</span><h3>Locadoras de veículos</h3><p>Adapte cadastros, cobranças, responsáveis e filiais ao processo da sua operação.</p></article></div>
       </section>
       <section className="value-section" id="recursos" aria-labelledby="valor-venda-mais">
-        <div className="value-intro"><small>CONTROLE QUE GERA VALOR</small><h2 id="valor-venda-mais">Transforme cada venda em informação para decidir melhor.</h2><p>O Venda Mais reúne a operação em painéis simples: o caixa registra, o estoque acompanha, a gestão compara e você controla acessos, filiais e resultados de onde estiver.</p></div>
+        <div className="value-intro"><small>CONTROLE QUE GERA VALOR</small><h2 id="valor-venda-mais">Transforme cada venda em informação para decidir melhor.</h2><p>O Venda+ reúne a operação em painéis simples: o caixa registra, o estoque acompanha, a gestão compara e você controla acessos, filiais e resultados de onde estiver.</p></div>
         <div className="value-numbers"><article><strong>R$ 105 mil</strong><span>em vendas acompanhadas por mês</span><p>Exemplo: 100 vendas por dia, com ticket médio de R$ 35, durante 30 dias.</p></article><article><strong>R$ 2,1 mil</strong><span>de valor potencialmente preservado</span><p>Simulação ilustrativa de uma redução de 2% em perdas sobre R$ 105 mil.</p></article><article><strong>7,5 horas</strong><span>liberadas no fechamento mensal</span><p>Exemplo de economia de 15 minutos por dia com caixa e indicadores organizados.</p></article></div>
         <small className="simulation-note">Os números são exemplos ilustrativos e não representam garantia de faturamento ou economia.</small>
         <div className="feature-panels"><article><b>01</b><h3>Venda e recebimento</h3><p>PDV ágil, carrinho, formas de pagamento, histórico e baixa automática do estoque.</p></article><article><b>02</b><h3>Gestão por painéis</h3><p>Faturamento, quantidade de vendas, produtos e estoque reunidos para leitura rápida.</p></article><article><b>03</b><h3>Controle operacional</h3><p>Caixa, entradas, retiradas, ajustes, filiais e perfis de acesso separados por responsabilidade.</p></article><article><b>04</b><h3>Acesso seguro</h3><p>Contas individuais, permissões por função, bloqueio administrativo e histórico de alterações.</p></article><article><b>05</b><h3>Suporte 24 horas</h3><p>Acompanhamento contínuo para dúvidas e situações importantes da operação.</p></article><article><b>06</b><h3>Em qualquer tela</h3><p>Use pelo computador, tablet ou celular, mantendo as informações centralizadas.</p></article></div>
@@ -554,13 +554,13 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       <ErpSurvey />
       <section className="public-faq" aria-labelledby="faq-title">
         <div className="section-heading"><small>PERGUNTAS FREQUENTES</small><h2 id="faq-title">Comece com tranquilidade.</h2></div>
-        <div><details open><summary>Preciso instalar alguma coisa?</summary><p>Não. O Venda Mais funciona pelo navegador no computador, tablet ou celular.</p></details><details><summary>Quando começam os 7 dias grátis?</summary><p>Depois do seu cadastro ser analisado e liberado, o período de teste começa a contar.</p></details><details><summary>Meus dados ficam misturados com os de outra empresa?</summary><p>Não. Cada empresa possui ambiente, usuários, dados e configurações independentes.</p></details><details><summary>Consigo controlar quem acessa o sistema?</summary><p>Sim. Você cria usuários e define funções como administrador, gerente, caixa ou estoque.</p></details></div>
+        <div><details open><summary>Preciso instalar alguma coisa?</summary><p>Não. O Venda+ funciona pelo navegador no computador, tablet ou celular.</p></details><details><summary>Quando começam os 7 dias grátis?</summary><p>Depois do seu cadastro ser analisado e liberado, o período de teste começa a contar.</p></details><details><summary>Meus dados ficam misturados com os de outra empresa?</summary><p>Não. Cada empresa possui ambiente, usuários, dados e configurações independentes.</p></details><details><summary>Consigo controlar quem acessa o sistema?</summary><p>Sim. Você cria usuários e define funções como administrador, gerente, caixa ou estoque.</p></details></div>
       </section>
-      <section className="final-cta"><small>PRONTO PARA ORGANIZAR SUA OPERAÇÃO?</small><h2>Teste o Venda Mais gratuitamente por 7 dias.</h2><p>Cadastre sua empresa sem compromisso e conheça o sistema com acompanhamento da nossa equipe.</p><a href="/teste">Quero testar o Venda Mais</a><span>Sem cobrança para solicitar o teste.</span></section>
+      <section className="final-cta"><small>PRONTO PARA ORGANIZAR SUA OPERAÇÃO?</small><h2>Teste o Venda+ gratuitamente por 7 dias.</h2><p>Cadastre sua empresa sem compromisso e conheça o sistema com acompanhamento da nossa equipe.</p><a href="/teste">Quero testar o Venda+</a><span>Sem cobrança para solicitar o teste.</span></section>
       <footer className="public-footer">
         <div>
           <strong>
-            Venda Mais <OmegaCredit />
+            Venda+ <OmegaCredit />
           </strong>
           <p>Sistema de vendas e gestão de estoque para restaurantes, bares, adegas e lojas.</p>
         </div>
@@ -573,11 +573,11 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <div>
           <strong>Atendimento</strong>
           <a href="#suporte">Suporte 24 horas</a>
-          <a href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Venda%20Mais." target="_blank" rel="noopener noreferrer">WhatsApp: +55 11 97843-6640</a>
+          <a href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Venda%2B." target="_blank" rel="noopener noreferrer">WhatsApp: +55 11 97843-6640</a>
           <span>Ambiente seguro e monitorado</span>
         </div>
         <small>
-          © {new Date().getFullYear()} Venda Mais. Todos os direitos
+          © {new Date().getFullYear()} Venda+. Todos os direitos
           reservados.
         </small>
       </footer>

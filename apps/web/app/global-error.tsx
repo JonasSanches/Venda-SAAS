@@ -15,7 +15,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
     <html lang="pt-BR">
       <body>
         <main className="recovery-page">
-          <div className="brand dark"><span>V</span> Venda Mais</div>
+          <div className="brand dark"><span>V</span> Venda+</div>
           <h1>Vamos recarregar o sistema</h1>
           <p>O navegador encontrou uma versão antiga dos arquivos. Tente novamente para abrir a versão atual.</p>
           <button onClick={() => { sessionStorage.removeItem("vendamais-recovered-version"); reset(); window.location.reload(); }}>Recarregar agora</button>

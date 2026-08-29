@@ -43,7 +43,7 @@ export default function Trial() {
     <div className="trial-page">
       <section>
         <div className="brand dark">
-          <span>V</span>Venda Mais{" "}
+          <span>V</span>Venda+{" "}
           <OmegaCredit />
         </div>
         <h1>Teste grátis por 7 dias</h1>

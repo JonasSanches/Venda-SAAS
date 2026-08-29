@@ -5,9 +5,9 @@ import { TenantBranding } from "./tenant-branding";
 import { LanguageProvider } from "./language-provider";
 import { ChatAssistant } from "./chat-assistant";
 export const metadata: Metadata = {
-  title: "Venda Mais",
+  title: "Venda+",
   description: "Sistema de vendas e gestão de estoque",
-  applicationName: "Venda Mais by Omega",
+  applicationName: "Venda+ by Omega",
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     shortcut: "/icon.svg",

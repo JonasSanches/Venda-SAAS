@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Venda Mais by Omega",
-    short_name: "Venda Mais",
+    name: "Venda+ by Omega",
+    short_name: "Venda+",
     description: "Sistema de vendas e gestão de estoque.",
     start_url: "/",
     display: "standalone",
