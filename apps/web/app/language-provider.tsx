@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 type Locale = "pt-BR" | "en";
 
 const english: Record<string, string> = {
+  "Uma empresa do Grupo Omega": "An Omega Group company",
   "Recursos": "Features",
   "Para quem é": "Who it is for",
   "Como funciona": "How it works",

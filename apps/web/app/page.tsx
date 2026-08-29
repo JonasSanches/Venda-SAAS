@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import { OmegaCredit } from "./omega-credit";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 type Product = {
   id: string;
@@ -574,18 +575,6 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         </small>
       </footer>
     </div>
-  );
-}
-function OmegaCredit() {
-  return (
-    <a
-      className="omega-credit"
-      href="https://omega-ia.com"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      by Omega
-    </a>
   );
 }
 function Overview({

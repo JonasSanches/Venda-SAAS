@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useState } from "react";
+import { OmegaCredit } from "../omega-credit";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 const dataUrl = (f: File) =>
   new Promise<string>((ok, no) => {
@@ -42,14 +43,7 @@ export default function Trial() {
       <section>
         <div className="brand dark">
           <span>V</span>Venda Mais{" "}
-          <a
-            className="omega-credit"
-            href="https://omega-ia.com"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            by Omega
-          </a>
+          <OmegaCredit />
         </div>
         <h1>Teste grátis por 7 dias</h1>
         <p>Personalize a plataforma para sua empresa.</p>
