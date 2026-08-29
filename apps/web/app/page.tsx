@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { OmegaCredit } from "./omega-credit";
+import { Pricing } from "./pricing";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 type Product = {
   id: string;
@@ -445,6 +446,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <a href="#recursos">Recursos</a>
           <a href="#segmentos">Para quem é</a>
           <a href="#como-funciona">Como funciona</a>
+          <a href="#planos">Planos</a>
           <a href="#suporte">Suporte 24h</a>
           <a href="/teste">Teste grátis</a>
           <a className="header-login" href="#entrar">
@@ -547,6 +549,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <div><small>CONTROLE SEM PRENDER VOCÊ AO BALCÃO</small><h2>Veja sua operação de onde estiver.</h2><p>Separe usuários por função, administre filiais e consulte os principais indicadores em uma interface preparada para computador, tablet e celular.</p><ul><li>Administrador, gerente, caixa e estoque com acessos próprios</li><li>Dados e configurações isolados para cada empresa</li><li>Histórico de alterações administrativas</li><li>Monitoramento e suporte 24 horas</li></ul></div>
         <aside><span>PAINEL EM TEMPO REAL</span><strong>Vendas + Estoque + Caixa</strong><p>Uma visão centralizada reduz conferências manuais e ajuda a identificar diferenças antes que elas cresçam.</p><a href="/teste">Começar meus 7 dias grátis</a></aside>
       </section>
+      <Pricing />
       <section className="public-faq" aria-labelledby="faq-title">
         <div className="section-heading"><small>PERGUNTAS FREQUENTES</small><h2 id="faq-title">Comece com tranquilidade.</h2></div>
         <div><details open><summary>Preciso instalar alguma coisa?</summary><p>Não. O Venda Mais funciona pelo navegador no computador, tablet ou celular.</p></details><details><summary>Quando começam os 7 dias grátis?</summary><p>Depois do seu cadastro ser analisado e liberado, o período de teste começa a contar.</p></details><details><summary>Meus dados ficam misturados com os de outra empresa?</summary><p>Não. Cada empresa possui ambiente, usuários, dados e configurações independentes.</p></details><details><summary>Consigo controlar quem acessa o sistema?</summary><p>Sim. Você cria usuários e define funções como administrador, gerente, caixa ou estoque.</p></details></div>

@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useState } from "react";
 import { OmegaCredit } from "../omega-credit";
+import { Pricing } from "../pricing";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 const dataUrl = (f: File) =>
   new Promise<string>((ok, no) => {
@@ -47,6 +48,7 @@ export default function Trial() {
         </div>
         <h1>Teste grátis por 7 dias</h1>
         <p>Personalize a plataforma para sua empresa.</p>
+        <Pricing compact />
       </section>
       <form onSubmit={submit}>
         <h2>Crie sua conta</h2>
