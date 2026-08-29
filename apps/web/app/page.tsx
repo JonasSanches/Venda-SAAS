@@ -1,6 +1,7 @@
 "use client";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { OmegaCredit } from "./omega-credit";
+import { ErpSurvey } from "./erp-survey";
 import { Pricing } from "./pricing";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 type Product = {
@@ -550,6 +551,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <aside><span>PAINEL EM TEMPO REAL</span><strong>Vendas + Estoque + Caixa</strong><p>Uma visão centralizada reduz conferências manuais e ajuda a identificar diferenças antes que elas cresçam.</p><a href="/teste">Começar meus 7 dias grátis</a></aside>
       </section>
       <Pricing />
+      <ErpSurvey />
       <section className="public-faq" aria-labelledby="faq-title">
         <div className="section-heading"><small>PERGUNTAS FREQUENTES</small><h2 id="faq-title">Comece com tranquilidade.</h2></div>
         <div><details open><summary>Preciso instalar alguma coisa?</summary><p>Não. O Venda Mais funciona pelo navegador no computador, tablet ou celular.</p></details><details><summary>Quando começam os 7 dias grátis?</summary><p>Depois do seu cadastro ser analisado e liberado, o período de teste começa a contar.</p></details><details><summary>Meus dados ficam misturados com os de outra empresa?</summary><p>Não. Cada empresa possui ambiente, usuários, dados e configurações independentes.</p></details><details><summary>Consigo controlar quem acessa o sistema?</summary><p>Sim. Você cria usuários e define funções como administrador, gerente, caixa ou estoque.</p></details></div>
