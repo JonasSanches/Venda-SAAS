@@ -312,5 +312,5 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("vendamais-language", next);
     setLocale(next);
   };
-  return <>{children}<div className="language-switcher" role="group" aria-label="Idioma / Language"><button className={locale === "pt-BR" ? "active" : ""} onClick={() => choose("pt-BR")} aria-label="Português">PT</button><button className={locale === "en" ? "active" : ""} onClick={() => choose("en")} aria-label="English">EN</button></div></>;
+  return <>{children}<div className="language-switcher" style={{ position: "fixed", top: 12, right: 12, bottom: "auto" }} role="group" aria-label="Idioma / Language"><button className={locale === "pt-BR" ? "active" : ""} onClick={() => choose("pt-BR")} aria-label="Português">PT</button><button className={locale === "en" ? "active" : ""} onClick={() => choose("en")} aria-label="English">EN</button></div></>;
 }
