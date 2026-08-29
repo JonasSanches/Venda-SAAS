@@ -485,6 +485,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
                 Atendimento contínuo para orientar sua equipe e acompanhar
                 situações importantes da operação.
               </p>
+              <a href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Venda%20Mais." target="_blank" rel="noopener noreferrer">WhatsApp: +55 11 97843-6640</a>
             </div>
           </div>
         </section>
@@ -567,6 +568,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <div>
           <strong>Atendimento</strong>
           <a href="#suporte">Suporte 24 horas</a>
+          <a href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Venda%20Mais." target="_blank" rel="noopener noreferrer">WhatsApp: +55 11 97843-6640</a>
           <span>Ambiente seguro e monitorado</span>
         </div>
         <small>

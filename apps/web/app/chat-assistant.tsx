@@ -14,6 +14,7 @@ const copy = {
     features: "Recursos",
     trial: "Teste grátis",
     support: "Suporte",
+    whatsapp: "Falar com uma pessoa no WhatsApp",
     placeholder: "Digite sua dúvida...",
     send: "Enviar",
     open: "Abrir atendimento",
@@ -26,6 +27,7 @@ const copy = {
     features: "Features",
     trial: "Free trial",
     support: "Support",
+    whatsapp: "Talk to a person on WhatsApp",
     placeholder: "Type your question...",
     send: "Send",
     open: "Open chat",
@@ -131,6 +133,7 @@ export function ChatAssistant() {
       <header><div><strong>{labels.title}</strong><small>{labels.status}</small></div><button onClick={() => setOpen(false)} aria-label="Fechar / Close">×</button></header>
       <div className="sales-chat-messages">{messages.map((message, index) => <p key={index} className={message.from}>{message.text}</p>)}<div ref={end}/></div>
       <div className="sales-chat-shortcuts"><button onClick={() => ask(labels.plans)}>{labels.plans}</button><button onClick={() => ask(labels.features)}>{labels.features}</button><button onClick={() => ask(labels.trial)}>{labels.trial}</button><button onClick={() => ask(labels.support)}>{labels.support}</button></div>
+      <a className="sales-chat-whatsapp" href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20sobre%20o%20Venda%20Mais." target="_blank" rel="noopener noreferrer">{labels.whatsapp}</a>
       <form onSubmit={submit}><input name="question" placeholder={labels.placeholder} autoComplete="off"/><button>{labels.send}</button></form>
     </section>}
     <button className="sales-chat-toggle" onClick={() => setOpen((value) => !value)} aria-label={labels.open}><span>{open ? "×" : "💬"}</span><b>{open ? "" : "Chat 24h"}</b></button>
