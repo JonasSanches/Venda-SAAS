@@ -294,16 +294,16 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     document.documentElement.lang = locale;
     document.cookie = `vendamais-language=${locale};path=/;max-age=31536000;SameSite=Lax`;
     translateNode(document.body, locale);
+    // Portuguese is the original React content, so observing it only creates
+    // unnecessary DOM writes while authenticated screens are being rendered.
+    if (locale === "pt-BR") return;
     const observer = new MutationObserver((records) => {
       for (const record of records) {
-        if (record.type === "characterData")
-          translateNode(record.target, locale, true);
         for (const node of Array.from(record.addedNodes)) translateNode(node, locale);
       }
     });
     observer.observe(document.body, {
       childList: true,
-      characterData: true,
       subtree: true,
     });
     return () => observer.disconnect();
