@@ -114,7 +114,9 @@ export function ChatAssistant() {
   useEffect(() => {
     setMessages((current) => current.length ? current : [{ from: "bot", text: copy[lang].welcome }]);
   }, [lang]);
-  useEffect(() => end.current?.scrollIntoView({ behavior: "smooth" }), [messages, open]);
+  useEffect(() => {
+    end.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, open]);
   const ask = (text: string) => {
     const clean = text.trim();
     if (!clean) return;
