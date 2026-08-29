@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./styles.css";
 import "./functional.css";
 import { TenantBranding } from "./tenant-branding";
+import { LanguageProvider } from "./language-provider";
 export const metadata: Metadata = {
   title: "Venda Mais",
   description: "Sistema de vendas e gestão de estoque",
@@ -24,8 +25,10 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body>
-        <TenantBranding />
-        {children}
+        <LanguageProvider>
+          <TenantBranding />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );
