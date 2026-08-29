@@ -3,6 +3,7 @@ import "./styles.css";
 import "./functional.css";
 import { TenantBranding } from "./tenant-branding";
 import { LanguageProvider } from "./language-provider";
+import { ChatAssistant } from "./chat-assistant";
 export const metadata: Metadata = {
   title: "Venda Mais",
   description: "Sistema de vendas e gestão de estoque",
@@ -28,6 +29,7 @@ export default function RootLayout({
         <LanguageProvider>
           <TenantBranding />
           {children}
+          <ChatAssistant />
         </LanguageProvider>
       </body>
     </html>
