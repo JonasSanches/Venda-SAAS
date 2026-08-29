@@ -2,6 +2,7 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { OmegaCredit } from "./omega-credit";
 import { ErpSurvey } from "./erp-survey";
+import { BrandName } from "./brand-name";
 import { Pricing } from "./pricing";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 type Product = {
@@ -214,7 +215,7 @@ export default function Home() {
     <main>
       <aside>
         <div className="brand">
-          <span>V</span> Venda+ <OmegaCredit />
+          <span>V</span> <BrandName /> <OmegaCredit />
         </div>
         <nav>
           {pagesFor(session.user.roles).map((name) => (
@@ -439,7 +440,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <div className="public-brand">
           <a className="public-logo" href="/">
             <span>V</span>
-            <strong>Venda+</strong>
+            <BrandName />
           </a>
           <OmegaCredit />
         </div>
@@ -458,7 +459,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       <div className="login login-commercial">
         <section className="login-offer">
           <div className="brand dark">
-            <span>V</span> Venda+ <OmegaCredit />
+            <span>V</span> <BrandName /> <OmegaCredit />
           </div>
         <small>VENDA+ • CONTROLE MAIS • DECIDA MELHOR</small>
           <h1>Seu negócio vendendo rápido, com caixa e estoque sob controle.</h1>
@@ -494,7 +495,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         </section>
         <form id="entrar" onSubmit={submit}>
           <div className="brand dark">
-            <span>V</span> Venda+ <OmegaCredit />
+            <span>V</span> <BrandName /> <OmegaCredit />
           </div>
           <h1>Entre na sua conta</h1>
           <p>Acesse a operação da sua empresa.</p>
@@ -560,7 +561,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       <footer className="public-footer">
         <div>
           <strong>
-            Venda+ <OmegaCredit />
+            <BrandName /> <OmegaCredit />
           </strong>
           <p>Sistema de vendas e gestão de estoque para restaurantes, bares, adegas e lojas.</p>
         </div>

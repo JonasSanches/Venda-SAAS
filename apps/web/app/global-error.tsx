@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { BrandName } from "./brand-name";
 
 export default function GlobalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   useEffect(() => {
@@ -15,7 +16,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
     <html lang="pt-BR">
       <body>
         <main className="recovery-page">
-          <div className="brand dark"><span>V</span> Venda+</div>
+          <div className="brand dark"><span>V</span> <BrandName /></div>
           <h1>Vamos recarregar o sistema</h1>
           <p>O navegador encontrou uma versão antiga dos arquivos. Tente novamente para abrir a versão atual.</p>
           <button onClick={() => { sessionStorage.removeItem("vendamais-recovered-version"); reset(); window.location.reload(); }}>Recarregar agora</button>
