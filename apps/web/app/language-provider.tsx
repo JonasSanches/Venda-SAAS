@@ -7,6 +7,7 @@ type Locale = "pt-BR" | "en";
 const english: Record<string, string> = {
   "Uma empresa do Grupo Omega": "An Omega Group company",
   "Recursos": "Features",
+  "CLIENTES PARCEIROS": "CLIENTS AND PARTNERS",
   "Planos": "Plans",
   "Para quem é": "Who it is for",
   "Como funciona": "How it works",

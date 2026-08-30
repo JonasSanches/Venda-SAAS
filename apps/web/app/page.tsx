@@ -598,6 +598,17 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       </section>
       <section className="final-cta"><small>PRONTO PARA ORGANIZAR SUA OPERAÇÃO?</small><h2>Teste o Venda+ gratuitamente por 7 dias.</h2><p>Cadastre sua empresa sem compromisso e conheça o sistema com acompanhamento da nossa equipe.</p><a href="/teste">Quero testar o Venda+</a><span>Sem cobrança para solicitar o teste.</span></section>
       <footer className="public-footer">
+        <section className="partner-trust" aria-labelledby="partner-title">
+          <small id="partner-title">CLIENTES PARCEIROS</small>
+          <div className="partner-logos">
+            <span className="partner-logo logo-votorantim" role="img" aria-label="Votorantim"><i>V</i><b>votorantim</b></span>
+            <span className="partner-logo logo-electrolux" role="img" aria-label="Electrolux"><i></i><b>ELECTROLUX</b></span>
+            <span className="partner-logo logo-selecta" role="img" aria-label="CJ Selecta"><i>CJ</i><b>selecta</b></span>
+            <span className="partner-logo logo-vivo" role="img" aria-label="Vivo"><b>vivo</b></span>
+            <span className="partner-logo logo-itau" role="img" aria-label="Itaú"><b>itaú</b></span>
+            <span className="partner-logo logo-adega" role="img" aria-label="Adega Point da Carlos Gomes"><i>AP</i><b>ADEGA POINT<small>DA CARLOS GOMES</small></b></span>
+          </div>
+        </section>
         <div>
           <strong>
             <BrandName /> <OmegaCredit />
@@ -617,10 +628,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <span>Ambiente seguro e monitorado</span>
           <a href="/privacidade">Privacidade e dados de acesso</a>
         </div>
-        <small>
-          © {new Date().getFullYear()} Venda+. Todos os direitos
-          reservados.
-        </small>
+        <small className="footer-legal">© {new Date().getFullYear()} Venda+. Todos os direitos reservados. <a href="https://www.omega-ia.com" target="_blank" rel="noopener noreferrer">Omega Software House — CNPJ 66.223.973/0001-06</a></small>
       </footer>
     </div>
   );
