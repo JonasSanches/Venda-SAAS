@@ -85,6 +85,8 @@ model Tenant {
   logoDataUrl     String?          @map("logo_data_url")
   trialStartsAt   DateTime?        @map("trial_starts_at")
   trialExpiresAt  DateTime?        @map("trial_expires_at")
+  subscriptionPlan String?        @map("subscription_plan")
+  subscriptionExpiresAt DateTime? @map("subscription_expires_at")
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
   branches        Branch[]
@@ -108,6 +110,7 @@ model BillingPayment {
   preferenceId      String?   @map("preference_id")
   status            String    @default("PENDING")
   paymentMethod     String?   @map("payment_method")
+  plan              String?
   amount            Decimal   @db.Decimal(14, 2)
   checkoutUrl       String?   @map("checkout_url")
   paidAt            DateTime? @map("paid_at")
