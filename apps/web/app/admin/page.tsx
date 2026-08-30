@@ -28,6 +28,8 @@ export default function Admin() {
     [audit, setAudit] = useState<any[]>([]),
     [analytics,setAnalytics]=useState<AnalyticsReport|null>(null),
     [surveys,setSurveys]=useState<SurveyResponse[]>([]),
+    [analyticsError,setAnalyticsError]=useState(""),
+    [surveyError,setSurveyError]=useState(""),
     [analyticsDays,setAnalyticsDays]=useState(30),
     [analyticsLoading,setAnalyticsLoading]=useState(false);
   async function call(path: string, body?: object) {
@@ -51,20 +53,19 @@ export default function Admin() {
   }
   async function load() {
     try {
-      const [trials, platformUsers, surveyResponses] = await Promise.all([
+      const [trials, platformUsers] = await Promise.all([
         call("/platform/trials"),
         call("/platform/users"),
-        call("/analytics/surveys"),
       ]);
       setItems(trials);
       setUsers(platformUsers);
-      setSurveys(surveyResponses);
       setError("");
+      try{setSurveys(await call("/analytics/surveys"));setSurveyError("")}catch(e){setSurveyError((e as Error).message)}
     } catch (e) {
       setError((e as Error).message);
     }
   }
-  async function loadAnalytics(days=analyticsDays,page=1){setAnalyticsLoading(true);try{setAnalytics(await call(`/analytics?days=${days}&page=${page}`));setError("")}catch(e){setError((e as Error).message)}finally{setAnalyticsLoading(false)}}
+  async function loadAnalytics(days=analyticsDays,page=1){setAnalyticsLoading(true);try{setAnalytics(await call(`/analytics?days=${days}&page=${page}`));setAnalyticsError("")}catch(e){setAnalyticsError((e as Error).message)}finally{setAnalyticsLoading(false)}}
   useEffect(() => {
     try {
       const saved = JSON.parse(
@@ -272,6 +273,7 @@ export default function Admin() {
         </form>
       )}
       <section className="analytics-admin" id="visitas">
+        {analyticsError&&<div className="error">Não foi possível carregar as visitas: {analyticsError}</div>}
         <div className="analytics-title"><div><small>INTELIGÊNCIA DE ACESSO</small><h2>Painel de visitantes</h2><p>Visitas à página pública, teste gratuito e pagamento · horário de Brasília.</p></div><div><select value={analyticsDays} onChange={e=>{const days=Number(e.target.value);setAnalyticsDays(days);void loadAnalytics(days,1)}}><option value={7}>Últimos 7 dias</option><option value={30}>Últimos 30 dias</option><option value={90}>Últimos 90 dias</option><option value={365}>Último ano</option></select><button className="secondary" disabled={analyticsLoading} onClick={()=>void loadAnalytics(analyticsDays,analytics?.pagination.page??1)}>{analyticsLoading?"Atualizando...":"Atualizar"}</button></div></div>
         <div className="analytics-metrics"><article><small>VISITAS NO PERÍODO</small><strong>{analytics?.summary.total??0}</strong></article><article><small>VISITANTES ÚNICOS</small><strong>{analytics?.summary.uniqueVisitors??0}</strong></article><article><small>VISITAS HOJE</small><strong>{analytics?.summary.today??0}</strong></article></div>
         <div className="analytics-chart"><h3>Volume diário</h3><div>{analytics?.daily.length?analytics.daily.map(item=>{const max=Math.max(...analytics.daily.map(day=>day.visits),1);return <span key={item.day} title={`${item.day}: ${item.visits} visita(s)`}><i style={{height:`${Math.max(8,item.visits/max*100)}%`}}></i><small>{item.day.slice(5).replace("-","/")}</small></span>}):<p>Nenhuma visita registrada no período.</p>}</div></div>
@@ -280,6 +282,7 @@ export default function Admin() {
         <p className="analytics-privacy">🔒 IP e dados técnicos são de acesso exclusivo da administração e devem ser usados somente para segurança e análise, com retenção limitada.</p>
       </section>
       <section className="survey-admin" id="respostas">
+        {surveyError&&<div className="error">Não foi possível carregar as respostas: {surveyError}</div>}
         <div className="survey-admin-title"><div><small>PESQUISA DE NECESSIDADES</small><h2>Respostas do questionário</h2><p>{surveys.length} resposta(s) recebida(s), da mais recente para a mais antiga.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar respostas</button></div>
         <div className="survey-response-list">{surveys.map(response=><details key={response.id}><summary><div><strong>{response.name} · {response.company}</strong><span>{response.contact}</span></div><small>{new Date(response.submittedAt).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})}</small></summary><div className="survey-response-data"><span><small>Contato</small><b>{response.contact}</b></span><span><small>Idioma</small><b>{response.language?.toUpperCase()||"—"}</b></span><span><small>IP</small><b>{response.ipAddress||"—"}</b></span>{Object.entries(response.answers).map(([key,values])=><span key={key}><small>{surveyAnswerLabel(key)}</small><b>{Array.isArray(values)&&values.length?values.join(", "):"Não respondeu"}</b></span>)}</div></details>)}{!surveys.length&&<p className="analytics-empty">As novas respostas aparecerão aqui automaticamente.</p>}</div>
       </section>
