@@ -13,6 +13,8 @@ type PlatformUser = {
   status: string;
   createdAt: string;
 };
+type AnalyticsReport={summary:{total:number;uniqueVisitors:number;today:number};daily:Array<{day:string;visits:number}>;visits:Array<{id:string;visitedAt:string;ipAddress?:string;path:string;referrer?:string;device?:string;browser?:string;operatingSystem?:string;language?:string;timezone?:string;platform?:string;screenWidth?:number;screenHeight?:number;viewportWidth?:number;viewportHeight?:number;country?:string;region?:string;city?:string}>;pagination:{page:number;pageSize:number;total:number;totalPages:number}};
+type SurveyResponse={id:string;submittedAt:string;name:string;company:string;contact:string;language?:string;ipAddress?:string;answers:Record<string,string[]>};
 
 export default function Admin() {
   const [session, setSession] = useState<Session | null>(null),
@@ -23,7 +25,11 @@ export default function Admin() {
     [message, setMessage] = useState(""),
     [showUser, setShowUser] = useState(false),
     [detail, setDetail] = useState<any | null>(null),
-    [audit, setAudit] = useState<any[]>([]);
+    [audit, setAudit] = useState<any[]>([]),
+    [analytics,setAnalytics]=useState<AnalyticsReport|null>(null),
+    [surveys,setSurveys]=useState<SurveyResponse[]>([]),
+    [analyticsDays,setAnalyticsDays]=useState(30),
+    [analyticsLoading,setAnalyticsLoading]=useState(false);
   async function call(path: string, body?: object) {
     if (!session) throw Error("Sessão expirada");
     const r = await fetch(API + path, {
@@ -45,17 +51,20 @@ export default function Admin() {
   }
   async function load() {
     try {
-      const [trials, platformUsers] = await Promise.all([
+      const [trials, platformUsers, surveyResponses] = await Promise.all([
         call("/platform/trials"),
         call("/platform/users"),
+        call("/analytics/surveys"),
       ]);
       setItems(trials);
       setUsers(platformUsers);
+      setSurveys(surveyResponses);
       setError("");
     } catch (e) {
       setError((e as Error).message);
     }
   }
+  async function loadAnalytics(days=analyticsDays,page=1){setAnalyticsLoading(true);try{setAnalytics(await call(`/analytics?days=${days}&page=${page}`));setError("")}catch(e){setError((e as Error).message)}finally{setAnalyticsLoading(false)}}
   useEffect(() => {
     try {
       const saved = JSON.parse(
@@ -75,7 +84,7 @@ export default function Admin() {
     }
   }, []);
   useEffect(() => {
-    if (session) void load();
+    if (session) {void load();void loadAnalytics(30,1)}
   }, [session]);
   async function extend(id: string) {
     const value = prompt(
@@ -226,6 +235,7 @@ export default function Admin() {
             <small>{session.user.email}</small>
           </div>
           <button onClick={() => setShowUser((v) => !v)}>Novo usuário</button>
+          <button className="secondary" onClick={()=>document.getElementById("visitas")?.scrollIntoView({behavior:"smooth"})}>Visitas</button>
           <button className="secondary" onClick={goHome}>
             Tela inicial
           </button>
@@ -261,6 +271,18 @@ export default function Admin() {
           </div>
         </form>
       )}
+      <section className="analytics-admin" id="visitas">
+        <div className="analytics-title"><div><small>INTELIGÊNCIA DE ACESSO</small><h2>Painel de visitantes</h2><p>Visitas à página pública, teste gratuito e pagamento · horário de Brasília.</p></div><div><select value={analyticsDays} onChange={e=>{const days=Number(e.target.value);setAnalyticsDays(days);void loadAnalytics(days,1)}}><option value={7}>Últimos 7 dias</option><option value={30}>Últimos 30 dias</option><option value={90}>Últimos 90 dias</option><option value={365}>Último ano</option></select><button className="secondary" disabled={analyticsLoading} onClick={()=>void loadAnalytics(analyticsDays,analytics?.pagination.page??1)}>{analyticsLoading?"Atualizando...":"Atualizar"}</button></div></div>
+        <div className="analytics-metrics"><article><small>VISITAS NO PERÍODO</small><strong>{analytics?.summary.total??0}</strong></article><article><small>VISITANTES ÚNICOS</small><strong>{analytics?.summary.uniqueVisitors??0}</strong></article><article><small>VISITAS HOJE</small><strong>{analytics?.summary.today??0}</strong></article></div>
+        <div className="analytics-chart"><h3>Volume diário</h3><div>{analytics?.daily.length?analytics.daily.map(item=>{const max=Math.max(...analytics.daily.map(day=>day.visits),1);return <span key={item.day} title={`${item.day}: ${item.visits} visita(s)`}><i style={{height:`${Math.max(8,item.visits/max*100)}%`}}></i><small>{item.day.slice(5).replace("-","/")}</small></span>}):<p>Nenhuma visita registrada no período.</p>}</div></div>
+        <div className="analytics-table-card"><div><h3>Acessos recentes</h3><p>{analytics?.pagination.total??0} registros no período</p></div><div className="analytics-table"><table><thead><tr><th>Data e hora</th><th>IP</th><th>Dispositivo</th><th>Localidade aproximada</th><th>Página</th><th>Origem</th></tr></thead><tbody>{analytics?.visits.map(visit=>{const location=[visit.city,visit.region,visit.country,visit.timezone].filter(Boolean).join(" · ");return <tr key={visit.id}><td>{new Date(visit.visitedAt).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})}</td><td><code>{visit.ipAddress||"—"}</code></td><td>{visit.device||visit.platform||"—"}<small>{[visit.browser,visit.operatingSystem,visit.language].filter(Boolean).join(" · ")}</small></td><td>{location||"Não informada"}</td><td>{visit.path}</td><td className="analytics-referrer">{visit.referrer||"Acesso direto"}</td></tr>})}</tbody></table>{!analytics?.visits.length&&<p className="analytics-empty">Nenhum acesso encontrado.</p>}</div>
+        {analytics&&<div className="analytics-pagination"><button className="secondary" disabled={analyticsLoading||analytics.pagination.page<=1} onClick={()=>void loadAnalytics(analyticsDays,analytics.pagination.page-1)}>Anterior</button><span>Página {analytics.pagination.page} de {analytics.pagination.totalPages}</span><button className="secondary" disabled={analyticsLoading||analytics.pagination.page>=analytics.pagination.totalPages} onClick={()=>void loadAnalytics(analyticsDays,analytics.pagination.page+1)}>Próxima</button></div>}</div>
+        <p className="analytics-privacy">🔒 IP e dados técnicos são de acesso exclusivo da administração e devem ser usados somente para segurança e análise, com retenção limitada.</p>
+      </section>
+      <section className="survey-admin" id="respostas">
+        <div className="survey-admin-title"><div><small>PESQUISA DE NECESSIDADES</small><h2>Respostas do questionário</h2><p>{surveys.length} resposta(s) recebida(s), da mais recente para a mais antiga.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar respostas</button></div>
+        <div className="survey-response-list">{surveys.map(response=><details key={response.id}><summary><div><strong>{response.name} · {response.company}</strong><span>{response.contact}</span></div><small>{new Date(response.submittedAt).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})}</small></summary><div className="survey-response-data"><span><small>Contato</small><b>{response.contact}</b></span><span><small>Idioma</small><b>{response.language?.toUpperCase()||"—"}</b></span><span><small>IP</small><b>{response.ipAddress||"—"}</b></span>{Object.entries(response.answers).map(([key,values])=><span key={key}><small>{surveyAnswerLabel(key)}</small><b>{Array.isArray(values)&&values.length?values.join(", "):"Não respondeu"}</b></span>)}</div></details>)}{!surveys.length&&<p className="analytics-empty">As novas respostas aparecerão aqui automaticamente.</p>}</div>
+      </section>
       <div className="cash-summary">
         <article>
           <span>Total</span>
@@ -574,3 +596,5 @@ const auditLabel = (action: string) =>
     TRIAL_EXTENDED: "Período de teste estendido",
     TRIAL_APPROVED: "Teste gratuito aprovado",
   })[action] ?? action;
+const surveyAnswerLabels:Record<string,string>={priority:"Principais prioridades",problem:"Principal problema",manual:"Controles manuais atuais",users:"Quantidade de usuários",branches:"Unidades ou filiais",dashboard:"Informações desejadas no painel",mobile:"Importância do acesso móvel",automation:"Automações desejadas",support:"Suporte preferido",reason:"Motivo para trocar de sistema",budget:"Valor mensal considerado adequado",essential:"Função indispensável"};
+const surveyAnswerLabel=(key:string)=>surveyAnswerLabels[key]??key;

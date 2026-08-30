@@ -608,6 +608,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <a href="#suporte">Suporte 24 horas</a>
           <a href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20quero%20saber%20mais%20sobre%20o%20Venda%2B." target="_blank" rel="noopener noreferrer">WhatsApp: +55 11 97843-6640</a>
           <span>Ambiente seguro e monitorado</span>
+          <a href="/privacidade">Privacidade e dados de acesso</a>
         </div>
         <small>
           © {new Date().getFullYear()} Venda+. Todos os direitos

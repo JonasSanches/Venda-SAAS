@@ -123,6 +123,46 @@ model BillingPayment {
   @@map("billing_payments")
 }
 
+model VisitorEvent {
+  id             BigInt   @id @default(autoincrement())
+  visitedAt      DateTime @default(now()) @map("visited_at")
+  ipAddress      String?  @map("ip_address") @db.VarChar(64)
+  path           String   @db.VarChar(300)
+  referrer       String?  @db.VarChar(1000)
+  userAgent      String?  @map("user_agent") @db.VarChar(1000)
+  device         String?  @db.VarChar(30)
+  browser        String?  @db.VarChar(30)
+  operatingSystem String? @map("operating_system") @db.VarChar(30)
+  language       String?  @db.VarChar(120)
+  timezone       String?  @db.VarChar(120)
+  platform       String?  @db.VarChar(160)
+  screenWidth    Int?     @map("screen_width")
+  screenHeight   Int?     @map("screen_height")
+  viewportWidth  Int?     @map("viewport_width")
+  viewportHeight Int?     @map("viewport_height")
+  country        String?  @db.VarChar(80)
+  region         String?  @db.VarChar(100)
+  city           String?  @db.VarChar(120)
+
+  @@index([visitedAt(sort: Desc)])
+  @@index([ipAddress, visitedAt])
+  @@map("visitor_events")
+}
+
+model SurveyResponse {
+  id          String   @id @default(uuid()) @db.Uuid
+  submittedAt DateTime @default(now()) @map("submitted_at")
+  name        String   @db.VarChar(160)
+  company     String   @db.VarChar(200)
+  contact     String   @db.VarChar(200)
+  language    String?  @db.VarChar(20)
+  ipAddress   String?  @map("ip_address") @db.VarChar(64)
+  answers     Json
+
+  @@index([submittedAt(sort: Desc)])
+  @@map("survey_responses")
+}
+
 model Branch {
   id                String           @id @default(uuid()) @db.Uuid
   tenantId          String           @map("tenant_id") @db.Uuid

@@ -1,0 +1,5 @@
+"use client";
+import{useEffect}from"react";
+import{usePathname}from"next/navigation";
+const API=process.env.NEXT_PUBLIC_API_URL??"http://localhost:3101/api",tracked=new Set(["/","/teste","/pagamento"]);
+export function VisitorTracker(){const pathname=usePathname();useEffect(()=>{if(!tracked.has(pathname)||localStorage.getItem("varejo-session"))return;const key=`vendamais:visit:${pathname}`,previous=Number(sessionStorage.getItem(key)||0);if(previous&&Date.now()-previous<30*60*1000)return;sessionStorage.setItem(key,String(Date.now()));const platform=(navigator as Navigator&{userAgentData?:{platform?:string}}).userAgentData?.platform||navigator.platform||"";void fetch(`${API}/analytics/visit`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({path:pathname+location.search,referrer:document.referrer,language:navigator.language,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone,platform,screenWidth:screen.width,screenHeight:screen.height,viewportWidth:innerWidth,viewportHeight:innerHeight}),keepalive:true}).catch(()=>undefined)},[pathname]);return null}
