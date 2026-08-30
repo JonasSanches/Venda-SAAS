@@ -533,6 +533,38 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <span><b>Suporte 24h</b> para sua operação</span>
         <span><b>Acesso responsivo</b> no celular e computador</span>
       </section>
+      <section className="product-showcase" aria-labelledby="product-showcase-title">
+        <div className="showcase-heading">
+          <small>VEJA O VENDA+ EM AÇÃO</small>
+          <h2 id="product-showcase-title">Poder tecnológico sem limites.</h2>
+          <p>O limite é a nossa imaginação, alinhada às necessidades do seu negócio. Conheça três pontos essenciais de uma operação conectada, simples de entender e pronta para crescer com você.</p>
+          <div className="showcase-principles"><span><b>Facilitador da vida</b><small>menos tarefas repetidas e mais tempo para o que importa</small></span><span><b>Poder de consciência e comunicação</b><small>informações claras para toda a equipe trabalhar alinhada</small></span><span><b>Poder pessoal</b><small>autonomia para compreender, decidir e agir com segurança</small></span></div>
+        </div>
+        <div className="showcase-grid">
+          <article>
+            <div className="app-preview dashboard-preview" aria-label="Exemplo do painel de visão geral">
+              <div className="preview-top"><i></i><i></i><i></i><span>Visão geral</span></div>
+              <div className="preview-shell"><aside><b>V+</b><em></em><em></em><em></em><em></em></aside><div><small>PAINEL EM TEMPO REAL</small><h4>Visão geral</h4><div className="preview-metrics"><span><small>Faturamento</small><b>R$ 28.450</b></span><span><small>Vendas</small><b>814</b></span><span><small>Estoque</small><b>2.397</b></span></div><div className="preview-chart"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+            </div>
+            <div className="showcase-copy"><span>01 · DECISÃO</span><h3>Enxergue o negócio inteiro</h3><p>Faturamento, vendas, produtos e estoque aparecem juntos. Você entende o que está acontecendo sem depender de várias planilhas ou conferências demoradas.</p></div>
+          </article>
+          <article>
+            <div className="app-preview pdv-preview" aria-label="Exemplo da tela de vendas PDV">
+              <div className="preview-top"><i></i><i></i><i></i><span>PDV</span></div>
+              <div className="pdv-screen"><div><small>PRODUTOS</small><div className="preview-products"><span><i></i><b>Café</b><small>R$ 8,00</small></span><span><i></i><b>Suco</b><small>R$ 9,00</small></span><span><i></i><b>Lanche</b><small>R$ 18,00</small></span><span><i></i><b>Água</b><small>R$ 5,00</small></span></div></div><aside><small>VENDA ATUAL</small><p><span>Lanche × 2</span><b>R$ 36,00</b></p><p><span>Suco × 1</span><b>R$ 9,00</b></p><strong><span>Total</span>R$ 45,00</strong><button>Finalizar venda</button></aside></div>
+            </div>
+            <div className="showcase-copy"><span>02 · VELOCIDADE</span><h3>Venda rápido e atualize tudo</h3><p>O operador registra a venda em poucos passos. No mesmo momento, o caixa recebe a movimentação e o estoque baixa automaticamente.</p></div>
+          </article>
+          <article>
+            <div className="app-preview stock-preview" aria-label="Exemplo da tela de controle de estoque">
+              <div className="preview-top"><i></i><i></i><i></i><span>Estoque</span></div>
+              <div className="stock-screen"><small>CONTROLE DE ESTOQUE</small><h4>Saldos e movimentações</h4><div><span><b>Produto</b><b>Saldo</b><b>Situação</b></span><span><i>Original 350ml</i><b>100</b><em>Disponível</em></span><span><i>Heineken 350ml</i><b>18</b><em>Atenção</em></span><span><i>Água 500ml</i><b>64</b><em>Disponível</em></span></div></div>
+            </div>
+            <div className="showcase-copy"><span>03 · CONTROLE</span><h3>Saiba o que entra e o que sai</h3><p>Consulte saldos, registre entradas e ajustes e identifique itens que precisam de atenção. Mais clareza para comprar melhor e reduzir perdas.</p></div>
+          </article>
+        </div>
+        <div className="showcase-cta"><div><strong>Não é apenas um sistema. É uma visão mais clara da sua empresa.</strong><span>Teste com seus próprios produtos, equipe e rotina durante 7 dias.</span></div><a href="/teste">Quero ver funcionando</a></div>
+      </section>
       <section className="segment-section" id="segmentos" aria-labelledby="segment-title">
         <div className="section-heading"><small>FEITO PARA QUEM VENDE TODOS OS DIAS</small><h2 id="segment-title">Uma operação organizada, seja qual for o seu balcão.</h2><p>O Venda+ se adapta à rotina de negócios que precisam vender com agilidade e manter produtos, equipe e caixa organizados.</p></div>
         <div className="segment-grid"><article><span>01</span><h3>Restaurantes</h3><p>Registre pedidos e acompanhe vendas, produtos e movimentações do dia.</p></article><article><span>02</span><h3>Bares</h3><p>Ganhe velocidade no atendimento e veja o estoque baixar automaticamente.</p></article><article><span>03</span><h3>Adegas</h3><p>Controle variedade, quantidade, preços e acesso da equipe em uma única tela.</p></article><article><span>04</span><h3>Lojas</h3><p>Centralize catálogo, caixa, filiais e indicadores para decidir com mais clareza.</p></article><article><span>05</span><h3>Advogados e contratos</h3><p>Organize serviços, responsáveis, recebimentos e acessos conforme o fluxo do escritório.</p></article><article><span>06</span><h3>Consultórios</h3><p>Acompanhe serviços, recebimentos, equipe e unidades em um ambiente centralizado.</p></article><article><span>07</span><h3>Materiais para construção</h3><p>Controle um catálogo amplo, movimentações de estoque, caixa e diferentes usuários.</p></article><article><span>08</span><h3>Locadoras de veículos</h3><p>Adapte cadastros, cobranças, responsáveis e filiais ao processo da sua operação.</p></article></div>
