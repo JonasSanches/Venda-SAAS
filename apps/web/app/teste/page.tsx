@@ -61,10 +61,6 @@ export default function Trial() {
             <input name="companyName" required />
           </label>
           <label>
-            CNPJ
-            <input name="document" minLength={14} required />
-          </label>
-          <label>
             Logo
             <input
               name="logoFile"

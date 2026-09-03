@@ -1,9 +1,9 @@
 import { planComparison, type PlanCode } from "./plan-comparison";
 
 const plans: Array<{ code: PlanCode; eyebrow: string; name: string; price: number; description: string; featured?: boolean }> = [
-  { code: "ESSENTIAL", eyebrow: "PARA COMEÇAR", name: "Essencial", price: 129, description: "Para uma operação menor que precisa organizar vendas, produtos, estoque, caixa e indicadores." },
-  { code: "PERFORMANCE", eyebrow: "PARA CRESCER", name: "Performance", price: 249, description: "Para negócios em crescimento que precisam organizar melhor equipe, filiais e gestão.", featured: true },
-  { code: "SCALE", eyebrow: "PARA EXPANDIR", name: "Escala", price: 499, description: "Para operações mais complexas, com várias equipes ou unidades e estrutura preparada para expansão." },
+  { code: "ESSENTIAL", eyebrow: "PRA COMEÇAR", name: "Essencial", price: 129, description: "Para uma operação menor que precisa organizar vendas, produtos, estoque, caixa e indicadores." },
+  { code: "PERFORMANCE", eyebrow: "PRA CRESCER", name: "Performance", price: 249, description: "Para negócios em crescimento que precisam organizar melhor equipe, filiais e gestão.", featured: true },
+  { code: "SCALE", eyebrow: "PRA EXPANDIR", name: "Escala", price: 499, description: "Para operações mais complexas, com várias equipes ou unidades e estrutura preparada para expansão." },
 ];
 
 export function Pricing({ compact = false }: { compact?: boolean }) {

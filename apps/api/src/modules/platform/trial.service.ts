@@ -6,7 +6,7 @@ import { dirname, resolve } from "node:path";
 import { hashPassword } from "../demo/demo-store.service";
 import { tenantContext } from "../../common/tenant-context";
 
-type TrialInput = { companyName:string; document:string; state:"SP"|"RJ"; city:string; segment:string; phone:string; logoDataUrl?:string; name:string; email:string; password:string };
+type TrialInput = { companyName:string; state:"SP"|"RJ"; city:string; segment:string; phone:string; logoDataUrl?:string; name:string; email:string; password:string };
 type DemoTrial = { tenantId:string; name:string; document:string; state:"SP"|"RJ"; city:string; segment:string; phone:string; logoDataUrl?:string; branch:{name:string;state:string}; status:"PENDING"|"TRIAL"|"ACTIVE"|"EXPIRED"|"SUSPENDED"; startsAt?:string; expiresAt?:string; limits:{users:number;branches:number;sales:number}; user:{id:string;tenantId:string;name:string;email:string;passwordHash:string;roles:string[];status?:"ACTIVE"|"BLOCKED"} };
 const tenantInclude = { branches:{orderBy:{createdAt:"asc" as const}}, users:{take:1,orderBy:{createdAt:"asc" as const},include:{roles:{include:{role:true}}}} };
 const tenantDetailInclude = { branches:{orderBy:{createdAt:"asc" as const}}, users:{orderBy:{createdAt:"asc" as const},include:{roles:{include:{role:true}}}} };
@@ -22,21 +22,21 @@ export class TrialService {
   async create(input:TrialInput){
     if(input.logoDataUrl&&input.logoDataUrl.length>700_000)throw new BadRequestException("Logo deve ter no máximo 500 KB");
     if(this.demoMode)return this.createDemo(input);
-    const document=input.document.replace(/\D/g,""),email=input.email.trim().toLowerCase();
-    const duplicate=await prisma.$transaction(async tx=>({tenant:await tx.tenant.findUnique({where:{document},select:{id:true}}),user:await tx.user.findUnique({where:{email},select:{id:true}})}));
-    if(duplicate.tenant||duplicate.user)throw new BadRequestException("CNPJ ou e-mail já possui uma conta");
+    const document=`TRIAL-${randomUUID()}`,email=input.email.trim().toLowerCase();
+    const duplicate=await prisma.user.findUnique({where:{email},select:{id:true}});
+    if(duplicate)throw new BadRequestException("Este e-mail já possui uma conta");
     try{
       const tenant=await prisma.$transaction(async tx=>{
         const created=await tx.tenant.create({data:{name:input.companyName.trim(),document,status:"PENDING",state:input.state,city:input.city.trim(),segment:input.segment,phone:input.phone.replace(/\D/g,""),logoDataUrl:input.logoDataUrl}});
         await tx.$executeRaw`SELECT set_config('app.tenant_id', ${created.id}, true)`;
-        const branch=await tx.branch.create({data:{tenantId:created.id,name:"Matriz",taxId:document,state:input.state,cityCode:"",taxRegime:"",stateRegistration:""}});
+        const branch=await tx.branch.create({data:{tenantId:created.id,name:"Matriz",taxId:"",state:input.state,cityCode:"",taxRegime:"",stateRegistration:""}});
         await tx.warehouse.create({data:{tenantId:created.id,branchId:branch.id,name:"Estoque principal"}});
         const role=await tx.role.create({data:{tenantId:created.id,name:"ADMIN",permissions:["*"]}});
         await tx.user.create({data:{tenantId:created.id,name:input.name.trim(),email,passwordHash:hashPassword(input.password),status:"ACTIVE",roles:{create:{roleId:role.id}}}});
         return tx.tenant.findUniqueOrThrow({where:{id:created.id},include:tenantInclude});
       });
       return this.publicTenant(tenant);
-    }catch(error:unknown){if(typeof error==="object"&&error&&"code" in error&&error.code==="P2002")throw new BadRequestException("CNPJ ou e-mail já possui uma conta");throw error}
+    }catch(error:unknown){if(typeof error==="object"&&error&&"code" in error&&error.code==="P2002")throw new BadRequestException("Este e-mail já possui uma conta");throw error}
   }
 
   async findUser(access:string){
@@ -104,9 +104,9 @@ export class TrialService {
   private async refreshDatabase(id:string){const tenant=await prisma.tenant.findUnique({where:{id}});if(tenant?.status==="TRIAL"&&tenant.trialExpiresAt&&tenant.trialExpiresAt<=new Date())return prisma.tenant.update({where:{id},data:{status:"EXPIRED"}});if(tenant?.status==="ACTIVE"&&tenant.subscriptionExpiresAt&&tenant.subscriptionExpiresAt<=new Date())return prisma.tenant.update({where:{id},data:{status:"EXPIRED"}});return tenant}
   private assertStatus(status:string){if(status==="PENDING")throw new HttpException("Seu cadastro foi recebido e aguarda liberação. Você será avisado assim que os 7 dias grátis forem ativados.",HttpStatus.FORBIDDEN);if(status==="EXPIRED")throw new HttpException("Seu período de teste terminou. Atualize seu plano para continuar.",HttpStatus.PAYMENT_REQUIRED);if(status==="SUSPENDED"||status==="CANCELLED")throw new HttpException("Conta suspensa. Entre em contato com o suporte.",HttpStatus.FORBIDDEN)}
   private async audit(tenantId:string,action:string,resource:string,resourceId:string|null,before:unknown,after:unknown){const context=tenantContext.getStore();await prisma.auditLog.create({data:{tenantId,actorId:context?.userId,action,resource,resourceId,requestId:context?.requestId??randomUUID(),before:before as any,after:after as any}})}
-  private createDemo(input:TrialInput){if(this.trials.some(t=>t.document===input.document||t.user.email.toLowerCase()===input.email.toLowerCase()))throw new BadRequestException("CNPJ ou e-mail já possui uma conta");const tenantId=randomUUID();const t:DemoTrial={tenantId,name:input.companyName,document:input.document,state:input.state,city:input.city,segment:input.segment,phone:input.phone,logoDataUrl:input.logoDataUrl,branch:{name:"Matriz",state:input.state},status:"PENDING",limits:{users:2,branches:1,sales:200},user:{id:randomUUID(),tenantId,name:input.name,email:input.email.toLowerCase(),passwordHash:hashPassword(input.password),roles:["ADMIN"]}};this.trials.push(t);this.save();return this.publicDemo(t)}
+  private createDemo(input:TrialInput){if(this.trials.some(t=>t.user.email.toLowerCase()===input.email.toLowerCase()))throw new BadRequestException("Este e-mail já possui uma conta");const tenantId=randomUUID();const t:DemoTrial={tenantId,name:input.companyName,document:`TRIAL-${randomUUID()}`,state:input.state,city:input.city,segment:input.segment,phone:input.phone,logoDataUrl:input.logoDataUrl,branch:{name:"Matriz",state:input.state},status:"PENDING",limits:{users:2,branches:1,sales:200},user:{id:randomUUID(),tenantId,name:input.name,email:input.email.toLowerCase(),passwordHash:hashPassword(input.password),roles:["ADMIN"]}};this.trials.push(t);this.save();return this.publicDemo(t)}
   private refreshDemo(t:DemoTrial){if(t.status==="TRIAL"&&t.expiresAt&&new Date(t.expiresAt)<=new Date()){t.status="EXPIRED";this.save()}}
   private requireDemo(id:string){const t=this.trials.find(item=>item.tenantId===id);if(!t)throw new BadRequestException("Conta não encontrada");return t}
-  private publicDemo(t:DemoTrial){const{passwordHash:_,...user}=t.user;return{...t,user}}
-  private publicTenant(t:any){const user=t.users?.[0],branches=(t.branches??[]).map((branch:any)=>({id:branch.id,name:branch.name,state:branch.state})),branch=branches[0]??null;return{tenantId:t.id,name:t.name,document:t.document,state:t.state,city:t.city,segment:t.segment,phone:t.phone,logoDataUrl:t.logoDataUrl,branch,branches,status:t.status,startsAt:t.trialStartsAt?.toISOString(),expiresAt:t.trialExpiresAt?.toISOString(),subscriptionPlan:t.subscriptionPlan,subscriptionExpiresAt:t.subscriptionExpiresAt?.toISOString(),limits:{users:2,branches:1,sales:200},user:user?{id:user.id,tenantId:user.tenantId,name:user.name,email:user.email,roles:user.roles.map((item:any)=>item.role.name)}:null}}
+  private publicDemo(t:DemoTrial){const{passwordHash:_,...user}=t.user;return{...t,document:t.document.startsWith("TRIAL-")?"":t.document,user}}
+  private publicTenant(t:any){const user=t.users?.[0],branches=(t.branches??[]).map((branch:any)=>({id:branch.id,name:branch.name,state:branch.state})),branch=branches[0]??null;return{tenantId:t.id,name:t.name,document:String(t.document).startsWith("TRIAL-")?"":t.document,state:t.state,city:t.city,segment:t.segment,phone:t.phone,logoDataUrl:t.logoDataUrl,branch,branches,status:t.status,startsAt:t.trialStartsAt?.toISOString(),expiresAt:t.trialExpiresAt?.toISOString(),subscriptionPlan:t.subscriptionPlan,subscriptionExpiresAt:t.subscriptionExpiresAt?.toISOString(),limits:{users:2,branches:1,sales:200},user:user?{id:user.id,tenantId:user.tenantId,name:user.name,email:user.email,roles:user.roles.map((item:any)=>item.role.name)}:null}}
 }
