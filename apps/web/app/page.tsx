@@ -544,9 +544,9 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <article>
             <div className="app-preview dashboard-preview" aria-label="Exemplo do painel de visão geral">
               <div className="preview-top"><i></i><i></i><i></i><span>Visão geral</span></div>
-              <div className="preview-shell"><aside><b>V+</b><em></em><em></em><em></em><em></em></aside><div><small>PAINEL EM TEMPO REAL</small><h4>Visão geral</h4><div className="preview-metrics"><span><small>Faturamento</small><b>R$ 28.450</b></span><span><small>Vendas</small><b>814</b></span><span><small>Estoque</small><b>2.397</b></span></div><div className="preview-chart"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+              <div className="preview-shell"><aside><b>V+</b><em></em><em></em><em></em><em></em></aside><div><small>RESUMO DO PROPRIETÁRIO · HOJE</small><h4>Seu negócio em poucos segundos</h4><div className="preview-metrics"><span><small>Faturamento hoje</small><b>R$ 3.460</b></span><span><small>Vendas</small><b>98</b></span><span><small>Ticket médio</small><b>R$ 35,31</b></span></div><div className="owner-insight"><span><small>ATENÇÃO AGORA</small><b>6 produtos precisam de reposição</b></span><em>Ver estoque →</em></div><div className="preview-chart"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
             </div>
-            <div className="showcase-copy"><span>01 · DECISÃO</span><h3>Enxergue o negócio inteiro</h3><p>Faturamento, vendas, produtos e estoque aparecem juntos. Você entende o que está acontecendo sem depender de várias planilhas ou conferências demoradas.</p></div>
+            <div className="showcase-copy"><span>01 · DECISÃO</span><h3>Saiba onde agir antes de perder venda</h3><p>Veja quanto entrou hoje, o valor médio de cada venda e quais produtos precisam de reposição. Informação pronta para decidir sem depender de várias planilhas.</p></div>
           </article>
           <article>
             <div className="app-preview pdv-preview" aria-label="Exemplo da tela de vendas PDV">
