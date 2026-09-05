@@ -537,32 +537,40 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         <div className="showcase-heading">
           <small>VEJA O VENDA+ EM AÇÃO</small>
           <h2 id="product-showcase-title">Poder tecnológico sem limites.</h2>
-          <p>O limite é a nossa imaginação, alinhada às necessidades do seu negócio. Conheça três pontos essenciais de uma operação conectada, simples de entender e pronta para crescer com você.</p>
+          <p>O limite é a nossa imaginação, alinhada às necessidades do seu negócio. Veja exemplos práticos de vendas do dia, desempenho semanal, estoque e um fluxo de entregas que pode ser configurado para sua operação.</p>
           <div className="showcase-principles"><span><b>Facilitador da vida</b><small>menos tarefas repetidas e mais tempo para o que importa</small></span><span><b>Poder de consciência e comunicação</b><small>informações claras para toda a equipe trabalhar alinhada</small></span><span><b>Poder pessoal</b><small>autonomia para compreender, decidir e agir com segurança</small></span></div>
         </div>
-        <div className="showcase-grid">
+        <div className="showcase-grid operational-showcase-grid">
           <article>
-            <div className="app-preview dashboard-preview" aria-label="Exemplo do painel de visão geral">
-              <div className="preview-top"><i></i><i></i><i></i><span>Visão geral</span></div>
-              <div className="preview-shell"><aside><b>V+</b><em></em><em></em><em></em><em></em></aside><div><small>RESUMO DO PROPRIETÁRIO · HOJE</small><h4>Seu negócio em poucos segundos</h4><div className="preview-metrics"><span><small>Faturamento hoje</small><b>R$ 3.460</b></span><span><small>Vendas</small><b>98</b></span><span><small>Ticket médio</small><b>R$ 35,31</b></span></div><div className="owner-insight"><span><small>ATENÇÃO AGORA</small><b>6 produtos precisam de reposição</b></span><em>Ver estoque →</em></div><div className="preview-chart"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+            <div className="app-preview sales-report-preview" aria-label="Exemplo de gráfico diário de vendas">
+              <div className="preview-top"><i></i><i></i><i></i><span>Vendas · Hoje</span></div>
+              <div className="report-screen"><header><span><small>FATURAMENTO HOJE</small><b>R$ 3.460,00</b></span><span><small>98 vendas</small><b>Ticket médio R$ 35,31</b></span></header><div className="report-bars daily-bars"><span><i></i><small>08h</small></span><span><i></i><small>10h</small></span><span><i></i><small>12h</small></span><span><i></i><small>14h</small></span><span><i></i><small>16h</small></span><span><i></i><small>18h</small></span><span><i></i><small>20h</small></span></div><footer><b>Pico de vendas: 18h</b><span>R$ 820 no período</span></footer></div>
             </div>
-            <div className="showcase-copy"><span>01 · DECISÃO</span><h3>Saiba onde agir antes de perder venda</h3><p>Veja quanto entrou hoje, o valor médio de cada venda e quais produtos precisam de reposição. Informação pronta para decidir sem depender de várias planilhas.</p></div>
+            <div className="showcase-copy"><span>01 · VENDAS DO DIA</span><h3>Descubra os horários que mais vendem</h3><p>O gráfico diário mostra a evolução das vendas por horário, o faturamento, o ticket médio e o pico do dia. Exemplo: às 18h foram vendidos R$ 820, ajudando a planejar equipe e reposição.</p></div>
           </article>
           <article>
-            <div className="app-preview pdv-preview" aria-label="Exemplo da tela de vendas PDV">
-              <div className="preview-top"><i></i><i></i><i></i><span>PDV</span></div>
-              <div className="pdv-screen"><div><small>PRODUTOS</small><div className="preview-products"><span><i></i><b>Café</b><small>R$ 8,00</small></span><span><i></i><b>Suco</b><small>R$ 9,00</small></span><span><i></i><b>Lanche</b><small>R$ 18,00</small></span><span><i></i><b>Água</b><small>R$ 5,00</small></span></div></div><aside><small>VENDA ATUAL</small><p><span>Lanche × 2</span><b>R$ 36,00</b></p><p><span>Suco × 1</span><b>R$ 9,00</b></p><strong><span>Total</span>R$ 45,00</strong><button>Finalizar venda</button></aside></div>
+            <div className="app-preview sales-report-preview" aria-label="Exemplo de gráfico semanal de vendas">
+              <div className="preview-top"><i></i><i></i><i></i><span>Vendas · Semana</span></div>
+              <div className="report-screen"><header><span><small>FATURAMENTO SEMANAL</small><b>R$ 21.840,00</b></span><span><small>+12,4% sobre a semana anterior</small><b>642 vendas</b></span></header><div className="report-bars weekly-bars"><span><i></i><small>Seg</small></span><span><i></i><small>Ter</small></span><span><i></i><small>Qua</small></span><span><i></i><small>Qui</small></span><span><i></i><small>Sex</small></span><span><i></i><small>Sáb</small></span><span><i></i><small>Dom</small></span></div><footer><b>Melhor dia: sábado</b><span>R$ 4.920 em vendas</span></footer></div>
             </div>
-            <div className="showcase-copy"><span>02 · VELOCIDADE</span><h3>Venda rápido e atualize tudo</h3><p>O operador registra a venda em poucos passos. No mesmo momento, o caixa recebe a movimentação e o estoque baixa automaticamente.</p></div>
+            <div className="showcase-copy"><span>02 · VISÃO SEMANAL</span><h3>Compare resultados e reconheça tendências</h3><p>A visão semanal permite comparar cada dia e perceber crescimento ou queda. No exemplo, sábado faturou R$ 4.920 e a semana cresceu 12,4% em relação à anterior.</p></div>
           </article>
           <article>
             <div className="app-preview stock-preview" aria-label="Exemplo da tela de controle de estoque">
               <div className="preview-top"><i></i><i></i><i></i><span>Estoque</span></div>
               <div className="stock-screen"><small>CONTROLE DE ESTOQUE</small><h4>Saldos e movimentações</h4><div><span><b>Produto</b><b>Saldo</b><b>Situação</b></span><span><i>Original 350ml</i><b>100</b><em>Disponível</em></span><span><i>Heineken 350ml</i><b>18</b><em>Atenção</em></span><span><i>Água 500ml</i><b>64</b><em>Disponível</em></span></div></div>
             </div>
-            <div className="showcase-copy"><span>03 · CONTROLE</span><h3>Saiba o que entra e o que sai</h3><p>Consulte saldos, registre entradas e ajustes e identifique itens que precisam de atenção. Mais clareza para comprar melhor e reduzir perdas.</p></div>
+            <div className="showcase-copy"><span>03 · ESTOQUE</span><h3>Reponha antes que o produto acabe</h3><p>Consulte saldos, registre entradas e ajustes e identifique itens em atenção. No exemplo, a Heineken chegou a 18 unidades e já aparece destacada para reposição.</p></div>
+          </article>
+          <article>
+            <div className="app-preview delivery-preview" aria-label="Exemplo configurável de controle de entregas">
+              <div className="preview-top"><i></i><i></i><i></i><span>Entregas · Hoje</span></div>
+              <div className="delivery-screen"><header><span><small>PEDIDOS DE HOJE</small><b>24 entregas</b></span><span><small>CONCLUÍDAS</small><b>18</b></span><span><small>EM ROTA</small><b>4</b></span><span><small>AGUARDANDO</small><b>2</b></span></header><div><span><b>#1048 · Ana Souza</b><small>Centro · previsão 18:40</small><em className="route">Em rota</em></span><span><b>#1049 · Carlos Lima</b><small>Jardins · previsão 18:55</small><em>Preparando</em></span><span><b>#1047 · Marina Alves</b><small>Vila Nova · entregue 18:12</small><em className="done">Entregue</em></span></div><footer>Fluxo configurável conforme sua operação</footer></div>
+            </div>
+            <div className="showcase-copy"><span>04 · ENTREGAS CONFIGURÁVEIS</span><h3>Saiba o que está parado, em rota ou entregue</h3><p>Um fluxo configurável pode reunir pedido, cliente, região, previsão e situação da entrega. Assim, a equipe responde com clareza e o gestor identifica atrasos antes da reclamação.</p></div>
           </article>
         </div>
+        <small className="showcase-data-note">Dados demonstrativos para exemplificar a leitura dos painéis. O fluxo de entregas é configurável e ainda não integra o módulo operacional padrão.</small>
         <div className="showcase-cta"><div><strong>Não é apenas um sistema. É uma visão mais clara da sua empresa.</strong><span>Teste com seus próprios produtos, equipe e rotina durante 7 dias.</span></div><a href="/teste">Quero ver funcionando</a></div>
       </section>
       <section className="segment-section" id="segmentos" aria-labelledby="segment-title">
