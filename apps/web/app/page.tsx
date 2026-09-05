@@ -414,6 +414,14 @@ function ChangePassword({
 function Login({ onLogin }: { onLogin: (s: Session) => void }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [zoomedPreview, setZoomedPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!zoomedPreview) return;
+    const close = (event: KeyboardEvent) => event.key === "Escape" && setZoomedPreview(null);
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", close);
+    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", close); };
+  }, [zoomedPreview]);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
@@ -540,34 +548,43 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <p>O limite é a nossa imaginação, alinhada às necessidades do seu negócio. Veja exemplos práticos de vendas do dia, desempenho semanal, estoque e um fluxo de entregas que pode ser configurado para sua operação.</p>
           <div className="showcase-principles"><span><b>Facilitador da vida</b><small>menos tarefas repetidas e mais tempo para o que importa</small></span><span><b>Poder de consciência e comunicação</b><small>informações claras para toda a equipe trabalhar alinhada</small></span><span><b>Poder pessoal</b><small>autonomia para compreender, decidir e agir com segurança</small></span></div>
         </div>
+        {zoomedPreview && <button className="preview-backdrop" aria-label="Fechar visualização ampliada" onClick={() => setZoomedPreview(null)} />}
         <div className="showcase-grid operational-showcase-grid">
-          <article>
+          <article className={zoomedPreview === "daily" ? "preview-zoomed" : undefined}>
             <div className="app-preview sales-report-preview" aria-label="Exemplo de gráfico diário de vendas">
+              <button className="preview-zoom-trigger" onClick={() => setZoomedPreview("daily")} aria-label="Ampliar gráfico diário">↗ <span>Ver detalhes</span></button>
               <div className="preview-top"><i></i><i></i><i></i><span>Vendas · Hoje</span></div>
               <div className="report-screen"><header><span><small>FATURAMENTO HOJE</small><b>R$ 3.460,00</b></span><span><small>98 vendas</small><b>Ticket médio R$ 35,31</b></span></header><div className="report-bars daily-bars"><span><i></i><small>08h</small></span><span><i></i><small>10h</small></span><span><i></i><small>12h</small></span><span><i></i><small>14h</small></span><span><i></i><small>16h</small></span><span><i></i><small>18h</small></span><span><i></i><small>20h</small></span></div><footer><b>Pico de vendas: 18h</b><span>R$ 820 no período</span></footer></div>
             </div>
-            <div className="showcase-copy"><span>01 · VENDAS DO DIA</span><h3>Descubra os horários que mais vendem</h3><p>O gráfico diário mostra a evolução das vendas por horário, o faturamento, o ticket médio e o pico do dia. Exemplo: às 18h foram vendidos R$ 820, ajudando a planejar equipe e reposição.</p></div>
+            <div className="showcase-copy"><span>01 · VENDAS DO DIA</span><h3>Descubra os horários que mais vendem</h3><p>O gráfico diário mostra a evolução das vendas por horário, o faturamento, o ticket médio e o pico do dia. Exemplo: às 18h foram vendidos R$ 820, ajudando a planejar equipe e reposição.</p><ul className="restaurant-details"><li><b>Salão:</b> 52% das vendas</li><li><b>Delivery:</b> 31% das vendas</li><li><b>Retirada:</b> 17% das vendas</li></ul></div>
+            {zoomedPreview === "daily" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
-          <article>
+          <article className={zoomedPreview === "weekly" ? "preview-zoomed" : undefined}>
             <div className="app-preview sales-report-preview" aria-label="Exemplo de gráfico semanal de vendas">
+              <button className="preview-zoom-trigger" onClick={() => setZoomedPreview("weekly")} aria-label="Ampliar gráfico semanal">↗ <span>Ver detalhes</span></button>
               <div className="preview-top"><i></i><i></i><i></i><span>Vendas · Semana</span></div>
               <div className="report-screen"><header><span><small>FATURAMENTO SEMANAL</small><b>R$ 21.840,00</b></span><span><small>+12,4% sobre a semana anterior</small><b>642 vendas</b></span></header><div className="report-bars weekly-bars"><span><i></i><small>Seg</small></span><span><i></i><small>Ter</small></span><span><i></i><small>Qua</small></span><span><i></i><small>Qui</small></span><span><i></i><small>Sex</small></span><span><i></i><small>Sáb</small></span><span><i></i><small>Dom</small></span></div><footer><b>Melhor dia: sábado</b><span>R$ 4.920 em vendas</span></footer></div>
             </div>
-            <div className="showcase-copy"><span>02 · VISÃO SEMANAL</span><h3>Compare resultados e reconheça tendências</h3><p>A visão semanal permite comparar cada dia e perceber crescimento ou queda. No exemplo, sábado faturou R$ 4.920 e a semana cresceu 12,4% em relação à anterior.</p></div>
+            <div className="showcase-copy"><span>02 · VISÃO SEMANAL</span><h3>Compare resultados e reconheça tendências</h3><p>A visão semanal permite comparar cada dia e perceber crescimento ou queda. No exemplo, sábado faturou R$ 4.920 e a semana cresceu 12,4% em relação à anterior.</p><ul className="restaurant-details"><li><b>Melhor dia:</b> sábado</li><li><b>Ticket médio:</b> R$ 34,02</li><li><b>Planejamento:</b> reforce a equipe de sexta a domingo</li></ul></div>
+            {zoomedPreview === "weekly" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
-          <article>
+          <article className={zoomedPreview === "stock" ? "preview-zoomed" : undefined}>
             <div className="app-preview stock-preview" aria-label="Exemplo da tela de controle de estoque">
+              <button className="preview-zoom-trigger" onClick={() => setZoomedPreview("stock")} aria-label="Ampliar controle de estoque">↗ <span>Ver detalhes</span></button>
               <div className="preview-top"><i></i><i></i><i></i><span>Estoque</span></div>
               <div className="stock-screen"><small>CONTROLE DE ESTOQUE</small><h4>Saldos e movimentações</h4><div><span><b>Produto</b><b>Saldo</b><b>Situação</b></span><span><i>Original 350ml</i><b>100</b><em>Disponível</em></span><span><i>Heineken 350ml</i><b>18</b><em>Atenção</em></span><span><i>Água 500ml</i><b>64</b><em>Disponível</em></span></div></div>
             </div>
-            <div className="showcase-copy"><span>03 · ESTOQUE</span><h3>Reponha antes que o produto acabe</h3><p>Consulte saldos, registre entradas e ajustes e identifique itens em atenção. No exemplo, a Heineken chegou a 18 unidades e já aparece destacada para reposição.</p></div>
+            <div className="showcase-copy"><span>03 · ESTOQUE</span><h3>Reponha antes que o produto acabe</h3><p>Consulte saldos, registre entradas e ajustes e identifique itens em atenção. No exemplo, a Heineken chegou a 18 unidades e já aparece destacada para reposição.</p><ul className="restaurant-details"><li><b>Reposição:</b> 6 produtos em atenção</li><li><b>Cobertura:</b> quantidade disponível para o próximo turno</li><li><b>Conferência:</b> entradas, vendas e ajustes no mesmo histórico</li></ul></div>
+            {zoomedPreview === "stock" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
-          <article>
+          <article className={zoomedPreview === "delivery" ? "preview-zoomed" : undefined}>
             <div className="app-preview delivery-preview" aria-label="Exemplo configurável de controle de entregas">
+              <button className="preview-zoom-trigger" onClick={() => setZoomedPreview("delivery")} aria-label="Ampliar controle de entregas">↗ <span>Ver detalhes</span></button>
               <div className="preview-top"><i></i><i></i><i></i><span>Entregas · Hoje</span></div>
               <div className="delivery-screen"><header><span><small>PEDIDOS DE HOJE</small><b>24 entregas</b></span><span><small>CONCLUÍDAS</small><b>18</b></span><span><small>EM ROTA</small><b>4</b></span><span><small>AGUARDANDO</small><b>2</b></span></header><div><span><b>#1048 · Ana Souza</b><small>Centro · previsão 18:40</small><em className="route">Em rota</em></span><span><b>#1049 · Carlos Lima</b><small>Jardins · previsão 18:55</small><em>Preparando</em></span><span><b>#1047 · Marina Alves</b><small>Vila Nova · entregue 18:12</small><em className="done">Entregue</em></span></div><footer>Fluxo configurável conforme sua operação</footer></div>
             </div>
-            <div className="showcase-copy"><span>04 · ENTREGAS CONFIGURÁVEIS</span><h3>Saiba o que está parado, em rota ou entregue</h3><p>Um fluxo configurável pode reunir pedido, cliente, região, previsão e situação da entrega. Assim, a equipe responde com clareza e o gestor identifica atrasos antes da reclamação.</p></div>
+            <div className="showcase-copy"><span>04 · ENTREGAS CONFIGURÁVEIS</span><h3>Saiba o que está parado, em rota ou entregue</h3><p>Um fluxo configurável pode reunir pedido, cliente, região, previsão e situação da entrega. Assim, a equipe responde com clareza e o gestor identifica atrasos antes da reclamação.</p><ul className="restaurant-details"><li><b>Tempo médio:</b> 32 minutos</li><li><b>No prazo:</b> 92% das entregas</li><li><b>Ação imediata:</b> 2 pedidos aguardam saída</li></ul></div>
+            {zoomedPreview === "delivery" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
         </div>
         <small className="showcase-data-note">Dados demonstrativos para exemplificar a leitura dos painéis. O fluxo de entregas é configurável e ainda não integra o módulo operacional padrão.</small>
