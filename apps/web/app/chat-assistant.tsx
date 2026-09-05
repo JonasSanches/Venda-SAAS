@@ -7,11 +7,12 @@ type Lang = "pt" | "en";
 
 const copy = {
   pt: {
-    welcome: "Olá! Sou o assistente do Venda+. Estou aqui para explicar tudo com palavras simples e exemplos. Você pode perguntar sobre preços, planos, vendas, estoque, caixa, usuários, filiais, segurança, pagamento, teste grátis ou suporte 24 horas.",
+    welcome: "Olá! Sou o assistente do Venda+. Explico tudo com palavras simples e exemplos. Você pode perguntar sobre preços mensais, semestrais e anuais, painéis de vendas, estoque, entregas configuráveis, caixa, usuários, segurança, pagamento, teste grátis ou suporte 24 horas.",
     title: "Assistente Venda+",
     status: "Online • atendimento 24h",
     plans: "Planos",
     features: "Recursos",
+    dashboards: "Painéis e gráficos",
     trial: "Teste grátis",
     support: "Suporte",
     whatsapp: "Falar com uma pessoa no WhatsApp",
@@ -20,11 +21,12 @@ const copy = {
     open: "Abrir atendimento",
   },
   en: {
-    welcome: "Hi! I'm the Venda+ assistant. I'm here to explain everything in plain language and with examples. Ask me about prices, plans, sales, inventory, cash control, users, branches, security, payments, the free trial or 24/7 support.",
+    welcome: "Hi! I'm the Venda+ assistant. I explain everything in plain language and with examples. Ask me about monthly, semiannual and annual pricing, sales dashboards, inventory, configurable deliveries, cash control, users, security, payments, the free trial or 24/7 support.",
     title: "Venda+ Assistant",
     status: "Online • 24/7 assistance",
     plans: "Plans",
     features: "Features",
+    dashboards: "Dashboards and charts",
     trial: "Free trial",
     support: "Support",
     whatsapp: "Talk to a person on WhatsApp",
@@ -42,6 +44,18 @@ function currentLanguage(): Lang {
 function answer(question: string, lang: Lang) {
   const value = question.toLocaleLowerCase("pt-BR");
   const has = (...terms: string[]) => terms.some((term) => value.includes(term));
+  if (has("anual", "annual", "semestral", "semiannual", "desconto", "discount", "parcela", "installment"))
+    return lang === "en"
+      ? "Venda+ offers three billing periods for every plan:\n\n• MONTHLY: regular price and 30 days of access.\n• SEMIANNUAL: 20% off the total of 6 months and 180 days of access.\n• ANNUAL: 30% off the total of 12 months and 365 days of access.\n\nESSENTIAL: R$129 monthly, R$619.20 semiannual, or R$1,083.60 annual.\nPERFORMANCE: R$249 monthly, R$1,195.20 semiannual, or R$2,091.60 annual.\nSCALE: R$499 monthly, R$2,395.20 semiannual, or R$4,191.60 annual.\n\nPix, debit card and boleto charge the full selected period. For credit cards, Mercado Pago may offer up to 6 or 12 installments, subject to approval and account availability. This is not an automatic recurring subscription: the customer authorizes the payment."
+      : "O Venda+ oferece três períodos em todos os planos:\n\n• MENSAL: preço normal e 30 dias de acesso.\n• SEMESTRAL: 20% de desconto sobre 6 meses e 180 dias de acesso.\n• ANUAL: 30% de desconto sobre 12 meses e 365 dias de acesso.\n\nESSENCIAL: R$ 129 mensal, R$ 619,20 semestral ou R$ 1.083,60 anual.\nPERFORMANCE: R$ 249 mensal, R$ 1.195,20 semestral ou R$ 2.091,60 anual.\nESCALA: R$ 499 mensal, R$ 2.395,20 semestral ou R$ 4.191,60 anual.\n\nPix, débito e boleto cobram o total do período. No crédito, o Mercado Pago poderá oferecer até 6 ou 12 parcelas, conforme aprovação e disponibilidade. Não é assinatura recorrente automática: o cliente autoriza o pagamento.";
+  if (has("entrega", "delivery", "rota", "pedido atrasado", "motoboy"))
+    return lang === "en"
+      ? "The delivery preview addresses a common restaurant problem: knowing which orders are waiting, being prepared, on route or delivered. A configured workflow can show the customer, region, expected time, average delivery time, on-time percentage and orders that need immediate action.\n\nImportant: delivery tracking is a configurable workflow and is not yet part of the standard operational module. Our team must first understand your process before confirming its implementation."
+      : "O painel de entregas atende uma dor comum de restaurantes: saber quais pedidos estão aguardando, em preparo, em rota ou entregues. Um fluxo configurado pode mostrar cliente, região, previsão, tempo médio, percentual no prazo e pedidos que precisam de ação imediata.\n\nImportante: o controle de entregas é um fluxo configurável e ainda não integra o módulo operacional padrão. Nossa equipe precisa entender seu processo antes de confirmar a implantação.";
+  if (has("gráfico", "grafico", "painel", "dashboard", "chart", "relatório", "relatorio", "horário de pico", "horario de pico", "ticket médio", "ticket medio"))
+    return lang === "en"
+      ? "The demonstration dashboards turn sales into practical management information:\n\n• DAILY CHART: revenue by hour, number of sales, average ticket and peak time. This helps a restaurant schedule staff and prepare inventory for busy hours.\n• WEEKLY CHART: compares each weekday, highlights the strongest day and shows growth or decline versus the previous week.\n• INVENTORY: shows balances and highlights products that need restocking before the next shift.\n\nExample: if 6 PM generated R$820 and Saturday was the strongest day, the manager has evidence to reinforce staffing and stock at those times. The figures shown on the website are illustrative. Click or tap any preview to enlarge it."
+      : "Os painéis demonstrativos transformam vendas em informação prática para a gestão:\n\n• GRÁFICO DIÁRIO: vendas por horário, faturamento, quantidade, ticket médio e horário de pico. Isso ajuda o restaurante a preparar equipe e estoque para o movimento.\n• GRÁFICO SEMANAL: compara os dias, mostra o melhor resultado e indica crescimento ou queda em relação à semana anterior.\n• ESTOQUE: apresenta saldos e destaca produtos que precisam de reposição antes do próximo turno.\n\nExemplo: se às 18h entraram R$ 820 e sábado foi o melhor dia, o gerente tem evidência para reforçar equipe e estoque nesses períodos. Os números do site são ilustrativos. Clique ou toque em qualquer print para ampliar.";
   if (has("essencial", "essential", "129", "básico", "basico"))
     return lang === "en"
       ? "ESSENTIAL — R$129/month\n\nThis is the entry plan for a business that wants to leave notebooks and scattered spreadsheets behind. You can register products, use the POS to record sales, track inventory, open and close the cash register, and see key indicators.\n\nSimple example: when the cashier sells 2 units of a product, the system records the sale and removes those 2 units from inventory.\n\nIt also includes secure team access and 24/7 support. It is a good starting point for a smaller or simpler operation."
@@ -56,8 +70,8 @@ function answer(question: string, lang: Lang) {
       : "ESCALA — R$ 499 por mês\n\nÉ voltado para operações com várias equipes, filiais ou planos de expansão. As informações ficam organizadas em uma estrutura central de gestão, com usuários, permissões, filiais, monitoramento e histórico administrativo.\n\nExemplo: em vez de controlar cada unidade em um arquivo diferente, o administrador usa uma única plataforma e mantém cada ambiente devidamente separado.\n\nInclui suporte 24 horas e é a opção mais indicada para uma operação mais complexa e preparada para crescer.";
   if (has("preço", "preco", "valor", "plano", "plan", "price", "cost"))
     return lang === "en"
-      ? "We offer three monthly plans, and all of them include 24/7 support:\n\n• ESSENTIAL — R$129/month: for getting started with sales, products, inventory, cash control and indicators.\n\n• PERFORMANCE — R$249/month: for growing businesses that need broader team, branch and management organization.\n\n• SCALE — R$499/month: for more complex operations, multiple teams or locations and an expansion-ready structure.\n\nThere is also a 7-day free trial. If you tell me about your business, I can explain which profile is closest to your needs."
-      : "Temos três planos mensais, e todos incluem suporte 24 horas:\n\n• ESSENCIAL — R$ 129/mês: para começar com vendas, produtos, estoque, caixa e indicadores.\n\n• PERFORMANCE — R$ 249/mês: para negócios em crescimento que precisam organizar melhor equipe, filiais e gestão.\n\n• ESCALA — R$ 499/mês: para operações mais complexas, com várias equipes ou unidades e estrutura preparada para expansão.\n\nTambém existe o teste gratuito de 7 dias. Se você contar como é o seu negócio, eu explico qual perfil parece mais próximo da sua necessidade.";
+      ? "We offer ESSENTIAL at R$129/month, PERFORMANCE at R$249/month and SCALE at R$499/month. Every plan includes 24/7 support and can be paid monthly, semiannually with 20% off, or annually with 30% off. There is also a free 7-day trial with no payment required to register. Ask me about annual or semiannual pricing and I will show every total."
+      : "Temos o ESSENCIAL por R$ 129/mês, PERFORMANCE por R$ 249/mês e ESCALA por R$ 499/mês. Todos incluem suporte 24 horas e podem ser pagos mensalmente, no semestral com 20% de desconto ou no anual com 30% de desconto. O teste de 7 dias é gratuito e não exige pagamento no cadastro. Pergunte pelos valores anuais ou semestrais que eu mostro todos os totais.";
   if (has("teste", "grátis", "gratis", "trial", "free"))
     return lang === "en"
       ? "The free trial lasts 7 days. First, you complete a simple registration with your business and account owner information. The Venda+ team reviews and approves the request.\n\nThe 7 days only start after approval, so you do not lose trial time while waiting. During the trial, you can learn the interface, register products, organize initial settings and test the daily operation before choosing a plan."
@@ -88,8 +102,8 @@ function answer(question: string, lang: Lang) {
       : "O Venda+ pode ser alinhado a diferentes tipos de operação:\n\n• Restaurantes, bares e adegas: vendas, produtos, estoque e caixa.\n• Lojas e materiais para construção: catálogo amplo, quantidades, preços e diferentes funcionários.\n• Advogados e contratos: organização de serviços, responsáveis, recebimentos e acessos.\n• Consultórios: serviços, recebimentos, equipe e unidades em um ambiente centralizado.\n• Locadoras de veículos: cadastros, cobranças, responsáveis e filiais adaptados ao processo da operação.\n\nA ideia simples é a mesma para todos: centralizar informações, definir quem pode acessar e facilitar o controle do dia a dia.";
   if (has("pagamento", "pix", "cartão", "cartao", "boleto", "payment", "card"))
     return lang === "en"
-      ? "Venda+ subscription payments are sent to the secure Mercado Pago environment. There, the customer can choose Pix, credit card, debit card or boleto, depending on Mercado Pago availability.\n\nVenda+ does not ask the customer to send card details through this chat. After Mercado Pago confirms an approved payment, the system can register the confirmation and activate the account."
-      : "O pagamento da assinatura Venda+ é direcionado para o ambiente seguro do Mercado Pago. Lá, o cliente pode escolher Pix, cartão de crédito, cartão de débito ou boleto, conforme a disponibilidade do Mercado Pago.\n\nO Venda+ não pede dados do cartão por este chat. Depois que o Mercado Pago confirma um pagamento aprovado, o sistema pode registrar a confirmação e ativar a conta.";
+      ? "Venda+ payments are sent to Mercado Pago's secure environment. Customers can use Pix, credit card, debit card or boleto, depending on account availability.\n\nMonthly payments release 30 days, semiannual payments release 180 days and annual payments release 365 days. Access is activated only after Mercado Pago confirms an approved payment. Pix, debit and boleto charge the full period; installments may be available for credit cards, subject to approval. Venda+ never asks for card details in this chat."
+      : "O pagamento do Venda+ é direcionado para o ambiente seguro do Mercado Pago. O cliente pode escolher Pix, crédito, débito ou boleto conforme a disponibilidade da conta.\n\nMensal libera 30 dias, semestral libera 180 e anual libera 365. A conta só é ativada depois que o Mercado Pago confirma o pagamento como aprovado. Pix, débito e boleto cobram o total do período; parcelamento é uma possibilidade do cartão de crédito, sujeito à aprovação. O Venda+ não pede dados do cartão por este chat.";
   if (has("celular", "mobile", "tablet", "computador", "browser", "navegador"))
     return lang === "en"
       ? "Venda+ runs in the internet browser, such as Chrome, Safari or Edge. There is no program to install for normal use.\n\nOn a computer, the system uses the larger screen to display more information. On a phone or tablet, menus and content reorganize themselves to fit the smaller screen. The same account can be used according to the employee's permission."
@@ -134,7 +148,7 @@ export function ChatAssistant() {
     {open && <section className="sales-chat-panel" role="dialog" aria-label={labels.title}>
       <header><div><strong>{labels.title}</strong><small>{labels.status}</small></div><button onClick={() => setOpen(false)} aria-label="Fechar / Close">×</button></header>
       <div className="sales-chat-messages">{messages.map((message, index) => <p key={index} className={message.from}>{message.text}</p>)}<div ref={end}/></div>
-      <div className="sales-chat-shortcuts"><button onClick={() => ask(labels.plans)}>{labels.plans}</button><button onClick={() => ask(labels.features)}>{labels.features}</button><button onClick={() => ask(labels.trial)}>{labels.trial}</button><button onClick={() => ask(labels.support)}>{labels.support}</button></div>
+      <div className="sales-chat-shortcuts"><button onClick={() => ask(labels.plans)}>{labels.plans}</button><button onClick={() => ask(labels.dashboards)}>{labels.dashboards}</button><button onClick={() => ask(labels.features)}>{labels.features}</button><button onClick={() => ask(labels.trial)}>{labels.trial}</button><button onClick={() => ask(labels.support)}>{labels.support}</button></div>
       <a className="sales-chat-whatsapp" href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20sobre%20o%20Venda%2B." target="_blank" rel="noopener noreferrer">{labels.whatsapp}</a>
       <form onSubmit={submit}><input name="question" placeholder={labels.placeholder} autoComplete="off"/><button>{labels.send}</button></form>
     </section>}
