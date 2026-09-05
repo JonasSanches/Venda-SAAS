@@ -41,6 +41,12 @@ function currentLanguage(): Lang {
   return (localStorage.getItem("vendamais-language") === "en" || document.documentElement.lang === "en") ? "en" : "pt";
 }
 
+function renderMessage(text: string) {
+  return text.split(/(https:\/\/wa\.me\/5511978436640)/g).map((part, index) => part.startsWith("https://")
+    ? <a href={part} target="_blank" rel="noopener noreferrer" key={index}>Abrir WhatsApp</a>
+    : part);
+}
+
 function answer(question: string, lang: Lang) {
   const value = question.toLocaleLowerCase("pt-BR");
   const has = (...terms: string[]) => terms.some((term) => value.includes(term));
@@ -56,6 +62,22 @@ function answer(question: string, lang: Lang) {
     return lang === "en"
       ? "The demonstration dashboards turn sales into practical management information:\n\n• DAILY CHART: revenue by hour, number of sales, average ticket and peak time. This helps a restaurant schedule staff and prepare inventory for busy hours.\n• WEEKLY CHART: compares each weekday, highlights the strongest day and shows growth or decline versus the previous week.\n• INVENTORY: shows balances and highlights products that need restocking before the next shift.\n\nExample: if 6 PM generated R$820 and Saturday was the strongest day, the manager has evidence to reinforce staffing and stock at those times. The figures shown on the website are illustrative. Click or tap any preview to enlarge it."
       : "Os painéis demonstrativos transformam vendas em informação prática para a gestão:\n\n• GRÁFICO DIÁRIO: vendas por horário, faturamento, quantidade, ticket médio e horário de pico. Isso ajuda o restaurante a preparar equipe e estoque para o movimento.\n• GRÁFICO SEMANAL: compara os dias, mostra o melhor resultado e indica crescimento ou queda em relação à semana anterior.\n• ESTOQUE: apresenta saldos e destaca produtos que precisam de reposição antes do próximo turno.\n\nExemplo: se às 18h entraram R$ 820 e sábado foi o melhor dia, o gerente tem evidência para reforçar equipe e estoque nesses períodos. Os números do site são ilustrativos. Clique ou toque em qualquer print para ampliar.";
+  if (has("contato", "telefone", "whatsapp", "falar com", "atendente", "contact", "phone"))
+    return lang === "en"
+      ? "You can speak directly with the Venda+ team on WhatsApp at +55 11 97843-6640.\n\nOpen WhatsApp: https://wa.me/5511978436640"
+      : "Você pode falar diretamente com a equipe do Venda+ pelo WhatsApp +55 11 97843-6640.\n\nAbrir WhatsApp: https://wa.me/5511978436640";
+  if (has("omega", "quem criou", "quem desenvolveu", "empresa responsável", "developer", "who made"))
+    return lang === "en"
+      ? "Venda+ belongs to Omega Group and is developed by Omega Software House, CNPJ 66.223.973/0001-06. Learn more at https://www.omega-ia.com. For direct assistance, use WhatsApp +55 11 97843-6640."
+      : "O Venda+ pertence ao Grupo Omega e é desenvolvido pela Omega Software House, CNPJ 66.223.973/0001-06. Conheça em https://www.omega-ia.com. Para atendimento direto, fale no WhatsApp +55 11 97843-6640.";
+  if (has("administrador", "gerente", "permissão", "permissao", "perfil", "senha", "bloquear usuário", "bloquear usuario", "administrator", "manager", "permission", "password"))
+    return lang === "en"
+      ? "Venda+ supports individual access by responsibility. Administrators can manage the business, users, branches and settings; managers follow the operation; cashiers focus on sales and cash control; inventory users handle products and balances. Administrative controls include changing roles, blocking access, resetting passwords and recording important changes in the audit history."
+      : "O Venda+ separa o acesso por responsabilidade. O administrador cuida da empresa, usuários, filiais e configurações; o gerente acompanha a operação; o caixa trabalha com vendas e caixa; e o estoque cuida de produtos e saldos. Os controles administrativos incluem trocar perfil, bloquear acesso, redefinir senha e registrar alterações importantes no histórico.";
+  if (has("privacidade", "endereço ip", "endereco ip", "visitante", "localização", "localizacao", "lgpd", "privacy", "visitor", "location"))
+    return lang === "en"
+      ? "Venda+ records technical visits to public pages for security and audience measurement, including IP address, date and time, page, source, device, browser, operating system, language, time zone and approximate location. This information is restricted to platform administration, is not sold and may be retained for up to 365 days. Requests for correction or deletion can be sent to https://wa.me/5511978436640."
+      : "O Venda+ registra dados técnicos de acesso às páginas públicas para segurança e medição de audiência: IP, data e hora, página, origem, dispositivo, navegador, sistema, idioma, fuso e localização aproximada. Essas informações ficam restritas à administração, não são vendidas e podem ser mantidas por até 365 dias. Pedidos de correção ou exclusão podem ser enviados em https://wa.me/5511978436640.";
   if (has("essencial", "essential", "129", "básico", "basico"))
     return lang === "en"
       ? "ESSENTIAL — R$129/month\n\nThis is the entry plan for a business that wants to leave notebooks and scattered spreadsheets behind. You can register products, use the POS to record sales, track inventory, open and close the cash register, and see key indicators.\n\nSimple example: when the cashier sells 2 units of a product, the system records the sale and removes those 2 units from inventory.\n\nIt also includes secure team access and 24/7 support. It is a good starting point for a smaller or simpler operation."
@@ -72,10 +94,10 @@ function answer(question: string, lang: Lang) {
     return lang === "en"
       ? "We offer ESSENTIAL at R$129/month, PERFORMANCE at R$249/month and SCALE at R$499/month. Every plan includes 24/7 support and can be paid monthly, semiannually with 20% off, or annually with 30% off. There is also a free 7-day trial with no payment required to register. Ask me about annual or semiannual pricing and I will show every total."
       : "Temos o ESSENCIAL por R$ 129/mês, PERFORMANCE por R$ 249/mês e ESCALA por R$ 499/mês. Todos incluem suporte 24 horas e podem ser pagos mensalmente, no semestral com 20% de desconto ou no anual com 30% de desconto. O teste de 7 dias é gratuito e não exige pagamento no cadastro. Pergunte pelos valores anuais ou semestrais que eu mostro todos os totais.";
-  if (has("teste", "grátis", "gratis", "trial", "free"))
+  if (has("teste", "grátis", "gratis", "trial", "free", "cadastro", "cadastrar", "cnpj", "register", "signup"))
     return lang === "en"
       ? "The free trial lasts 7 days. First, you complete a simple registration with your business and account owner information. The Venda+ team reviews and approves the request.\n\nThe 7 days only start after approval, so you do not lose trial time while waiting. During the trial, you can learn the interface, register products, organize initial settings and test the daily operation before choosing a plan."
-      : "O teste gratuito dura 7 dias. Primeiro, você faz um cadastro simples com os dados da empresa e da pessoa responsável. A equipe do Venda+ analisa e libera o acesso.\n\nOs 7 dias só começam depois dessa liberação. Assim, você não perde tempo de teste enquanto espera. Durante o período, pode conhecer as telas, cadastrar produtos, organizar as configurações iniciais e experimentar a operação antes de escolher um plano.";
+      : "O teste gratuito dura 7 dias e o cadastro não exige CNPJ nem pagamento. Você informa os dados básicos da empresa e da pessoa responsável. A equipe do Venda+ analisa e libera o acesso.\n\nOs 7 dias só começam depois da liberação. Quando terminam, o acesso é bloqueado até a confirmação do pagamento de um plano. Durante o teste, você pode conhecer as telas, cadastrar produtos, organizar as configurações iniciais e experimentar a operação.";
   if (has("suporte", "atendimento", "ajuda", "support", "help", "24"))
     return lang === "en"
       ? "24/7 support is included in every plan. This means you can ask for guidance at any time when you have a question about using the platform or an important operational situation.\n\nThe goal is to help people who are not technology experts. Guidance should be clear, step by step and aligned with the way your business works."
@@ -109,8 +131,8 @@ function answer(question: string, lang: Lang) {
       ? "Venda+ runs in the internet browser, such as Chrome, Safari or Edge. There is no program to install for normal use.\n\nOn a computer, the system uses the larger screen to display more information. On a phone or tablet, menus and content reorganize themselves to fit the smaller screen. The same account can be used according to the employee's permission."
       : "O Venda+ funciona no navegador de internet, como Chrome, Safari ou Edge. Não é necessário instalar um programa para o uso normal.\n\nNo computador, o sistema aproveita a tela maior para mostrar mais informações. No celular ou tablet, os menus e conteúdos se reorganizam para caber na tela menor. A mesma conta pode ser usada de acordo com a permissão do funcionário.";
   return lang === "en"
-    ? "I couldn't find that information in the official Venda+ content. I can help with plans, prices, POS, inventory, cash flow, users, branches, security, payments, the free trial and 24/7 support. For anything else, please contact support."
-    : "Não encontrei essa informação no conteúdo oficial do Venda+. Posso ajudar sobre planos, valores, PDV, estoque, caixa, usuários, filiais, segurança, pagamentos, teste grátis e suporte 24h. Para outros assuntos, procure o suporte.";
+    ? "I don't have reliable information about that in the official Venda+ content, so I won't invent an answer. Please speak directly with our team on WhatsApp at +55 11 97843-6640.\n\nOpen WhatsApp: https://wa.me/5511978436640"
+    : "Não encontrei uma informação confiável sobre isso no conteúdo oficial do Venda+, então não vou inventar uma resposta. Fale diretamente com nossa equipe pelo WhatsApp +55 11 97843-6640.\n\nAbrir WhatsApp: https://wa.me/5511978436640";
 }
 
 export function ChatAssistant() {
@@ -147,7 +169,7 @@ export function ChatAssistant() {
   return <div className={`sales-chat ${open ? "open" : ""}`}>
     {open && <section className="sales-chat-panel" role="dialog" aria-label={labels.title}>
       <header><div><strong>{labels.title}</strong><small>{labels.status}</small></div><button onClick={() => setOpen(false)} aria-label="Fechar / Close">×</button></header>
-      <div className="sales-chat-messages">{messages.map((message, index) => <p key={index} className={message.from}>{message.text}</p>)}<div ref={end}/></div>
+      <div className="sales-chat-messages">{messages.map((message, index) => <p key={index} className={message.from}>{renderMessage(message.text)}</p>)}<div ref={end}/></div>
       <div className="sales-chat-shortcuts"><button onClick={() => ask(labels.plans)}>{labels.plans}</button><button onClick={() => ask(labels.dashboards)}>{labels.dashboards}</button><button onClick={() => ask(labels.features)}>{labels.features}</button><button onClick={() => ask(labels.trial)}>{labels.trial}</button><button onClick={() => ask(labels.support)}>{labels.support}</button></div>
       <a className="sales-chat-whatsapp" href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20sobre%20o%20Venda%2B." target="_blank" rel="noopener noreferrer">{labels.whatsapp}</a>
       <form onSubmit={submit}><input name="question" placeholder={labels.placeholder} autoComplete="off"/><button>{labels.send}</button></form>
