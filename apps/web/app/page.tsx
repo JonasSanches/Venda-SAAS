@@ -551,8 +551,8 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
         {zoomedPreview && <button className="preview-backdrop" aria-label="Fechar visualização ampliada" onClick={() => setZoomedPreview(null)} />}
         <div className="showcase-grid operational-showcase-grid">
           <article className={zoomedPreview === "daily" ? "preview-zoomed" : undefined}>
-            <div className="app-preview sales-report-preview" aria-label="Exemplo de gráfico diário de vendas">
-              <button className="preview-zoom-trigger" onClick={() => setZoomedPreview("daily")} aria-label="Ampliar gráfico diário">↗ <span>Ver detalhes</span></button>
+            <div className="app-preview sales-report-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("daily")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("daily")} aria-label="Ampliar exemplo de gráfico diário de vendas">
+              <span className="preview-zoom-trigger" aria-hidden="true">↗ <span>Ver detalhes</span></span>
               <div className="preview-top"><i></i><i></i><i></i><span>Vendas · Hoje</span></div>
               <div className="report-screen"><header><span><small>FATURAMENTO HOJE</small><b>R$ 3.460,00</b></span><span><small>98 vendas</small><b>Ticket médio R$ 35,31</b></span></header><div className="report-bars daily-bars"><span><i></i><small>08h</small></span><span><i></i><small>10h</small></span><span><i></i><small>12h</small></span><span><i></i><small>14h</small></span><span><i></i><small>16h</small></span><span><i></i><small>18h</small></span><span><i></i><small>20h</small></span></div><footer><b>Pico de vendas: 18h</b><span>R$ 820 no período</span></footer></div>
             </div>
@@ -560,8 +560,8 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
             {zoomedPreview === "daily" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
           <article className={zoomedPreview === "weekly" ? "preview-zoomed" : undefined}>
-            <div className="app-preview sales-report-preview" aria-label="Exemplo de gráfico semanal de vendas">
-              <button className="preview-zoom-trigger" onClick={() => setZoomedPreview("weekly")} aria-label="Ampliar gráfico semanal">↗ <span>Ver detalhes</span></button>
+            <div className="app-preview sales-report-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("weekly")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("weekly")} aria-label="Ampliar exemplo de gráfico semanal de vendas">
+              <span className="preview-zoom-trigger" aria-hidden="true">↗ <span>Ver detalhes</span></span>
               <div className="preview-top"><i></i><i></i><i></i><span>Vendas · Semana</span></div>
               <div className="report-screen"><header><span><small>FATURAMENTO SEMANAL</small><b>R$ 21.840,00</b></span><span><small>+12,4% sobre a semana anterior</small><b>642 vendas</b></span></header><div className="report-bars weekly-bars"><span><i></i><small>Seg</small></span><span><i></i><small>Ter</small></span><span><i></i><small>Qua</small></span><span><i></i><small>Qui</small></span><span><i></i><small>Sex</small></span><span><i></i><small>Sáb</small></span><span><i></i><small>Dom</small></span></div><footer><b>Melhor dia: sábado</b><span>R$ 4.920 em vendas</span></footer></div>
             </div>
@@ -569,8 +569,8 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
             {zoomedPreview === "weekly" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
           <article className={zoomedPreview === "stock" ? "preview-zoomed" : undefined}>
-            <div className="app-preview stock-preview" aria-label="Exemplo da tela de controle de estoque">
-              <button className="preview-zoom-trigger" onClick={() => setZoomedPreview("stock")} aria-label="Ampliar controle de estoque">↗ <span>Ver detalhes</span></button>
+            <div className="app-preview stock-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("stock")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("stock")} aria-label="Ampliar exemplo da tela de controle de estoque">
+              <span className="preview-zoom-trigger" aria-hidden="true">↗ <span>Ver detalhes</span></span>
               <div className="preview-top"><i></i><i></i><i></i><span>Estoque</span></div>
               <div className="stock-screen"><small>CONTROLE DE ESTOQUE</small><h4>Saldos e movimentações</h4><div><span><b>Produto</b><b>Saldo</b><b>Situação</b></span><span><i>Original 350ml</i><b>100</b><em>Disponível</em></span><span><i>Heineken 350ml</i><b>18</b><em>Atenção</em></span><span><i>Água 500ml</i><b>64</b><em>Disponível</em></span></div></div>
             </div>
@@ -578,8 +578,8 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
             {zoomedPreview === "stock" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
           <article className={zoomedPreview === "delivery" ? "preview-zoomed" : undefined}>
-            <div className="app-preview delivery-preview" aria-label="Exemplo configurável de controle de entregas">
-              <button className="preview-zoom-trigger" onClick={() => setZoomedPreview("delivery")} aria-label="Ampliar controle de entregas">↗ <span>Ver detalhes</span></button>
+            <div className="app-preview delivery-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("delivery")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("delivery")} aria-label="Ampliar exemplo configurável de controle de entregas">
+              <span className="preview-zoom-trigger" aria-hidden="true">↗ <span>Ver detalhes</span></span>
               <div className="preview-top"><i></i><i></i><i></i><span>Entregas · Hoje</span></div>
               <div className="delivery-screen"><header><span><small>PEDIDOS DE HOJE</small><b>24 entregas</b></span><span><small>CONCLUÍDAS</small><b>18</b></span><span><small>EM ROTA</small><b>4</b></span><span><small>AGUARDANDO</small><b>2</b></span></header><div><span><b>#1048 · Ana Souza</b><small>Centro · previsão 18:40</small><em className="route">Em rota</em></span><span><b>#1049 · Carlos Lima</b><small>Jardins · previsão 18:55</small><em>Preparando</em></span><span><b>#1047 · Marina Alves</b><small>Vila Nova · entregue 18:12</small><em className="done">Entregue</em></span></div><footer>Fluxo configurável conforme sua operação</footer></div>
             </div>
