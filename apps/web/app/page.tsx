@@ -77,53 +77,48 @@ async function request<T>(
   return body;
 }
 
-type DetectedBarcode = { rawValue: string };
-type BarcodeDetectorInstance = { detect(source: HTMLVideoElement): Promise<DetectedBarcode[]> };
-type BarcodeDetectorConstructor = new (options?: { formats?: string[] }) => BarcodeDetectorInstance;
-
 function BarcodeScanner({ onRead, onClose }: { onRead: (code: string) => void; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const frameRef = useRef<number | null>(null);
+  const onReadRef = useRef(onRead);
   const [error, setError] = useState("");
+  useEffect(() => { onReadRef.current = onRead; }, [onRead]);
   useEffect(() => {
     let active = true;
+    let stop: (() => void) | undefined;
     async function start() {
       try {
-        const Detector = (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector;
-        if (!Detector) throw new Error("Este navegador não oferece leitura automática. Use o Chrome atualizado ou digite o código manualmente.");
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
-        streamRef.current = stream;
         const video = videoRef.current;
         if (!video || !active) return;
-        video.srcObject = stream;
-        await video.play();
-        const detector = new Detector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf"] });
-        const scan = async () => {
-          if (!active) return;
-          try {
-            const result = await detector.detect(video);
-            const code = result[0]?.rawValue?.trim();
-            if (code) {
-              navigator.vibrate?.(100);
-              onRead(code);
-              return;
-            }
-          } catch {}
-          frameRef.current = requestAnimationFrame(scan);
-        };
-        scan();
+        const { BrowserMultiFormatReader } = await import("@zxing/browser");
+        const reader = new BrowserMultiFormatReader(undefined, { delayBetweenScanAttempts: 120, delayBetweenScanSuccess: 800 });
+        const controls = await reader.decodeFromConstraints(
+          { video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false },
+          video,
+          (result) => {
+            const code = result?.getText().trim();
+            if (!active || !code) return;
+            active = false;
+            navigator.vibrate?.(100);
+            controls.stop();
+            onReadRef.current(code);
+          },
+        );
+        stop = () => controls.stop();
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "Não foi possível abrir a câmera.");
+        const message = cause instanceof Error ? cause.message : "";
+        setError(message.includes("Permission") || message.includes("NotAllowed")
+          ? "A câmera foi bloqueada. Libere o acesso à câmera nas configurações do navegador e tente novamente."
+          : "Não foi possível abrir a câmera. Confirme a permissão e tente novamente.");
       }
     }
     void start();
     return () => {
       active = false;
-      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
-      streamRef.current?.getTracks().forEach((track) => track.stop());
+      stop?.();
+      const stream = videoRef.current?.srcObject;
+      if (stream instanceof MediaStream) stream.getTracks().forEach((track) => track.stop());
     };
-  }, [onRead]);
+  }, []);
   return (
     <div className="scanner-backdrop" role="dialog" aria-modal="true" aria-label="Leitor de código de barras">
       <div className="scanner-modal">
