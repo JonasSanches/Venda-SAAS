@@ -8,8 +8,8 @@ type Template = "BOARD_SHORTS_SLIT" | "BOARD_SHORTS_STRAIGHT" | "TSHIRT_REGULAR"
 type DesignData = { front: Placement; back: Placement };
 
 const templates: Record<Template, { name: string; note: string }> = {
-  BOARD_SHORTS_SLIT: { name: "Bermuda surf · com fenda", note: "Tactel, corte surf, fenda lateral inferior, cordão duplo e bolso traseiro direito." },
-  BOARD_SHORTS_STRAIGHT: { name: "Bermuda surf · reta", note: "Tactel, barra reta, cordão duplo e bolso traseiro direito." },
+  BOARD_SHORTS_SLIT: { name: "Bermuda surf · cavada", note: "Tactel, lateral cavada com acabamento curvo, laço de duas alças e bolso traseiro direito." },
+  BOARD_SHORTS_STRAIGHT: { name: "Bermuda surf · reta", note: "Tactel, barra reta, laço de duas alças e bolso traseiro direito." },
   TSHIRT_REGULAR: { name: "Camiseta regular", note: "Modelagem regular com mangas, visualização de frente e costas." },
   TANK_TOP: { name: "Camiseta regata", note: "Modelagem sem mangas, visualização de frente e costas." },
 };
@@ -105,10 +105,13 @@ function optimizeJpeg(file: File): Promise<string> {
 
 function GarmentView({ id, template, side, placement }: { id: string; template: Template; side: Side; placement: Placement }) {
   const shorts = template.startsWith("BOARD_SHORTS");
+  const curved = template === "BOARD_SHORTS_SLIT";
   const tank = template === "TANK_TOP";
   const clipId = `${id}-clip`;
   const shape = shorts
-    ? "M130 120 Q250 92 370 120 L405 500 L270 510 L250 325 L230 510 L95 500 Z"
+    ? curved
+      ? "M125 105 Q250 88 375 105 L400 462 Q394 494 348 502 Q310 509 270 493 L250 335 L230 493 Q190 509 152 502 Q106 494 100 462 Z"
+      : "M125 105 Q250 88 375 105 L405 500 Q335 512 272 500 L250 335 L228 500 Q165 512 95 500 Z"
     : tank
       ? "M165 100 Q195 140 220 105 Q250 85 280 105 Q305 140 335 100 L400 175 L350 235 L332 520 L168 520 L150 235 L100 175 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
@@ -116,9 +119,23 @@ function GarmentView({ id, template, side, placement }: { id: string; template: 
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs><clipPath id={clipId}><path d={shape}/></clipPath></defs>
     <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>
-    {shorts && <><path d="M130 120 Q250 145 370 120" fill="none" stroke="#6b7280" strokeWidth="3"/><path d="M238 128 Q250 162 262 128" fill="none" stroke="#172033" strokeWidth="4"/><path d="M242 148 Q205 185 190 215 M258 148 Q295 185 310 215" fill="none" stroke="#b78720" strokeWidth="5" strokeLinecap="round"/>{side === "back" && <rect x="274" y="205" width="75" height="68" rx="8" fill="none" stroke="#6b7280" strokeWidth="3"/>}{template === "BOARD_SHORTS_SLIT" && <path d="M96 462 L125 440 M404 462 L375 440" stroke="#172033" strokeWidth="4"/>}</>}
-    {!shorts && <><path d="M220 105 Q250 145 280 105" fill="none" stroke="#6b7280" strokeWidth="3"/>{side === "back" && <path d="M205 120 Q250 150 295 120" fill="none" stroke="#9ca3af" strokeWidth="2"/>}</>}
     <g clipPath={`url(#${clipId})`}>{placement.image && <image href={placement.image} x={placement.x * 5 - imageSize / 2} y={placement.y * 6 - imageSize / 2} width={imageSize} height={imageSize} preserveAspectRatio="xMidYMid meet"/>}</g>
+    {shorts && <>
+      <path d="M125 105 Q250 88 375 105 L379 164 Q250 181 121 164 Z" fill="#202938" stroke="#172033" strokeWidth="3"/>
+      <path d="M121 164 Q250 181 379 164" fill="none" stroke="#6b7280" strokeWidth="2"/>
+      <path d={side === "front" ? "M250 170 L250 335" : "M250 171 Q242 245 250 335"} fill="none" stroke="#596273" strokeWidth="3"/>
+      {side === "front" ? <g className="shorts-bow" fill="none" stroke="#f8fafc" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="250" cy="145" r="7" fill="#f8fafc" stroke="#172033" strokeWidth="2"/>
+        <path d="M247 145 C232 124 204 127 210 145 C215 162 235 158 248 147"/>
+        <path d="M253 145 C268 124 296 127 290 145 C285 162 265 158 252 147"/>
+        <path d="M245 151 C232 171 220 192 215 220 M255 151 C268 171 280 192 285 220"/>
+      </g> : curved
+        ? <g fill="none" stroke="#596273" strokeWidth="3"><path d="M286 217 L354 217 L362 235 L345 252 L294 252 L278 235 Z"/><path d="M290 222 L350 222"/></g>
+        : <g fill="none" stroke="#596273" strokeWidth="4" strokeLinecap="round"><path d="M282 220 L354 220"/><path d="M292 228 L344 228" strokeWidth="2"/></g>}
+      {curved && <><path d="M102 435 L100 462 Q106 494 152 502 Q190 509 230 493" fill="none" stroke="#c4932b" strokeWidth="7"/><path d="M398 435 L400 462 Q394 494 348 502 Q310 509 270 493" fill="none" stroke="#c4932b" strokeWidth="7"/><path d="M103 180 Q110 320 102 435 M397 180 Q390 320 398 435" fill="none" stroke="#c4932b" strokeWidth="5"/></>}
+      {!curved && <path d="M98 486 Q165 500 228 488 M272 488 Q335 500 402 486" fill="none" stroke="#596273" strokeWidth="2"/>}
+    </>}
+    {!shorts && <><path d="M220 105 Q250 145 280 105" fill="none" stroke="#6b7280" strokeWidth="3"/>{side === "back" && <path d="M205 120 Q250 150 295 120" fill="none" stroke="#9ca3af" strokeWidth="2"/>}</>}
     <rect x="150" y="180" width="200" height="230" rx="8" fill="none" stroke="#c4932b" strokeWidth="2" strokeDasharray="8 7" opacity=".75"/>
     <text x="250" y="565" textAnchor="middle" fontSize="14" fill="#667085">{side === "front" ? "FRENTE" : "COSTAS"} · área visual tracejada</text>
   </svg></article>;
