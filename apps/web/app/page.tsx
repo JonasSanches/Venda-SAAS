@@ -4,6 +4,7 @@ import { OmegaCredit } from "./omega-credit";
 import { ErpSurvey } from "./erp-survey";
 import { BrandName } from "./brand-name";
 import { Pricing } from "./pricing";
+import { GarmentStudio } from "./garment-studio";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 type Product = {
   id: string;
@@ -41,6 +42,7 @@ type Session = {
     tenantId: string;
     name: string;
     status?: string;
+    segment?: string;
     expiresAt?: string;
     branch: BranchInfo | null;
     branches?: BranchInfo[];
@@ -273,7 +275,7 @@ export default function Home() {
           <span>V</span> <BrandName /> <OmegaCredit />
         </div>
         <nav>
-          {pagesFor(session.user.roles).map((name) => (
+          {pagesFor(session.user.roles, session.tenant.segment).map((name) => (
             <button
               className={page === name ? "active" : ""}
               key={name}
@@ -360,6 +362,11 @@ export default function Home() {
             token={session.accessToken}
             onCreated={updated}
           />
+        ) : page === "Estúdio de moldes" ? (
+          <GarmentStudio onSave={async (input) => {
+            await request("/products", session.accessToken, { method: "POST", body: JSON.stringify(input) });
+            await updated();
+          }} />
         ) : page === "Usuários" ? (
           <Users token={session.accessToken} roles={session.user.roles} />
         ) : page === "Filial" ? (
@@ -647,7 +654,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       </section>
       <section className="segment-section" id="segmentos" aria-labelledby="segment-title">
         <div className="section-heading"><small>FEITO PARA QUEM VENDE TODOS OS DIAS</small><h2 id="segment-title">Uma operação organizada, seja qual for o seu balcão.</h2><p>O Venda+ se adapta à rotina de negócios que precisam vender com agilidade e manter produtos, equipe e caixa organizados.</p></div>
-        <div className="segment-grid"><article><span>01</span><h3>Restaurantes</h3><p>Registre pedidos e acompanhe vendas, produtos e movimentações do dia.</p></article><article><span>02</span><h3>Bares</h3><p>Ganhe velocidade no atendimento e veja o estoque baixar automaticamente.</p></article><article><span>03</span><h3>Adegas</h3><p>Controle variedade, quantidade, preços e acesso da equipe em uma única tela.</p></article><article><span>04</span><h3>Lojas</h3><p>Centralize catálogo, caixa, filiais e indicadores para decidir com mais clareza.</p></article><article><span>05</span><h3>Advogados e contratos</h3><p>Organize serviços, responsáveis, recebimentos e acessos conforme o fluxo do escritório.</p></article><article><span>06</span><h3>Consultórios</h3><p>Acompanhe serviços, recebimentos, equipe e unidades em um ambiente centralizado.</p></article><article><span>07</span><h3>Materiais para construção</h3><p>Controle um catálogo amplo, movimentações de estoque, caixa e diferentes usuários.</p></article><article><span>08</span><h3>Locadoras de veículos</h3><p>Adapte cadastros, cobranças, responsáveis e filiais ao processo da sua operação.</p></article></div>
+        <div className="segment-grid"><article><span>01</span><h3>Restaurantes</h3><p>Registre pedidos e acompanhe vendas, produtos e movimentações do dia.</p></article><article><span>02</span><h3>Bares</h3><p>Ganhe velocidade no atendimento e veja o estoque baixar automaticamente.</p></article><article><span>03</span><h3>Adegas</h3><p>Controle variedade, quantidade, preços e acesso da equipe em uma única tela.</p></article><article><span>04</span><h3>Lojas</h3><p>Centralize catálogo, caixa, filiais e indicadores para decidir com mais clareza.</p></article><article><span>05</span><h3>Advogados e contratos</h3><p>Organize serviços, responsáveis, recebimentos e acessos conforme o fluxo do escritório.</p></article><article><span>06</span><h3>Consultórios</h3><p>Acompanhe serviços, recebimentos, equipe e unidades em um ambiente centralizado.</p></article><article><span>07</span><h3>Materiais para construção</h3><p>Controle um catálogo amplo, movimentações de estoque, caixa e diferentes usuários.</p></article><article><span>08</span><h3>Locadoras de veículos</h3><p>Adapte cadastros, cobranças, responsáveis e filiais ao processo da sua operação.</p></article><article><span>09</span><h3>Confecção e personalizados</h3><p>Crie peças frente e costas, aplique artes, aprove modelos e transforme a criação em produto.</p></article></div>
       </section>
       <section className="value-section" id="recursos" aria-labelledby="valor-venda-mais">
         <div className="value-intro"><small>CONTROLE QUE GERA VALOR</small><h2 id="valor-venda-mais">Transforme cada venda em informação para decidir melhor.</h2><p>O Venda+ reúne a operação em painéis simples: o caixa registra, o estoque acompanha, a gestão compara e você controla acessos, filiais e resultados de onde estiver.</p></div>
@@ -1842,7 +1849,9 @@ function CommercialFiscal() {
 }
 const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-const pagesFor = (roles: string[]) =>
+const pagesFor = (roles: string[], segment?: string) => {
+  const studio = segment === "APPAREL_CUSTOMIZATION" ? ["Estúdio de moldes"] : [];
+  return (
   roles.includes("ADMIN") || roles.includes("MANAGER")
     ? [
         "Visão geral",
@@ -1850,10 +1859,13 @@ const pagesFor = (roles: string[]) =>
         "PDV",
         "Estoque",
         "Produtos",
+        ...studio,
         "Usuários",
         "Filial",
         "Fiscal",
       ]
     : roles.includes("STOCK")
       ? ["Visão geral", "Estoque", "Produtos"]
-      : ["Visão geral", "Caixa", "PDV"];
+      : ["Visão geral", "Caixa", "PDV"]
+  );
+};

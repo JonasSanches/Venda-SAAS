@@ -464,6 +464,7 @@ export default function Admin() {
                   <option value="BAR">Bar</option>
                   <option value="WINERY">Adega</option>
                   <option value="RETAIL">Loja</option>
+                  <option value="APPAREL_CUSTOMIZATION">Confecção e personalizados</option>
                 </select>
               </label>
               <button>Salvar alterações</button>
@@ -584,7 +585,7 @@ export default function Admin() {
 const date = (value?: string) =>
   value ? new Date(value).toLocaleString("pt-BR") : "—";
 const segmentName = (value?: string) =>
-  ({ RESTAURANT: "Restaurante", BAR: "Bar", WINERY: "Adega", RETAIL: "Loja" })[
+  ({ RESTAURANT: "Restaurante", BAR: "Bar", WINERY: "Adega", RETAIL: "Loja", APPAREL_CUSTOMIZATION: "Confecção e personalizados" })[
     value ?? ""
   ] ??
   value ??

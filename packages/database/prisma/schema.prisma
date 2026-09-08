@@ -228,6 +228,8 @@ model Product {
   tenantId       String          @map("tenant_id") @db.Uuid
   sku            String
   barcode        String?
+  designTemplate String?         @map("design_template")
+  designData     Json?           @map("design_data")
   name           String
   price          Decimal         @db.Decimal(14, 2)
   cost           Decimal         @default(0) @db.Decimal(14, 4)

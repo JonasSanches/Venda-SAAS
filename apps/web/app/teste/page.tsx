@@ -76,6 +76,7 @@ export default function Trial() {
               <option value="BAR">Bar</option>
               <option value="WINERY">Adega</option>
               <option value="RETAIL">Loja/varejo</option>
+              <option value="APPAREL_CUSTOMIZATION">Confecção e personalizados</option>
             </select>
           </label>
           <label>
