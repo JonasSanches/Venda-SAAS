@@ -129,10 +129,18 @@ function GarmentView({ id, template, side, placement }: { id: string; template: 
       ? "M165 100 Q195 140 220 105 Q250 85 280 105 Q305 140 335 100 L400 175 L350 235 L332 520 L168 520 L150 235 L100 175 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
   const imageSize = placement.scale * 3;
-  return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
+  return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs><clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath></defs>
     {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
-    <g clipPath={`url(#${clipId})`}>{placement.image && <image href={placement.image} x={placement.x * 5 - imageSize / 2} y={placement.y * 6 - imageSize / 2} width={imageSize} height={imageSize} preserveAspectRatio="xMidYMid slice"/>}</g>
+    {placement.image && <image
+      href={placement.image}
+      x={placement.x * 5 - imageSize / 2}
+      y={placement.y * 6 - imageSize / 2}
+      width={imageSize}
+      height={imageSize}
+      preserveAspectRatio="xMidYMid slice"
+      clipPath={`url(#${clipId})`}
+    />}
     {shorts && moldImage && <image
       href={moldImage}
       x={side === "front" ? 61 : 30}
