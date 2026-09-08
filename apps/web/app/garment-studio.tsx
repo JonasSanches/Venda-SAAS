@@ -131,7 +131,7 @@ function GarmentView({ id, template, side, placement }: { id: string; template: 
   const imageSize = placement.scale * 3;
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs><clipPath id={clipId}><path d={shape}/></clipPath></defs>
-    <path d={shape} fill="#f8fafc" stroke={shorts ? "none" : "#172033"} strokeWidth="4"/>
+    {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
     <g clipPath={`url(#${clipId})`}>{placement.image && <image href={placement.image} x={placement.x * 5 - imageSize / 2} y={placement.y * 6 - imageSize / 2} width={imageSize} height={imageSize} preserveAspectRatio="xMidYMid slice"/>}</g>
     {shorts && moldImage && <image
       href={moldImage}
