@@ -3,9 +3,10 @@
 import { ChangeEvent, FormEvent, useMemo, useState } from "react";
 
 type Side = "front" | "back";
-type Placement = { image?: string; x: number; y: number; scale: number };
+type ArtworkLayer = { id: string; name: string; image: string; x: number; y: number; scale: number };
+type SideDesign = { layers: ArtworkLayer[]; selectedId?: string };
 type Template = "BOARD_SHORTS_SLIT" | "BOARD_SHORTS_STRAIGHT" | "TSHIRT_REGULAR" | "TANK_TOP";
-type DesignData = { front: Placement; back: Placement };
+type DesignData = { front: SideDesign; back: SideDesign };
 
 const templates: Record<Template, { name: string; note: string }> = {
   BOARD_SHORTS_SLIT: { name: "Bermuda surf · cavada", note: "Tactel, lateral cavada com acabamento curvo, laço de duas alças e bolso traseiro direito." },
@@ -14,29 +15,55 @@ const templates: Record<Template, { name: string; note: string }> = {
   TANK_TOP: { name: "Camiseta regata", note: "Modelagem sem mangas, visualização de frente e costas." },
 };
 
-const initialPlacement = (): Placement => ({ x: 50, y: 48, scale: 110 });
+const initialSide = (): SideDesign => ({ layers: [] });
 
 export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; name: string; price: number; designTemplate: Template; designData: DesignData }) => Promise<void> }) {
   const [template, setTemplate] = useState<Template>("BOARD_SHORTS_SLIT");
   const [side, setSide] = useState<Side>("front");
-  const [design, setDesign] = useState<DesignData>({ front: initialPlacement(), back: initialPlacement() });
+  const [design, setDesign] = useState<DesignData>({ front: initialSide(), back: initialSide() });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
-  const current = design[side];
+  const currentSide = design[side];
+  const current = currentSide.layers.find((layer) => layer.id === currentSide.selectedId);
   const title = useMemo(() => templates[template], [template]);
 
-  function update(values: Partial<Placement>) {
-    setDesign((old) => ({ ...old, [side]: { ...old[side], ...values } }));
+  function update(values: Partial<Pick<ArtworkLayer, "x" | "y" | "scale">>) {
+    if (!current) return;
+    setDesign((old) => ({ ...old, [side]: { ...old[side], layers: old[side].layers.map((layer) => layer.id === current.id ? { ...layer, ...values } : layer) } }));
+  }
+  function selectLayer(id: string) {
+    setDesign((old) => ({ ...old, [side]: { ...old[side], selectedId: id } }));
+  }
+  function removeLayer() {
+    if (!current) return;
+    setDesign((old) => {
+      const layers = old[side].layers.filter((layer) => layer.id !== current.id);
+      return { ...old, [side]: { layers, selectedId: layers.at(-1)?.id } };
+    });
+  }
+  function moveLayer(direction: -1 | 1) {
+    if (!current) return;
+    setDesign((old) => {
+      const layers = [...old[side].layers];
+      const from = layers.findIndex((layer) => layer.id === current.id);
+      const to = Math.max(0, Math.min(layers.length - 1, from + direction));
+      if (from !== to) [layers[from], layers[to]] = [layers[to], layers[from]];
+      return { ...old, [side]: { ...old[side], layers } };
+    });
   }
   async function upload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
     if (!/^image\/(jpe?g|png)$/i.test(file.type)) return setError("Escolha uma imagem PNG, JPG ou JPEG.");
-    if (file.size > 10 * 1024 * 1024) return setError("A arte deve ter no máximo 10 MB por lado.");
+    if (file.size > 10 * 1024 * 1024) return setError("Cada arquivo deve ter no máximo 10 MB.");
+    if (currentSide.layers.length >= 10) return setError("Use no máximo 10 camadas em cada lado da peça.");
     try {
       const image = await optimizeArtwork(file);
-      update({ image }); setError(""); setMessage(`Arte ${file.type === "image/png" ? "PNG" : "JPG"} aplicada e otimizada no lado ${side === "front" ? "da frente" : "das costas"}.`);
+      const layer: ArtworkLayer = { id: crypto.randomUUID(), name: file.name, image, x: 50, y: 48, scale: 110 };
+      setDesign((old) => ({ ...old, [side]: { layers: [...old[side].layers, layer], selectedId: layer.id } }));
+      event.target.value = "";
+      setError(""); setMessage(`${file.type === "image/png" ? "PNG transparente" : "Imagem"} adicionado como nova camada ${side === "front" ? "na frente" : "nas costas"}.`);
     } catch { setError("Não foi possível processar esta imagem."); }
   }
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -65,14 +92,16 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
     <div className="studio-workspace">
       <aside className="studio-controls">
         <div className="side-switch"><button type="button" className={side === "front" ? "active" : ""} onClick={() => setSide("front")}>Frente</button><button type="button" className={side === "back" ? "active" : ""} onClick={() => setSide("back")}>Costas</button></div>
-        <label>Arte do lado selecionado<input type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" onChange={upload}/><small>PNG, JPG ou JPEG de até 10 MB. A transparência do PNG é preservada.</small></label>
-        <label>Horizontal <input type="range" min="20" max="80" value={current.x} onChange={(e) => update({ x: Number(e.target.value) })}/></label>
-        <label>Vertical <input type="range" min="20" max="78" value={current.y} onChange={(e) => update({ y: Number(e.target.value) })}/></label>
-        <label>Tamanho <input type="range" min="15" max="200" value={current.scale} onChange={(e) => update({ scale: Number(e.target.value) })}/></label>
-        <button type="button" onClick={() => update({ x: 50, y: 50, scale: 200 })}>Preencher toda a peça</button>
-        <button type="button" className="secondary" onClick={() => update({ image: undefined, x: 50, y: 48, scale: 110 })}>Limpar este lado</button>
+        <label>Adicionar imagem ou estampa<input type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" onChange={upload}/><small>Cada arquivo vira uma camada. PNG transparente pode ser colocado sobre outra imagem.</small></label>
+        <div className="artwork-layers"><b>Camadas · de baixo para cima</b>{currentSide.layers.length === 0 && <small>Nenhuma camada adicionada.</small>}{currentSide.layers.map((layer, index) => <button type="button" key={layer.id} className={layer.id === current?.id ? "active" : ""} onClick={() => selectLayer(layer.id)}><span>{index + 1}</span><em>{layer.name}</em></button>)}</div>
+        <label>Horizontal <input disabled={!current} type="range" min="0" max="100" value={current?.x ?? 50} onChange={(e) => update({ x: Number(e.target.value) })}/></label>
+        <label>Vertical <input disabled={!current} type="range" min="0" max="100" value={current?.y ?? 48} onChange={(e) => update({ y: Number(e.target.value) })}/></label>
+        <label>Tamanho <input disabled={!current} type="range" min="15" max="200" value={current?.scale ?? 110} onChange={(e) => update({ scale: Number(e.target.value) })}/></label>
+        <button type="button" disabled={!current} onClick={() => update({ x: 50, y: 50, scale: 200 })}>Preencher toda a peça</button>
+        <div className="layer-actions"><button type="button" className="secondary" disabled={!current} onClick={() => moveLayer(-1)}>Descer</button><button type="button" className="secondary" disabled={!current} onClick={() => moveLayer(1)}>Subir</button></div>
+        <button type="button" className="secondary" disabled={!current} onClick={removeLayer}>Excluir camada selecionada</button>
       </aside>
-      <div className="garment-views"><GarmentView id="garment-front" template={template} side="front" placement={design.front}/><GarmentView id="garment-back" template={template} side="back" placement={design.back}/></div>
+      <div className="garment-views"><GarmentView id="garment-front" template={template} side="front" design={design.front}/><GarmentView id="garment-back" template={template} side="back" design={design.back}/></div>
     </div>
     <form className="studio-product" onSubmit={save}><label>SKU<input name="sku" required placeholder="Ex.: BERM-SURF-001"/></label><label>Nome do produto<input key={template} name="name" required minLength={2} defaultValue={title.name}/></label><label>Preço<input name="price" type="number" min="0" step="0.01" required/></label><button disabled={saving}>{saving ? "Salvando..." : "Salvar como produto"}</button><button type="button" className="secondary" onClick={exportPdf}>Exportar PDF</button></form>
   </div>;
@@ -109,7 +138,7 @@ function optimizeArtwork(file: File): Promise<string> {
   });
 }
 
-function GarmentView({ id, template, side, placement }: { id: string; template: Template; side: Side; placement: Placement }) {
+function GarmentView({ id, template, side, design }: { id: string; template: Template; side: Side; design: SideDesign }) {
   const shorts = template.startsWith("BOARD_SHORTS");
   const curved = template === "BOARD_SHORTS_SLIT";
   const tank = template === "TANK_TOP";
@@ -128,19 +157,22 @@ function GarmentView({ id, template, side, placement }: { id: string; template: 
     : tank
       ? "M165 100 Q195 140 220 105 Q250 85 280 105 Q305 140 335 100 L400 175 L350 235 L332 520 L168 520 L150 235 L100 175 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
-  const imageSize = placement.scale * 3;
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs><clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath></defs>
     {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
-    {placement.image && <image
-      href={placement.image}
-      x={placement.x * 5 - imageSize / 2}
-      y={placement.y * 6 - imageSize / 2}
-      width={imageSize}
-      height={imageSize}
-      preserveAspectRatio="xMidYMid slice"
-      clipPath={`url(#${clipId})`}
-    />}
+    {design.layers.map((layer) => {
+      const imageSize = layer.scale * 3;
+      return <image
+        key={layer.id}
+        href={layer.image}
+        x={layer.x * 5 - imageSize / 2}
+        y={layer.y * 6 - imageSize / 2}
+        width={imageSize}
+        height={imageSize}
+        preserveAspectRatio="xMidYMid slice"
+        clipPath={`url(#${clipId})`}
+      />;
+    })}
     {shorts && moldImage && <image
       href={moldImage}
       x={side === "front" ? 61 : 30}
