@@ -1,9 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsNumber, IsOptional, IsString, Length, Min, ValidateNested } from "class-validator";
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsNumber, IsOptional, IsString, Length, Matches, Min, ValidateNested } from "class-validator";
 
 export class CreateProductDto {
   @ApiProperty() @IsString() @Length(1, 64) sku!: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() @Length(4, 64) @Matches(/^[0-9A-Za-z._-]+$/, { message: "Código de barras inválido" }) barcode?: string;
   @ApiProperty() @IsString() @Length(2, 160) name!: string;
   @ApiProperty() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) price!: number;
   @ApiProperty({ required: false }) @IsOptional() @IsString() @Length(8, 8) ncm?: string;

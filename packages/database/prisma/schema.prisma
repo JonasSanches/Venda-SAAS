@@ -245,6 +245,7 @@ model Product {
   orderItems     OrderItem[]
 
   @@unique([tenantId, sku])
+  @@unique([tenantId, barcode])
   @@index([tenantId, name])
   @@map("products")
 }

@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { OmegaCredit } from "./omega-credit";
 import { ErpSurvey } from "./erp-survey";
 import { BrandName } from "./brand-name";
@@ -8,6 +8,7 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 type Product = {
   id: string;
   sku: string;
+  barcode?: string;
   name: string;
   price: number;
   ncm?: string;
@@ -74,6 +75,65 @@ async function request<T>(
         : (body.message ?? "Operação não concluída"),
     );
   return body;
+}
+
+type DetectedBarcode = { rawValue: string };
+type BarcodeDetectorInstance = { detect(source: HTMLVideoElement): Promise<DetectedBarcode[]> };
+type BarcodeDetectorConstructor = new (options?: { formats?: string[] }) => BarcodeDetectorInstance;
+
+function BarcodeScanner({ onRead, onClose }: { onRead: (code: string) => void; onClose: () => void }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const frameRef = useRef<number | null>(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    async function start() {
+      try {
+        const Detector = (window as unknown as { BarcodeDetector?: BarcodeDetectorConstructor }).BarcodeDetector;
+        if (!Detector) throw new Error("Este navegador não oferece leitura automática. Use o Chrome atualizado ou digite o código manualmente.");
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+        streamRef.current = stream;
+        const video = videoRef.current;
+        if (!video || !active) return;
+        video.srcObject = stream;
+        await video.play();
+        const detector = new Detector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "itf"] });
+        const scan = async () => {
+          if (!active) return;
+          try {
+            const result = await detector.detect(video);
+            const code = result[0]?.rawValue?.trim();
+            if (code) {
+              navigator.vibrate?.(100);
+              onRead(code);
+              return;
+            }
+          } catch {}
+          frameRef.current = requestAnimationFrame(scan);
+        };
+        scan();
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : "Não foi possível abrir a câmera.");
+      }
+    }
+    void start();
+    return () => {
+      active = false;
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+    };
+  }, [onRead]);
+  return (
+    <div className="scanner-backdrop" role="dialog" aria-modal="true" aria-label="Leitor de código de barras">
+      <div className="scanner-modal">
+        <div className="scanner-heading"><div><small>LEITOR PELA CÂMERA</small><h2>Aponte para o código de barras</h2></div><button type="button" className="secondary" onClick={onClose}>Fechar</button></div>
+        <div className="scanner-viewport"><video ref={videoRef} playsInline muted /><i aria-hidden="true" /></div>
+        <p>Mantenha o código inteiro dentro do quadro e evite reflexos. A leitura acontece automaticamente.</p>
+        {error && <div className="error">{error}</div>}
+      </div>
+    </div>
+  );
 }
 function trialDays(expiresAt?: string) {
   if (!expiresAt) return null;
@@ -724,6 +784,8 @@ function Products({
 }) {
   const [open, setOpen] = useState(false),
     [importOpen, setImportOpen] = useState(false),
+    [scannerOpen, setScannerOpen] = useState(false),
+    [barcode, setBarcode] = useState(""),
     [error, setError] = useState(""),
     [message, setMessage] = useState("");
   async function submit(e: FormEvent<HTMLFormElement>) {
@@ -734,6 +796,7 @@ function Products({
         method: "POST",
         body: JSON.stringify({
           sku: form.get("sku"),
+          barcode: form.get("barcode") || undefined,
           name: form.get("name"),
           price: Number(form.get("price")),
           ncm: form.get("ncm") || undefined,
@@ -750,6 +813,7 @@ function Products({
           }),
         });
       setOpen(false);
+      setBarcode("");
       setError("");
       onCreated();
     } catch (err) {
@@ -858,6 +922,13 @@ function Products({
             <input name="sku" required />
           </label>
           <label>
+            Código de barras
+            <span className="barcode-input">
+              <input name="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value.trim())} inputMode="numeric" autoComplete="off" placeholder="Leia ou digite" />
+              <button type="button" className="secondary" onClick={() => setScannerOpen(true)}>Câmera</button>
+            </span>
+          </label>
+          <label>
             Nome
             <input name="name" required minLength={2} />
           </label>
@@ -883,9 +954,17 @@ function Products({
           <button>Salvar produto</button>
         </form>
       )}
+      {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onRead={(code) => {
+        const existing = products.find((product) => product.barcode === code);
+        setBarcode(code);
+        setScannerOpen(false);
+        setError(existing ? `Este código já pertence a ${existing.name}.` : "");
+        setMessage(existing ? "" : `Código ${code} lido com sucesso.`);
+      }} />}
       <div className="table products-table">
         <div className="product-row head">
           <span>SKU</span>
+          <span>Código de barras</span>
           <span>Produto</span>
           <span>NCM</span>
           <span>Preço</span>
@@ -895,6 +974,7 @@ function Products({
         {products.map((p) => (
           <div className="product-row" key={p.id}>
             <span>{p.sku}</span>
+            <span>{p.barcode ?? "—"}</span>
             <strong>{p.name}</strong>
             <span>{p.ncm ?? "—"}</span>
             <span>{money(p.price)}</span>
@@ -925,6 +1005,9 @@ function Inventory({
     }>
   >([]);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [productId, setProductId] = useState("");
   const load = useCallback(
     () =>
       Promise.all([
@@ -953,9 +1036,11 @@ function Inventory({
         }),
       });
       setError("");
+      setMessage("Movimento registrado com sucesso.");
       await load();
       onChange();
       target.reset();
+      setProductId("");
     } catch (err) {
       setError((err as Error).message);
     }
@@ -964,9 +1049,10 @@ function Inventory({
     <>
       <form className="stock-form" onSubmit={submit}>
         {error && <div className="error">{error}</div>}
+        {message && <div className="success">{message}</div>}
         <label>
           Produto
-          <select name="productId" required>
+          <select name="productId" required value={productId} onChange={(e) => setProductId(e.target.value)}>
             <option value="">Selecione</option>
             {stock.map((p) => (
               <option key={p.id} value={p.id}>
@@ -975,6 +1061,7 @@ function Inventory({
             ))}
           </select>
         </label>
+        <button type="button" className="secondary scan-stock" onClick={() => setScannerOpen(true)}>Ler código</button>
         <label>
           Quantidade
           <input
@@ -991,6 +1078,18 @@ function Inventory({
         </label>
         <button>Registrar movimento</button>
       </form>
+      {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onRead={(code) => {
+        const product = stock.find((item) => item.barcode === code);
+        setScannerOpen(false);
+        if (!product) {
+          setError(`Nenhum produto encontrado para o código ${code}.`);
+          setMessage("");
+          return;
+        }
+        setProductId(product.id);
+        setError("");
+        setMessage(`${product.name} selecionado — saldo atual: ${product.quantity}.`);
+      }} />}
       <h2 className="subtitle">Saldos</h2>
       <div className="stock-grid">
         {stock.map((p) => (
@@ -1039,6 +1138,8 @@ function Pdv({
   const [orders, setOrders] = useState<Order[]>([]);
   const [method, setMethod] = useState("PIX");
   const [message, setMessage] = useState("");
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [barcode, setBarcode] = useState("");
   const load = useCallback(
     () =>
       Promise.all([
@@ -1057,6 +1158,22 @@ function Pdv({
     (sum, p) => sum + (cart[p.id] ?? 0) * p.price,
     0,
   );
+  function addByBarcode(code: string) {
+    const normalized = code.trim();
+    const product = stock.find((item) => item.barcode === normalized);
+    if (!product) {
+      setMessage(`Código ${normalized || "não informado"} não cadastrado.`);
+      return;
+    }
+    const inCart = cart[product.id] ?? 0;
+    if (product.quantity <= inCart) {
+      setMessage(`Estoque insuficiente para ${product.name}.`);
+      return;
+    }
+    setCart((old) => ({ ...old, [product.id]: (old[product.id] ?? 0) + 1 }));
+    setMessage(`${product.name} adicionado ao carrinho.`);
+    setBarcode("");
+  }
   async function checkout() {
     try {
       const items = Object.entries(cart)
@@ -1077,6 +1194,12 @@ function Pdv({
   return (
     <div className="pdv">
       <section>
+        <form className="pdv-scanner" onSubmit={(event) => { event.preventDefault(); addByBarcode(barcode); }}>
+          <label>Código de barras<input value={barcode} onChange={(e) => setBarcode(e.target.value)} autoComplete="off" inputMode="numeric" autoFocus placeholder="Use a pistola ou digite o código" /></label>
+          <button type="submit">Adicionar</button>
+          <button type="button" className="secondary" onClick={() => setScannerOpen(true)}>Usar câmera</button>
+        </form>
+        {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onRead={(code) => { setScannerOpen(false); addByBarcode(code); }} />}
         <div className="product-cards">
           {stock.map((p) => (
             <button
