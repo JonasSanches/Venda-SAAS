@@ -120,17 +120,17 @@ function GarmentView({ id, template, side, placement }: { id: string; template: 
   const shape = shorts
     ? side === "front"
       ? curved
-        ? "M88 118 Q250 100 412 118 L432 442 Q426 474 380 490 Q325 507 275 486 L250 338 L225 486 Q175 507 120 490 Q74 474 68 442 Z"
-        : "M88 118 Q250 100 412 118 L432 478 Q350 501 275 486 L250 338 L225 486 Q150 501 68 478 Z"
+        ? "M104 120 Q250 102 396 120 L420 418 Q420 454 378 472 Q326 494 274 478 L250 458 L226 478 Q174 494 122 472 Q80 454 80 418 Z"
+        : "M104 120 Q250 102 396 120 L420 450 Q350 482 274 478 L250 458 L226 478 Q150 482 80 450 Z"
       : curved
-        ? "M66 116 Q250 94 434 116 L455 450 Q450 485 390 505 Q325 520 277 492 L250 340 L223 492 Q175 520 110 505 Q50 485 45 450 Z"
-        : "M66 116 Q250 94 434 116 L455 490 Q350 518 277 494 L250 340 L223 494 Q150 518 45 490 Z"
+        ? "M88 118 Q250 98 412 118 L438 430 Q438 466 388 486 Q326 506 276 486 L250 464 L224 486 Q174 506 112 486 Q62 466 62 430 Z"
+        : "M88 118 Q250 98 412 118 L438 466 Q350 500 276 486 L250 464 L224 486 Q150 500 62 466 Z"
     : tank
       ? "M165 100 Q195 140 220 105 Q250 85 280 105 Q305 140 335 100 L400 175 L350 235 L332 520 L168 520 L150 235 L100 175 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
   const imageSize = placement.scale * 3;
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
-    <defs><clipPath id={clipId}><path d={shape}/></clipPath></defs>
+    <defs><clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath></defs>
     {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
     <g clipPath={`url(#${clipId})`}>{placement.image && <image href={placement.image} x={placement.x * 5 - imageSize / 2} y={placement.y * 6 - imageSize / 2} width={imageSize} height={imageSize} preserveAspectRatio="xMidYMid slice"/>}</g>
     {shorts && moldImage && <image
