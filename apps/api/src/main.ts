@@ -7,7 +7,7 @@ import helmet from "@fastify/helmet";
 import { AppModule } from "./app.module";
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter(), {
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, new FastifyAdapter({ bodyLimit: 12 * 1024 * 1024 }), {
     bufferLogs: true
   });
   app.setGlobalPrefix("api");

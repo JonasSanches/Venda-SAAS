@@ -29,14 +29,15 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
   function update(values: Partial<Placement>) {
     setDesign((old) => ({ ...old, [side]: { ...old[side], ...values } }));
   }
-  function upload(event: ChangeEvent<HTMLInputElement>) {
+  async function upload(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) return setError("Escolha uma imagem PNG, JPG ou WebP.");
-    if (file.size > 300_000) return setError("A arte deve ter no máximo 300 KB por lado.");
-    const reader = new FileReader();
-    reader.onload = () => { update({ image: String(reader.result) }); setError(""); setMessage(`Arte aplicada no lado ${side === "front" ? "da frente" : "das costas"}.`); };
-    reader.readAsDataURL(file);
+    if (!/^image\/jpe?g$/i.test(file.type)) return setError("Por enquanto, escolha uma imagem JPG ou JPEG.");
+    if (file.size > 10 * 1024 * 1024) return setError("A arte deve ter no máximo 10 MB por lado.");
+    try {
+      const image = await optimizeJpeg(file);
+      update({ image }); setError(""); setMessage(`Arte JPG aplicada e otimizada no lado ${side === "front" ? "da frente" : "das costas"}.`);
+    } catch { setError("Não foi possível processar esta imagem JPG."); }
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,7 +65,7 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
     <div className="studio-workspace">
       <aside className="studio-controls">
         <div className="side-switch"><button type="button" className={side === "front" ? "active" : ""} onClick={() => setSide("front")}>Frente</button><button type="button" className={side === "back" ? "active" : ""} onClick={() => setSide("back")}>Costas</button></div>
-        <label>Arte do lado selecionado<input type="file" accept="image/png,image/jpeg,image/webp" onChange={upload}/><small>PNG com fundo transparente oferece o melhor resultado.</small></label>
+        <label>Arte do lado selecionado<input type="file" accept="image/jpeg,.jpg,.jpeg" onChange={upload}/><small>JPG ou JPEG de até 10 MB. A imagem é otimizada automaticamente.</small></label>
         <label>Horizontal <input type="range" min="20" max="80" value={current.x} onChange={(e) => update({ x: Number(e.target.value) })}/></label>
         <label>Vertical <input type="range" min="20" max="78" value={current.y} onChange={(e) => update({ y: Number(e.target.value) })}/></label>
         <label>Tamanho <input type="range" min="15" max="90" value={current.scale} onChange={(e) => update({ scale: Number(e.target.value) })}/></label>
@@ -74,6 +75,32 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
     </div>
     <form className="studio-product" onSubmit={save}><label>SKU<input name="sku" required placeholder="Ex.: BERM-SURF-001"/></label><label>Nome do produto<input key={template} name="name" required minLength={2} defaultValue={title.name}/></label><label>Preço<input name="price" type="number" min="0" step="0.01" required/></label><button disabled={saving}>{saving ? "Salvando..." : "Salvar como produto"}</button><button type="button" className="secondary" onClick={exportPdf}>Exportar PDF</button></form>
   </div>;
+}
+
+function optimizeJpeg(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const image = new Image();
+      image.onerror = reject;
+      image.onload = () => {
+        const maximum = 1800;
+        const ratio = Math.min(1, maximum / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * ratio));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * ratio));
+        const context = canvas.getContext("2d");
+        if (!context) return reject(new Error("Canvas indisponível"));
+        context.fillStyle = "#ffffff";
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.9));
+      };
+      image.src = String(reader.result);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 function GarmentView({ id, template, side, placement }: { id: string; template: Template; side: Side; placement: Placement }) {
