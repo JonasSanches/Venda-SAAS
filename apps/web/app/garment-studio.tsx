@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 
 type Side = "front" | "back";
 type ArtworkLayer = { id: string; name: string; image: string; x: number; y: number; scale: number };
@@ -138,14 +138,66 @@ function optimizeArtwork(file: File): Promise<string> {
   });
 }
 
+function useSilhouetteMask(source?: string) {
+  const [mask, setMask] = useState<string>();
+  useEffect(() => {
+    if (!source) return setMask(undefined);
+    let active = true;
+    const image = new Image();
+    image.onload = () => {
+      const width = Math.min(800, image.naturalWidth);
+      const height = Math.round(image.naturalHeight * width / image.naturalWidth);
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      if (!context) return;
+      context.drawImage(image, 0, 0, width, height);
+      const pixels = context.getImageData(0, 0, width, height);
+      const barrier = new Uint8Array(width * height);
+      for (let index = 0; index < barrier.length; index++) {
+        const offset = index * 4;
+        barrier[index] = pixels.data[offset] < 205 && pixels.data[offset + 1] < 205 && pixels.data[offset + 2] < 205 ? 1 : 0;
+      }
+      const sealed = barrier.slice();
+      for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
+        const index = y * width + x;
+        if (barrier[index]) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) sealed[index + dy * width + dx] = 1;
+      }
+      const outside = new Uint8Array(width * height);
+      const queue = new Int32Array(width * height);
+      let head = 0, tail = 0;
+      const add = (index: number) => { if (!sealed[index] && !outside[index]) { outside[index] = 1; queue[tail++] = index; } };
+      for (let x = 0; x < width; x++) { add(x); add((height - 1) * width + x); }
+      for (let y = 0; y < height; y++) { add(y * width); add(y * width + width - 1); }
+      while (head < tail) {
+        const index = queue[head++], x = index % width;
+        if (x > 0) add(index - 1); if (x < width - 1) add(index + 1);
+        if (index >= width) add(index - width); if (index < width * (height - 1)) add(index + width);
+      }
+      for (let index = 0; index < outside.length; index++) {
+        const offset = index * 4, inside = outside[index] ? 0 : 255;
+        pixels.data[offset] = 255; pixels.data[offset + 1] = 255; pixels.data[offset + 2] = 255; pixels.data[offset + 3] = inside;
+      }
+      context.putImageData(pixels, 0, 0);
+      if (active) setMask(canvas.toDataURL("image/png"));
+    };
+    image.src = source;
+    return () => { active = false; };
+  }, [source]);
+  return mask;
+}
+
 function GarmentView({ id, template, side, design }: { id: string; template: Template; side: Side; design: SideDesign }) {
   const shorts = template.startsWith("BOARD_SHORTS");
   const curved = template === "BOARD_SHORTS_SLIT";
   const tank = template === "TANK_TOP";
   const clipId = `${id}-clip`;
+  const maskId = `${id}-mask`;
   const moldImage = shorts
     ? `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
+  const silhouetteMask = useSilhouetteMask(moldImage);
+  const moldBox = side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
   const shape = shorts
     ? side === "front"
       ? curved
@@ -158,9 +210,12 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
       ? "M165 100 Q195 140 220 105 Q250 85 280 105 Q305 140 335 100 L400 175 L350 235 L332 520 L168 520 L150 235 L100 175 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
-    <defs><clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath></defs>
+    <defs>
+      <clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath>
+      {shorts && silhouetteMask && <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={silhouetteMask} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>}
+    </defs>
     {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
-    {design.layers.map((layer) => {
+    {(!shorts || silhouetteMask) && design.layers.map((layer) => {
       const imageSize = layer.scale * 3;
       return <image
         key={layer.id}
@@ -170,15 +225,13 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
         width={imageSize}
         height={imageSize}
         preserveAspectRatio="xMidYMid slice"
-        clipPath={`url(#${clipId})`}
+        clipPath={shorts ? undefined : `url(#${clipId})`}
+        mask={shorts ? `url(#${maskId})` : undefined}
       />;
     })}
     {shorts && moldImage && <image
       href={moldImage}
-      x={side === "front" ? 61 : 30}
-      y={side === "front" ? 55 : 80}
-      width={side === "front" ? 378 : 440}
-      height={side === "front" ? 472 : 440}
+      {...moldBox}
       preserveAspectRatio="xMidYMid meet"
       style={{ mixBlendMode: "multiply" }}
     />}
