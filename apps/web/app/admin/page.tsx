@@ -43,6 +43,11 @@ export default function Admin() {
         body: body ? JSON.stringify(body) : undefined,
       }),
       j = await r.json().catch(() => ({}));
+    if (r.status === 401) {
+      localStorage.removeItem("varejo-session");
+      location.replace("/");
+      throw Error("Sessão expirada");
+    }
     if (!r.ok)
       throw Error(
         Array.isArray(j.message)
