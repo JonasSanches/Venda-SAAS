@@ -10,7 +10,7 @@ export class DigitalProductsService{
   private token(){const value=process.env.MERCADO_PAGO_ACCESS_TOKEN;if(!value)throw new BadRequestException("Pagamento temporariamente indisponível");return value}
   private directory(){return process.env.DIGITAL_PRODUCTS_DIR??"/app/storage/digital-products"}
   private file(product:{pdfFile:string;kindleFile:string},format:DigitalFormat){return resolve(this.directory(),format==="PDF"?"pdf":"kindle",format==="PDF"?product.pdfFile:product.kindleFile)}
-  catalog(){return DIGITAL_PRODUCTS.map(({pdfFile,kindleFile,...product})=>({...product,cover:`/pdf-covers/${product.slug}.png`,preview:`/pdf-previews/${product.slug}.jpg`,prices:{PDF:11.99,KINDLE:39.99},available:{PDF:existsSync(this.file({pdfFile,kindleFile},"PDF")),KINDLE:existsSync(this.file({pdfFile,kindleFile},"KINDLE"))}}))}
+  catalog(){return DIGITAL_PRODUCTS.map(({pdfFile,kindleFile,...product})=>({...product,cover:`/pdf-covers/${product.slug}.png`,preview:`/pdf-previews/${product.slug}.jpg`,previewPages:[1,2,3].map(page=>`/pdf-previews/pages/${product.slug}-${page}.jpg`),prices:{PDF:11.99,KINDLE:39.99},available:{PDF:existsSync(this.file({pdfFile,kindleFile},"PDF")),KINDLE:existsSync(this.file({pdfFile,kindleFile},"KINDLE"))}}))}
   private product(slug:string){const product=DIGITAL_PRODUCTS.find(item=>item.slug===slug);if(!product)throw new NotFoundException("Livro não encontrado");return product}
   async checkout(slug:string,format:DigitalFormat,email:string){
     const product=this.product(slug);if(!existsSync(this.file(product,format)))throw new BadRequestException("Esta edição ainda está sendo preparada para venda");
