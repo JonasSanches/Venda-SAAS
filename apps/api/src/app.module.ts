@@ -16,6 +16,7 @@ import { PlatformModule } from "./modules/platform/platform.module";
 import { BranchesModule } from "./modules/branches/branches.module";
 import { BillingModule } from "./modules/billing/billing.module";
 import { AnalyticsModule } from "./modules/analytics/analytics.module";
+import { DigitalProductsModule } from "./modules/digital-products/digital-products.module";
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { AnalyticsModule } from "./modules/analytics/analytics.module";
     BranchesModule,
     FiscalModule,
     BillingModule,
-    AnalyticsModule
+    AnalyticsModule,
+    DigitalProductsModule
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }]

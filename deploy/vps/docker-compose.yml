@@ -9,6 +9,8 @@ services:
       HOST: 0.0.0.0
       PORT: 3001
     restart: unless-stopped
+    volumes:
+      - ../../storage/digital-products:/app/storage/digital-products:ro
     expose:
       - "3001"
     healthcheck:

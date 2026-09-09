@@ -459,3 +459,26 @@ model OutboxEvent {
   @@index([tenantId])
   @@map("outbox_events")
 }
+
+model DigitalPurchase {
+  id                String    @id @default(uuid()) @db.Uuid
+  externalReference String    @unique @map("external_reference")
+  downloadToken     String    @unique @map("download_token")
+  productSlug       String    @map("product_slug")
+  format            String
+  email             String
+  amount            Decimal   @db.Decimal(10, 2)
+  status            String    @default("PENDING")
+  providerPaymentId String?   @map("provider_payment_id")
+  preferenceId      String?   @map("preference_id")
+  checkoutUrl       String?   @map("checkout_url")
+  paidAt            DateTime? @map("paid_at")
+  downloadCount     Int       @default(0) @map("download_count")
+  lastDownloadedAt  DateTime? @map("last_downloaded_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@index([email, createdAt])
+  @@index([status])
+  @@map("digital_purchases")
+}

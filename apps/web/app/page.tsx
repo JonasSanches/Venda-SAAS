@@ -520,6 +520,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <a href="#como-funciona">Como funciona</a>
           <a href="#planos">Planos</a>
           <a href="#suporte">Suporte 24h</a>
+          <a href="/biblioteca">Livros digitais</a>
           <a href="/teste">Teste grátis</a>
           <a className="header-login" href="#entrar">
             Entrar
@@ -697,6 +698,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <a href="#recursos">PDV e estoque</a>
           <a href="#como-funciona">Como funciona</a>
           <a href="/teste">Teste grátis</a>
+          <a href="/biblioteca">Biblioteca digital</a>
         </div>
         <div>
           <strong>Atendimento</strong>
