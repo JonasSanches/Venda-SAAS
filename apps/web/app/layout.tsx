@@ -6,6 +6,7 @@ import { LanguageProvider } from "./language-provider";
 import { ChatAssistant } from "./chat-assistant";
 import { VisitorTracker } from "./visitor-tracker";
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.vendamais-app.com"),
   title: "Venda+",
   description: "Sistema de vendas e gestão de estoque",
   applicationName: "Venda+ by Omega",
