@@ -242,18 +242,17 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
           transform={`rotate(${layer.rotation ?? 0} ${layer.x * 5} ${layer.y * 6})`}
         /></g>;
     })}
+    {shorts && <>
+      <path d={innerWaist} fill="#edf0f3"/>
+      {innerHems.map((hem) => <path key={hem} d={hem} fill="none" stroke="#edf0f3" strokeWidth="15" strokeLinecap="round"/>)}
+      {side === "front" && <g fill="none" stroke="#f7f8fa" strokeLinecap="round" strokeLinejoin="round"><path d="M250 143 C239 127 215 128 213 143 C212 157 234 157 250 143 C266 157 288 157 287 143 C285 128 261 127 250 143" strokeWidth="10"/><path d="M250 143 C246 159 241 176 240 194 M250 143 C255 159 260 176 261 194" strokeWidth="9"/></g>}
+    </>}
     {shorts && moldImage && <image
       href={moldImage}
       {...moldBox}
       preserveAspectRatio="xMidYMid meet"
       style={{ mixBlendMode: "multiply" }}
     />}
-    {shorts && <>
-      <path d={innerWaist} fill="#0b1220" opacity=".3"/>
-      <path d={innerWaist} fill="none" stroke="#101827" strokeWidth="2.5" opacity=".72"/>
-      {innerHems.map((hem) => <path key={hem} d={hem} fill="none" stroke="#0b1220" strokeWidth="10" strokeLinecap="round" opacity=".25"/>)}
-      {side === "front" && <g fill="none" stroke="#0b1220" strokeLinecap="round" strokeLinejoin="round" opacity=".9"><path d="M250 143 C239 127 215 128 213 143 C212 157 234 157 250 143 C266 157 288 157 287 143 C285 128 261 127 250 143" strokeWidth="4.5"/><path d="M250 143 C246 159 241 176 240 194 M250 143 C255 159 260 176 261 194" strokeWidth="4"/><path d="M240 194 L237 201 M261 194 L264 201" strokeWidth="5"/></g>}
-    </>}
     {!shorts && !tank && <><path d="M220 105 Q250 145 280 105" fill="none" stroke="#6b7280" strokeWidth="3"/>{side === "back" && <path d="M205 120 Q250 150 295 120" fill="none" stroke="#9ca3af" strokeWidth="2"/>}</>}
     {tank && <>
       <path d={shape} fill="none" stroke="#172033" strokeWidth="4"/>
