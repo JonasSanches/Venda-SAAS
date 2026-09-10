@@ -606,9 +606,9 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       </section>
       <section className="fiscal-integration" aria-labelledby="fiscal-integration-title">
         <div className="fiscal-stamps" aria-label="Documentos fiscais eletrônicos suportados">
-          <span><b>NF-<em>e</em></b><small>PRODUTOS</small></span>
+          <span aria-label="NF-e"><b><i>NF</i><em>e</em></b><small>PRODUTOS</small></span>
           <i>+</i>
-          <span><b>NFS-<em>e</em></b><small>SERVIÇOS</small></span>
+          <span aria-label="NFS-e"><b><i>NFS</i><em>e</em></b><small>SERVIÇOS</small></span>
         </div>
         <div>
           <small>EMISSÃO FISCAL CONECTADA</small>
