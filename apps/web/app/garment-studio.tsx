@@ -194,7 +194,9 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
   const clipId = `${id}-clip`;
   const maskId = `${id}-mask`;
   const moldImage = shorts
-    ? `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
+    ? !curved && side === "front"
+      ? "/molde-bermuda-reta-frente-transparente.png"
+      : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
   const silhouetteMask = useSilhouetteMask(moldImage);
   const moldBox = side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
