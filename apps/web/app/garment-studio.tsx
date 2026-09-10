@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 
 type Side = "front" | "back";
-type ArtworkLayer = { id: string; name: string; image: string; x: number; y: number; scale: number };
+type ArtworkLayer = { id: string; name: string; image: string; x: number; y: number; scale: number; rotation?: number };
 type SideDesign = { layers: ArtworkLayer[]; selectedId?: string };
 type Template = "BOARD_SHORTS_SLIT" | "BOARD_SHORTS_STRAIGHT" | "TSHIRT_REGULAR" | "TANK_TOP";
 type DesignData = { front: SideDesign; back: SideDesign };
@@ -28,7 +28,7 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
   const current = currentSide.layers.find((layer) => layer.id === currentSide.selectedId);
   const title = useMemo(() => templates[template], [template]);
 
-  function update(values: Partial<Pick<ArtworkLayer, "x" | "y" | "scale">>) {
+  function update(values: Partial<Pick<ArtworkLayer, "x" | "y" | "scale" | "rotation">>) {
     if (!current) return;
     setDesign((old) => ({ ...old, [side]: { ...old[side], layers: old[side].layers.map((layer) => layer.id === current.id ? { ...layer, ...values } : layer) } }));
   }
@@ -60,7 +60,7 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
     if (currentSide.layers.length >= 10) return setError("Use no máximo 10 camadas em cada lado da peça.");
     try {
       const image = await optimizeArtwork(file);
-      const layer: ArtworkLayer = { id: crypto.randomUUID(), name: file.name, image, x: 50, y: 48, scale: 110 };
+      const layer: ArtworkLayer = { id: crypto.randomUUID(), name: file.name, image, x: 50, y: 48, scale: 110, rotation: 0 };
       setDesign((old) => ({ ...old, [side]: { layers: [...old[side].layers, layer], selectedId: layer.id } }));
       event.target.value = "";
       setError(""); setMessage(`${file.type === "image/png" ? "PNG transparente" : "Imagem"} adicionado como nova camada ${side === "front" ? "na frente" : "nas costas"}.`);
@@ -97,6 +97,7 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
         <label>Horizontal <input disabled={!current} type="range" min="0" max="100" value={current?.x ?? 50} onChange={(e) => update({ x: Number(e.target.value) })}/></label>
         <label>Vertical <input disabled={!current} type="range" min="0" max="100" value={current?.y ?? 48} onChange={(e) => update({ y: Number(e.target.value) })}/></label>
         <label>Tamanho <input disabled={!current} type="range" min="15" max="200" value={current?.scale ?? 110} onChange={(e) => update({ scale: Number(e.target.value) })}/></label>
+        <label>Rotação <input disabled={!current} type="range" min="0" max="360" step="1" value={current?.rotation ?? 0} onChange={(e) => update({ rotation: Number(e.target.value) })}/><small>{current ? `${current.rotation ?? 0}°` : "Selecione uma camada"}</small></label>
         <button type="button" disabled={!current} onClick={() => update({ x: 50, y: 50, scale: 200 })}>Preencher toda a peça</button>
         <div className="layer-actions"><button type="button" className="secondary" disabled={!current} onClick={() => moveLayer(-1)}>Descer</button><button type="button" className="secondary" disabled={!current} onClick={() => moveLayer(1)}>Subir</button></div>
         <button type="button" className="secondary" disabled={!current} onClick={removeLayer}>Excluir camada selecionada</button>
@@ -229,6 +230,7 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
         width={imageSize}
         height={imageSize}
         preserveAspectRatio="xMidYMid slice"
+        transform={`rotate(${layer.rotation ?? 0} ${layer.x * 5} ${layer.y * 6})`}
         clipPath={shorts ? undefined : `url(#${clipId})`}
         mask={shorts ? `url(#${maskId})` : undefined}
       />;
