@@ -215,8 +215,8 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
         : "M150 92 L188 106 C204 115 215 126 226 137 C241 153 259 153 274 137 C285 126 296 115 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
   const innerWaist = shorts ? side === "front"
-    ? curved ? "M108 120 Q250 144 392 120 L396 150 Q250 174 104 150 Z" : "M108 120 Q250 144 392 120 L396 150 Q250 174 104 150 Z"
-    : curved ? "M92 118 Q250 142 408 118 L412 148 Q250 172 88 148 Z" : "M92 118 Q250 142 408 118 L412 148 Q250 172 88 148 Z"
+    ? "M45 45 H455 V150 Q250 174 45 150 Z"
+    : "M35 45 H465 V148 Q250 172 35 148 Z"
     : "";
   const innerHems = shorts ? side === "front"
     ? curved ? ["M79 399 Q88 421 118 428 Q176 444 225 436", "M275 436 Q324 444 382 428 Q412 421 421 399"]
@@ -242,11 +242,11 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
           transform={`rotate(${layer.rotation ?? 0} ${layer.x * 5} ${layer.y * 6})`}
         /></g>;
     })}
-    {shorts && <>
-      <path d={innerWaist} fill="#edf0f3"/>
-      {innerHems.map((hem) => <path key={hem} d={hem} fill="none" stroke="#edf0f3" strokeWidth="15" strokeLinecap="round"/>)}
-      {side === "front" && <g fill="none" stroke="#f7f8fa" strokeLinecap="round" strokeLinejoin="round"><path d="M250 143 C239 127 215 128 213 143 C212 157 234 157 250 143 C266 157 288 157 287 143 C285 128 261 127 250 143" strokeWidth="10"/><path d="M250 143 C246 159 241 176 240 194 M250 143 C255 159 260 176 261 194" strokeWidth="9"/></g>}
-    </>}
+    {shorts && silhouetteMask && <g mask={`url(#${maskId})`}>
+      <path d={innerWaist} fill="#d9dde2"/>
+      {innerHems.map((hem) => <path key={hem} d={hem} fill="none" stroke="#d9dde2" strokeWidth="11" strokeLinecap="round"/>)}
+      {side === "front" && <path d="M241 142 C242 171 239 209 241 250 M259 142 C258 171 261 209 259 250" fill="none" stroke="#f7f8fa" strokeWidth="3.5" strokeLinecap="round"/>}
+    </g>}
     {shorts && moldImage && <image
       href={moldImage}
       {...moldBox}
