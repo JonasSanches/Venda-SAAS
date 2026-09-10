@@ -90,7 +90,7 @@ export default function Admin() {
     }
   }, []);
   useEffect(() => {
-    if (session) {void load();void loadAnalytics(30,1)}
+    if (session) {void load();void call("/analytics/exclude-current-ip").then(()=>loadAnalytics(30,1)).catch(e=>setAnalyticsError((e as Error).message))}
   }, [session]);
   async function extend(id: string) {
     const value = prompt(

@@ -222,18 +222,15 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
     {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
     {(!shorts || silhouetteMask) && design.layers.map((layer) => {
       const imageSize = layer.scale * 3;
-      return <image
-        key={layer.id}
-        href={layer.image}
-        x={layer.x * 5 - imageSize / 2}
-        y={layer.y * 6 - imageSize / 2}
-        width={imageSize}
-        height={imageSize}
-        preserveAspectRatio="xMidYMid slice"
-        transform={`rotate(${layer.rotation ?? 0} ${layer.x * 5} ${layer.y * 6})`}
-        clipPath={shorts ? undefined : `url(#${clipId})`}
-        mask={shorts ? `url(#${maskId})` : undefined}
-      />;
+      return <g key={layer.id} clipPath={shorts ? undefined : `url(#${clipId})`} mask={shorts ? `url(#${maskId})` : undefined}><image
+          href={layer.image}
+          x={layer.x * 5 - imageSize / 2}
+          y={layer.y * 6 - imageSize / 2}
+          width={imageSize}
+          height={imageSize}
+          preserveAspectRatio="xMidYMid slice"
+          transform={`rotate(${layer.rotation ?? 0} ${layer.x * 5} ${layer.y * 6})`}
+        /></g>;
     })}
     {shorts && moldImage && <image
       href={moldImage}

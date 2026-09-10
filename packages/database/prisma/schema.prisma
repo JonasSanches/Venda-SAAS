@@ -149,6 +149,14 @@ model VisitorEvent {
   @@map("visitor_events")
 }
 
+model VisitorExclusion {
+  ipAddress String   @id @map("ip_address") @db.VarChar(64)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("visitor_exclusions")
+}
+
 model SurveyResponse {
   id          String   @id @default(uuid()) @db.Uuid
   submittedAt DateTime @default(now()) @map("submitted_at")
