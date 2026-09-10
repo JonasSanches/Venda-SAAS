@@ -214,6 +214,16 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
         ? "M150 92 L188 106 C204 116 214 133 225 147 C240 167 260 167 275 147 C286 133 296 116 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
         : "M150 92 L188 106 C204 115 215 126 226 137 C241 153 259 153 274 137 C285 126 296 115 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
+  const innerWaist = shorts ? side === "front"
+    ? curved ? "M108 120 Q250 144 392 120 L396 150 Q250 174 104 150 Z" : "M108 120 Q250 144 392 120 L396 150 Q250 174 104 150 Z"
+    : curved ? "M92 118 Q250 142 408 118 L412 148 Q250 172 88 148 Z" : "M92 118 Q250 142 408 118 L412 148 Q250 172 88 148 Z"
+    : "";
+  const innerHems = shorts ? side === "front"
+    ? curved ? ["M79 399 Q88 421 118 428 Q176 444 225 436", "M275 436 Q324 444 382 428 Q412 421 421 399"]
+      : ["M79 419 Q158 447 225 444", "M275 444 Q342 447 421 419"]
+    : curved ? ["M63 409 Q73 434 106 443 Q172 460 224 449", "M276 449 Q328 460 394 443 Q427 434 437 409"]
+      : ["M63 433 Q154 462 224 454", "M276 454 Q346 462 437 433"]
+    : [];
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs>
       <clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath>
@@ -238,6 +248,12 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
       preserveAspectRatio="xMidYMid meet"
       style={{ mixBlendMode: "multiply" }}
     />}
+    {shorts && <>
+      <path d={innerWaist} fill="#0b1220" opacity=".3"/>
+      <path d={innerWaist} fill="none" stroke="#101827" strokeWidth="2.5" opacity=".72"/>
+      {innerHems.map((hem) => <path key={hem} d={hem} fill="none" stroke="#0b1220" strokeWidth="10" strokeLinecap="round" opacity=".25"/>)}
+      {side === "front" && <g fill="none" stroke="#0b1220" strokeLinecap="round" strokeLinejoin="round" opacity=".9"><path d="M250 143 C239 127 215 128 213 143 C212 157 234 157 250 143 C266 157 288 157 287 143 C285 128 261 127 250 143" strokeWidth="4.5"/><path d="M250 143 C246 159 241 176 240 194 M250 143 C255 159 260 176 261 194" strokeWidth="4"/><path d="M240 194 L237 201 M261 194 L264 201" strokeWidth="5"/></g>}
+    </>}
     {!shorts && !tank && <><path d="M220 105 Q250 145 280 105" fill="none" stroke="#6b7280" strokeWidth="3"/>{side === "back" && <path d="M205 120 Q250 150 295 120" fill="none" stroke="#9ca3af" strokeWidth="2"/>}</>}
     {tank && <>
       <path d={shape} fill="none" stroke="#172033" strokeWidth="4"/>
