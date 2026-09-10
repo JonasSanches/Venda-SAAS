@@ -606,20 +606,17 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       </section>
       <section className="fiscal-integration" aria-labelledby="fiscal-integration-title">
         <div className="fiscal-stamps" aria-label="Documentos fiscais eletrônicos suportados">
-          <span><b>NF-e</b><small>PRODUTOS</small></span>
+          <span><b>NF-<em>e</em></b><small>PRODUTOS</small></span>
           <i>+</i>
-          <span><b>NFC-e</b><small>CONSUMIDOR</small></span>
-          <i>+</i>
-          <span><b>NFS-e</b><small>SERVIÇOS</small></span>
+          <span><b>NFS-<em>e</em></b><small>SERVIÇOS</small></span>
         </div>
         <div>
           <small>EMISSÃO FISCAL CONECTADA</small>
           <h2 id="fiscal-integration-title">Notas fiscais de produto e serviço, sem sair da sua operação.</h2>
-          <p>O ERP conecta sua empresa à Secretaria da Fazenda e aos webservices das prefeituras para homologar e emitir NF-e, NFC-e e NFS-e, conforme a sua operação fiscal.</p>
+          <p>O ERP conecta sua empresa à Secretaria da Fazenda e aos webservices das prefeituras para homologar e emitir NF-e e NFS-e, conforme a sua operação fiscal.</p>
         </div>
         <ul>
           <li><b>NF-e</b><span>Integração para notas de produtos</span></li>
-          <li><b>NFC-e</b><span>Documento fiscal para venda ao consumidor</span></li>
           <li><b>NFS-e</b><span>Integração municipal para serviços</span></li>
           <li><b>Homologação</b><span>Acompanhamento da configuração fiscal</span></li>
         </ul>
