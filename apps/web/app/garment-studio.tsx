@@ -210,8 +210,8 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
         : "M92 118 Q250 142 408 118 L438 434 Q346 464 276 455 L250 435 L224 455 Q154 464 62 434 Z"
     : tank
       ? side === "front"
-        ? "M165 100 L205 122 Q250 174 295 122 L335 100 L352 168 Q340 225 326 245 L332 520 Q250 535 168 520 L174 245 Q160 225 148 168 Z"
-        : "M170 100 L208 140 Q250 220 292 140 L330 100 L350 168 Q322 218 320 252 L332 520 Q250 535 168 520 L180 252 Q178 218 150 168 Z"
+        ? "M145 92 L194 116 Q250 190 306 116 L355 92 L372 168 Q362 210 336 235 L342 520 Q250 535 158 520 L164 235 Q138 210 128 168 Z"
+        : "M145 92 L194 116 Q250 168 306 116 L355 92 L372 168 Q362 210 336 235 L342 520 Q250 535 158 520 L164 235 Q138 210 128 168 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs>
@@ -242,8 +242,8 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
     {!shorts && !tank && <><path d="M220 105 Q250 145 280 105" fill="none" stroke="#6b7280" strokeWidth="3"/>{side === "back" && <path d="M205 120 Q250 150 295 120" fill="none" stroke="#9ca3af" strokeWidth="2"/>}</>}
     {tank && <>
       <path d={shape} fill="none" stroke="#172033" strokeWidth="4"/>
-      {side === "front" ? <><path d="M166 107 L204 130 Q250 184 296 130 L334 107" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/><path d="M149 171 Q164 218 179 240 M351 171 Q336 218 321 240" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/></> : <><path d="M171 107 L207 148 Q250 230 293 148 L329 107" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/><path d="M151 172 Q180 218 186 246 M349 172 Q320 218 314 246" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/><path d="M250 181 L250 512" fill="none" stroke="#8b96a5" strokeWidth="1.5" strokeDasharray="4 4" opacity=".55"/></>}
-      <path d="M172 510 Q250 524 328 510" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/>
+      {side === "front" ? <><path d="M148 100 L196 124 Q250 200 304 124 L352 100" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/><path d="M130 171 Q141 211 166 238 M370 171 Q359 211 334 238" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/></> : <><path d="M148 100 L196 124 Q250 178 304 124 L352 100" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/><path d="M130 171 Q141 211 166 238 M370 171 Q359 211 334 238" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/></>}
+      <path d="M162 510 Q250 524 338 510" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/>
     </>}
     <rect x="150" y="180" width="200" height="230" rx="8" fill="none" stroke="#c4932b" strokeWidth="2" strokeDasharray="8 7" opacity=".75"/>
     <text x="250" y="565" textAnchor="middle" fontSize="14" fill="#667085">{side === "front" ? "FRENTE" : "COSTAS"} · área visual tracejada</text>
