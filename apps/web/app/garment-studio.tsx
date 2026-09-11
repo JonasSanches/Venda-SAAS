@@ -238,7 +238,9 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
       });
       const hems = Uint8Array.from(seamAllowance, (value, index) => value && Math.floor(index / width) / height > (curved ? .68 : .76) ? 1 : 0);
       const interior = Uint8Array.from(topInterior, (value, index) => value || hems[index] ? 1 : 0);
-      const whole = Uint8Array.from(body, (value, index) => value || waist[index] || sides[index] ? 1 : 0);
+      // “Estampa toda” usa toda a silhueta externa. Apenas as áreas internas de
+      // acabamento (debrum superior e bainhas inferiores) ficam sem estampa.
+      const whole = Uint8Array.from(outside, (value, index) => originalAlpha[index] > 16 && !value && !interior[index] ? 1 : 0);
       const toDataUrl = (alphaFor: (index: number) => number) => {
         const output = context.createImageData(width, height);
         for (let index = 0; index < width * height; index++) {
