@@ -237,7 +237,14 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const x = index % width, y = Math.floor(index / width);
         return value && y / height > .12 && y / height < sideEnd && (x / width < .16 || x / width > .84) ? 1 : 0;
       });
-      const hems = Uint8Array.from(seamAllowance, (value, index) => value && Math.floor(index / width) / height > (curved ? .68 : .76) ? 1 : 0);
+      const hemProfile = side === "front"
+        ? curved ? { edge: .70, rise: .30 } : { edge: .80, rise: .14 }
+        : curved ? { edge: .75, rise: .28 } : { edge: .77, rise: .28 };
+      const hems = Uint8Array.from(outside, (isOutside, index) => {
+        const x = index % width / width, y = Math.floor(index / width) / height;
+        const innerHem = hemProfile.edge + hemProfile.rise * Math.min(x, 1 - x);
+        return !isOutside && originalAlpha[index] > 16 && y >= innerHem ? 1 : 0;
+      });
       const interior = Uint8Array.from(topInterior, (value, index) => value || hems[index] ? 1 : 0);
       // “Estampa toda” usa toda a silhueta externa. Apenas as áreas internas de
       // acabamento (debrum superior e bainhas inferiores) ficam sem estampa.
