@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 
 type Side = "front" | "back";
-type EditMode = "WHOLE" | "SECTIONS";
+type EditMode = "WHOLE" | "SECTIONS" | "COMBINED";
 type PrintArea = "WHOLE" | "BODY" | "WAIST" | "SIDES" | "CORD" | "INTERIOR";
 type ArtworkLayer = { id: string; name: string; image: string; x: number; y: number; scale: number; rotation?: number; printArea?: PrintArea };
 type SideDesign = { layers: ArtworkLayer[]; selectedId?: string };
@@ -24,7 +24,7 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
   const [template, setTemplate] = useState<Template>("BOARD_SHORTS_SLIT");
   const [side, setSide] = useState<Side>("front");
   const [editMode, setEditMode] = useState<EditMode>("WHOLE");
-  const [printArea, setPrintArea] = useState<Exclude<PrintArea, "WHOLE">>("BODY");
+  const [printArea, setPrintArea] = useState<PrintArea>("BODY");
   const [design, setDesign] = useState<DesignData>({ front: initialSide(), back: initialSide() });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -65,7 +65,7 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
     if (currentSide.layers.length >= 10) return setError("Use no máximo 10 camadas em cada lado da peça.");
     try {
       const image = await optimizeArtwork(file);
-      const selectedArea: PrintArea = template.startsWith("BOARD_SHORTS") && editMode === "SECTIONS"
+      const selectedArea: PrintArea = template.startsWith("BOARD_SHORTS") && editMode !== "WHOLE"
         ? side === "back" && printArea === "CORD" ? "BODY" : printArea
         : "WHOLE";
       const layer: ArtworkLayer = { id: crypto.randomUUID(), name: file.name, image, x: 50, y: 48, scale: 110, rotation: 0, printArea: selectedArea };
@@ -100,9 +100,9 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
     <div className="studio-workspace">
       <aside className="studio-controls">
         <div className="side-switch"><button type="button" className={side === "front" ? "active" : ""} onClick={() => setSide("front")}>Frente</button><button type="button" className={side === "back" ? "active" : ""} onClick={() => { setSide("back"); if (printArea === "CORD") setPrintArea("BODY"); }}>Costas</button></div>
-        <div className="edit-mode-switch"><button type="button" className={editMode === "SECTIONS" ? "active" : ""} onClick={() => setEditMode("SECTIONS")}>Divisão dos pontos</button><button type="button" className={editMode === "WHOLE" ? "active" : ""} onClick={() => setEditMode("WHOLE")}>Estampa toda</button></div>
-        {editMode === "SECTIONS" && template.startsWith("BOARD_SHORTS") && <label>Parte a estampar<select value={printArea} onChange={(event) => setPrintArea(event.target.value as Exclude<PrintArea, "WHOLE">)}><option value="BODY">Corpo da peça</option><option value="WAIST">Cintura</option><option value="SIDES">Linhas laterais</option><option value="CORD" disabled={side === "back"}>Cordão</option><option value="INTERIOR">Interior</option></select><small>A próxima imagem ficará limitada somente a esta parte.</small></label>}
-        {editMode === "SECTIONS" && !template.startsWith("BOARD_SHORTS") && <small className="studio-mode-note">A divisão por partes está disponível nos moldes de bermuda. Para camisetas, use “Estampa toda”.</small>}
+        <div className="edit-mode-switch"><button type="button" className={editMode === "SECTIONS" ? "active" : ""} onClick={() => { setEditMode("SECTIONS"); if (printArea === "WHOLE") setPrintArea("BODY"); }}>Divisão dos pontos</button><button type="button" className={editMode === "WHOLE" ? "active" : ""} onClick={() => setEditMode("WHOLE")}>Estampa toda</button><button type="button" className={editMode === "COMBINED" ? "active" : ""} onClick={() => setEditMode("COMBINED")}>Usar os dois</button></div>
+        {editMode !== "WHOLE" && template.startsWith("BOARD_SHORTS") && <label>{editMode === "COMBINED" ? "Modo da próxima camada" : "Parte a estampar"}<select value={printArea} onChange={(event) => setPrintArea(event.target.value as PrintArea)}>{editMode === "COMBINED" && <option value="WHOLE">Estampa toda</option>}<option value="BODY">Corpo da peça</option><option value="WAIST">Cintura</option><option value="SIDES">Linhas laterais</option><option value="CORD" disabled={side === "back"}>Cordão</option><option value="INTERIOR">Interior</option></select><small>{editMode === "COMBINED" ? "Escolha Estampa toda ou uma parte para cada nova camada." : "A próxima imagem ficará limitada somente a esta parte."}</small></label>}
+        {editMode !== "WHOLE" && !template.startsWith("BOARD_SHORTS") && <small className="studio-mode-note">A divisão por partes está disponível nos moldes de bermuda. Para camisetas, use “Estampa toda”.</small>}
         <label>Adicionar imagem ou estampa<input type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" onChange={upload}/><small>Cada arquivo vira uma camada. PNG transparente pode ser colocado sobre outra imagem.</small></label>
         <div className="artwork-layers"><b>Camadas · de baixo para cima</b>{currentSide.layers.length === 0 && <small>Nenhuma camada adicionada.</small>}{currentSide.layers.map((layer, index) => <button type="button" key={layer.id} className={layer.id === current?.id ? "active" : ""} onClick={() => selectLayer(layer.id)}><span>{index + 1}</span><em>{layer.name}<small>{printAreaLabels[layer.printArea ?? "WHOLE"]}</small></em></button>)}</div>
         {current && template.startsWith("BOARD_SHORTS") && <label>Área desta camada<select value={current.printArea ?? "WHOLE"} onChange={(event) => update({ printArea: event.target.value as PrintArea })}><option value="WHOLE">Estampa toda</option><option value="BODY">Corpo da peça</option><option value="WAIST">Cintura</option><option value="SIDES">Linhas laterais</option><option value="CORD" disabled={side === "back"}>Cordão</option><option value="INTERIOR">Interior</option></select></label>}
