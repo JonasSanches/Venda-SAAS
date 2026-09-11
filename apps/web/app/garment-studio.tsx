@@ -239,9 +239,18 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
       }
       const topThickness = Math.max(9, Math.round(height * .014));
       const hemThickness = Math.max(13, Math.round(height * .019));
+      const edgeDistance = new Uint16Array(width * height); edgeDistance.fill(65535);
+      const edgeQueue = new Int32Array(width * height); let edgeHead = 0, edgeTail = 0;
+      for (let index = 0; index < silhouettePixels.length; index++) if (!silhouettePixels[index]) { edgeDistance[index] = 0; edgeQueue[edgeTail++] = index; }
+      const visitEdge = (from: number, next: number) => { if (edgeDistance[next] > edgeDistance[from] + 1) { edgeDistance[next] = edgeDistance[from] + 1; edgeQueue[edgeTail++] = next; } };
+      while (edgeHead < edgeTail) {
+        const index = edgeQueue[edgeHead++], x = index % width;
+        if (x > 0) visitEdge(index, index - 1); if (x < width - 1) visitEdge(index, index + 1);
+        if (index >= width) visitEdge(index, index - width); if (index < width * (height - 1)) visitEdge(index, index + width);
+      }
       const topInterior = Uint8Array.from(silhouettePixels, (value, index) => {
         const x = index % width, y = Math.floor(index / width);
-        return value && topEdge[x] >= 0 && y <= topEdge[x] + topThickness ? 1 : 0;
+        return value && topEdge[x] >= 0 && y <= topEdge[x] + topThickness * 1.6 && edgeDistance[index] <= topThickness ? 1 : 0;
       });
       const sideEnd = curved ? .68 : .76;
       const sides = Uint8Array.from(seamAllowance, (value, index) => {
@@ -250,9 +259,7 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
       });
       const hems = Uint8Array.from(silhouettePixels, (value, index) => {
         const x = index % width, y = Math.floor(index / width);
-        const distanceFromEdge = Math.min(x / width, 1 - x / width);
-        const cornerProtection = Math.max(0, (0.1 - distanceFromEdge) / 0.1) * height * .025;
-        return value && bottomEdge[x] >= 0 && y >= bottomEdge[x] - hemThickness - cornerProtection ? 1 : 0;
+        return value && bottomEdge[x] >= 0 && y >= bottomEdge[x] - hemThickness * 1.8 && edgeDistance[index] <= hemThickness ? 1 : 0;
       });
       const interior = Uint8Array.from(topInterior, (value, index) => value || hems[index] ? 1 : 0);
       // “Estampa toda” usa toda a silhueta externa. Apenas as áreas internas de
