@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, PointerEvent as ReactPointerEvent, useEffect, useMemo, useRef, useState } from "react";
 
 type Side = "front" | "back";
 type EditMode = "WHOLE" | "SECTIONS" | "COMBINED";
@@ -36,6 +36,9 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
   function update(values: Partial<Pick<ArtworkLayer, "x" | "y" | "scale" | "rotation" | "printArea">>) {
     if (!current) return;
     setDesign((old) => ({ ...old, [side]: { ...old[side], layers: old[side].layers.map((layer) => layer.id === current.id ? { ...layer, ...values } : layer) } }));
+  }
+  function updateLayer(targetSide: Side, id: string, values: Partial<Pick<ArtworkLayer, "x" | "y" | "scale" | "rotation">>) {
+    setDesign((old) => ({ ...old, [targetSide]: { ...old[targetSide], layers: old[targetSide].layers.map((layer) => layer.id === id ? { ...layer, ...values } : layer) } }));
   }
   function selectLayer(id: string) {
     setDesign((old) => ({ ...old, [side]: { ...old[side], selectedId: id } }));
@@ -88,8 +91,9 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
     const popup = window.open("", "_blank");
     if (!popup) return setError("Permita pop-ups para exportar o PDF.");
     popup.opener = null;
-    const front = document.getElementById("garment-front")?.outerHTML ?? "";
-    const back = document.getElementById("garment-back")?.outerHTML ?? "";
+    const cleanSvg = (id: string) => { const copy = document.getElementById(id)?.cloneNode(true) as Element | undefined; copy?.querySelectorAll("[data-editor-controls]").forEach((node) => node.remove()); return copy?.outerHTML ?? ""; };
+    const front = cleanSvg("garment-front");
+    const back = cleanSvg("garment-back");
     popup.document.write(`<!doctype html><html><head><title>${title.name}</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Arial;color:#172033}h1{font-size:22px;margin:0 0 5px}p{font-size:11px;color:#596579;margin:0 0 14px}.views{display:grid;grid-template-columns:1fr 1fr;gap:20px}.view{border:1px solid #ccd4df;border-radius:12px;padding:12px;text-align:center}.view h2{font-size:14px}.view svg{width:100%;height:160mm}footer{font-size:9px;color:#667085;margin-top:10px}</style></head><body><h1>${title.name}</h1><p>${title.note}</p><div class="views"><div class="view"><h2>Frente</h2>${front}</div><div class="view"><h2>Costas</h2>${back}</div></div><footer>Venda+ · ficha visual de personalização. Confirme medidas, cores, sangria e acabamento com a produção antes da fabricação.</footer><script>setTimeout(()=>window.print(),300)</script></body></html>`);
     popup.document.close();
   }
@@ -106,15 +110,12 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
         <label>Adicionar imagem ou estampa<input type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" onChange={upload}/><small>Cada arquivo vira uma camada. PNG transparente pode ser colocado sobre outra imagem.</small></label>
         <div className="artwork-layers"><b>Camadas · de baixo para cima</b>{currentSide.layers.length === 0 && <small>Nenhuma camada adicionada.</small>}{currentSide.layers.map((layer, index) => <button type="button" key={layer.id} className={layer.id === current?.id ? "active" : ""} onClick={() => selectLayer(layer.id)}><span>{index + 1}</span><em>{layer.name}<small>{printAreaLabels[layer.printArea ?? "WHOLE"]}</small></em></button>)}</div>
         {current && template.startsWith("BOARD_SHORTS") && <label>Área desta camada<select value={current.printArea ?? "WHOLE"} onChange={(event) => update({ printArea: event.target.value as PrintArea })}><option value="WHOLE">Estampa toda</option><option value="BODY">Corpo da peça</option><option value="WAIST">Cintura</option><option value="SIDES">Linhas laterais</option><option value="CORD" disabled={side === "back"}>Cordão</option><option value="INTERIOR">Interior</option></select></label>}
-        <label>Horizontal <input disabled={!current} type="range" min="0" max="100" value={current?.x ?? 50} onChange={(e) => update({ x: Number(e.target.value) })}/></label>
-        <label>Vertical <input disabled={!current} type="range" min="0" max="100" value={current?.y ?? 48} onChange={(e) => update({ y: Number(e.target.value) })}/></label>
-        <label>Tamanho <input disabled={!current} type="range" min="15" max="200" value={current?.scale ?? 110} onChange={(e) => update({ scale: Number(e.target.value) })}/></label>
-        <label>Rotação <input disabled={!current} type="range" min="0" max="360" step="1" value={current?.rotation ?? 0} onChange={(e) => update({ rotation: Number(e.target.value) })}/><small>{current ? `${current.rotation ?? 0}°` : "Selecione uma camada"}</small></label>
+        <small className="studio-mode-note">Selecione uma camada e edite diretamente sobre o molde: arraste para posicionar, use o canto azul para dimensionar e o controle superior para rotacionar.</small>
         <button type="button" disabled={!current} onClick={() => update({ x: 50, y: 50, scale: 200 })}>Preencher toda a peça</button>
         <div className="layer-actions"><button type="button" className="secondary" disabled={!current} onClick={() => moveLayer(-1)}>Descer</button><button type="button" className="secondary" disabled={!current} onClick={() => moveLayer(1)}>Subir</button></div>
         <button type="button" className="secondary" disabled={!current} onClick={removeLayer}>Excluir camada selecionada</button>
       </aside>
-      <div className="garment-views"><GarmentView id="garment-front" template={template} side="front" design={design.front}/><GarmentView id="garment-back" template={template} side="back" design={design.back}/></div>
+      <div className="garment-views"><GarmentView id="garment-front" template={template} side="front" design={design.front} editable={side === "front"} onUpdate={updateLayer}/><GarmentView id="garment-back" template={template} side="back" design={design.back} editable={side === "back"} onUpdate={updateLayer}/></div>
     </div>
     <form className="studio-product" onSubmit={save}><label>SKU<input name="sku" required placeholder="Ex.: BERM-SURF-001"/></label><label>Nome do produto<input key={template} name="name" required minLength={2} defaultValue={title.name}/></label><label>Preço<input name="price" type="number" min="0" step="0.01" required/></label><button disabled={saving}>{saving ? "Salvando..." : "Salvar como produto"}</button><button type="button" className="secondary" onClick={exportPdf}>Exportar PDF</button></form>
   </div>;
@@ -260,7 +261,8 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
   return masks;
 }
 
-function GarmentView({ id, template, side, design }: { id: string; template: Template; side: Side; design: SideDesign }) {
+function GarmentView({ id, template, side, design, editable, onUpdate }: { id: string; template: Template; side: Side; design: SideDesign; editable: boolean; onUpdate: (side: Side, id: string, values: Partial<Pick<ArtworkLayer, "x" | "y" | "scale" | "rotation">>) => void }) {
+  const svgRef = useRef<SVGSVGElement>(null);
   const shorts = template.startsWith("BOARD_SHORTS");
   const curved = template === "BOARD_SHORTS_SLIT";
   const tank = template === "TANK_TOP";
@@ -292,7 +294,25 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
         ? "M150 92 L188 106 C204 116 214 133 225 147 C240 167 260 167 275 147 C286 133 296 116 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
         : "M150 92 L188 106 C204 115 215 126 226 137 C241 153 259 153 274 137 C285 126 296 115 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
-  return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
+  const selected = editable ? design.layers.find((layer) => layer.id === design.selectedId) : undefined;
+  function startTransform(action: "move" | "scale" | "rotate", event: ReactPointerEvent<SVGElement>) {
+    if (!selected || !svgRef.current) return;
+    event.preventDefault(); event.stopPropagation();
+    const bounds = svgRef.current.getBoundingClientRect();
+    const point = (clientX: number, clientY: number) => ({ x: (clientX - bounds.left) * 500 / bounds.width, y: (clientY - bounds.top) * 600 / bounds.height });
+    const origin = point(event.clientX, event.clientY), center = { x: selected.x * 5, y: selected.y * 6 };
+    const initialDistance = Math.max(1, Math.hypot(origin.x - center.x, origin.y - center.y));
+    const initialAngle = Math.atan2(origin.y - center.y, origin.x - center.x) * 180 / Math.PI;
+    const move = (pointer: PointerEvent) => {
+      const next = point(pointer.clientX, pointer.clientY);
+      if (action === "move") onUpdate(side, selected.id, { x: Math.max(0, Math.min(100, (center.x + next.x - origin.x) / 5)), y: Math.max(0, Math.min(100, (center.y + next.y - origin.y) / 6)) });
+      if (action === "scale") onUpdate(side, selected.id, { scale: Math.max(15, Math.min(200, selected.scale * Math.hypot(next.x - center.x, next.y - center.y) / initialDistance)) });
+      if (action === "rotate") onUpdate(side, selected.id, { rotation: ((selected.rotation ?? 0) + Math.atan2(next.y - center.y, next.x - center.x) * 180 / Math.PI - initialAngle + 360) % 360 });
+    };
+    const end = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", end); window.removeEventListener("pointercancel", end); };
+    window.addEventListener("pointermove", move, { passive: false }); window.addEventListener("pointerup", end); window.addEventListener("pointercancel", end);
+  }
+  return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg ref={svgRef} id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs>
       <clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath>
       {shorts && garmentMasks && <>
@@ -333,6 +353,18 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
       {side === "front" ? <><path d="M153 100 L191 114 C207 124 217 141 229 153 C242 169 258 169 271 153 C283 141 293 124 309 114 L347 100" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/><path d="M132 177 C139 203 151 222 169 239 M368 177 C361 203 349 222 331 239" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/></> : <><path d="M153 100 L191 114 C207 123 218 134 230 143 C243 155 257 155 270 143 C282 134 293 123 309 114 L347 100" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/><path d="M132 177 C139 203 151 222 169 239 M368 177 C361 203 349 222 331 239" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/></>}
       <path d="M152 510 Q250 525 348 510" fill="none" stroke="#172033" strokeWidth="2" strokeDasharray="5 4"/>
     </>}
+    {selected && (() => {
+      const centerX = selected.x * 5, centerY = selected.y * 6, size = selected.scale * 3;
+      return <g data-editor-controls="true" className="canvas-transform" transform={`rotate(${selected.rotation ?? 0} ${centerX} ${centerY})`}>
+        <rect className="canvas-transform-hit" x={centerX - size / 2} y={centerY - size / 2} width={size} height={size} onPointerDown={(event) => startTransform("move", event)}/>
+        <rect className="canvas-transform-box" x={centerX - size / 2} y={centerY - size / 2} width={size} height={size}/>
+        <line className="canvas-transform-line" x1={centerX} y1={centerY - size / 2} x2={centerX} y2={centerY - size / 2 - 28}/>
+        <circle className="canvas-transform-rotate" cx={centerX} cy={centerY - size / 2 - 31} r="11" onPointerDown={(event) => startTransform("rotate", event)}/>
+        <path className="canvas-transform-icon" d={`M${centerX - 4} ${centerY - size / 2 - 34} A6 6 0 1 1 ${centerX + 4} ${centerY - size / 2 - 27}`} />
+        <circle className="canvas-transform-scale" cx={centerX + size / 2} cy={centerY + size / 2} r="11" onPointerDown={(event) => startTransform("scale", event)}/>
+        <path className="canvas-transform-icon" d={`M${centerX + size / 2 - 4} ${centerY + size / 2 - 4} L${centerX + size / 2 + 4} ${centerY + size / 2 + 4} M${centerX + size / 2} ${centerY + size / 2 + 4} L${centerX + size / 2 + 4} ${centerY + size / 2 + 4} L${centerX + size / 2 + 4} ${centerY + size / 2}`} />
+      </g>;
+    })()}
     <rect x="150" y="180" width="200" height="230" rx="8" fill="none" stroke="#c4932b" strokeWidth="2" strokeDasharray="8 7" opacity=".75"/>
     <text x="250" y="565" textAnchor="middle" fontSize="14" fill="#667085">{side === "front" ? "FRENTE" : "COSTAS"} · área visual tracejada</text>
   </svg></article>;
