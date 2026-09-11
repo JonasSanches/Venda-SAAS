@@ -151,9 +151,9 @@ function optimizeArtwork(file: File): Promise<string> {
   });
 }
 
-type GarmentMasks = { silhouette: string; body: string };
+type GarmentMasks = { silhouette: string; body: string; waist: string; sides: string; cord: string; interior: string; whole: string };
 
-function useGarmentMasks(source: string | undefined, side: Side) {
+function useGarmentMasks(source: string | undefined, side: Side, curved: boolean) {
   const [masks, setMasks] = useState<GarmentMasks>();
   useEffect(() => {
     if (!source) return setMasks(undefined);
@@ -206,6 +206,28 @@ function useGarmentMasks(source: string | undefined, side: Side) {
       };
       const outside = flood([], true);
       const body = flood(side === "back" ? [[.3, .45], [.7, .45], [.71, .36]] : [[.3, .45], [.7, .45]]);
+      const regionSeeds = side === "front"
+        ? curved
+          ? { waist: [[.22, .17], [.36, .18], [.64, .18], [.78, .17]], top: [[.25, .108], [.5, .115], [.75, .108]], sides: [[.055, .48], [.945, .48]], hems: [[.25, .79], [.75, .79]], cord: [[.405, .187], [.595, .187], [.445, .31], [.555, .31]] }
+          : { waist: [[.22, .16], [.36, .165], [.64, .165], [.78, .16]], top: [[.25, .105], [.5, .11], [.75, .105]], sides: [[.055, .48], [.945, .48]], hems: [[.25, .862], [.75, .862]], cord: [[.415, .155], [.585, .155], [.445, .245], [.555, .245]] }
+        : curved
+          ? { waist: [[.22, .15], [.42, .16], [.62, .16], [.82, .15]], top: [[.25, .105], [.5, .112], [.75, .105]], sides: [[.06, .48], [.94, .48]], hems: [[.25, .84], [.75, .84]], cord: [] }
+          : { waist: [[.22, .17], [.42, .18], [.62, .18], [.82, .17]], top: [[.25, .125], [.5, .132], [.75, .125]], sides: [[.055, .5], [.945, .5]], hems: [[.25, .84], [.75, .84]], cord: [] };
+      const waist = flood(regionSeeds.waist as Array<[number, number]>);
+      const topInterior = flood(regionSeeds.top as Array<[number, number]>);
+      const seamAllowance = flood([...(regionSeeds.sides as Array<[number, number]>), ...(regionSeeds.hems as Array<[number, number]>)]);
+      const cordRegion = flood(regionSeeds.cord as Array<[number, number]>);
+      const cord = Uint8Array.from(cordRegion, (value, index) => {
+        const x = index % width, y = Math.floor(index / width);
+        return value && x / width > .32 && x / width < .68 && y / height > .1 && y / height < .46 ? 1 : 0;
+      });
+      const sides = Uint8Array.from(seamAllowance, (value, index) => {
+        const x = index % width, y = Math.floor(index / width);
+        return value && y / height > .12 && (x / width < .16 || x / width > .84) ? 1 : 0;
+      });
+      const hems = Uint8Array.from(seamAllowance, (value, index) => value && Math.floor(index / width) / height > (curved ? .68 : .76) ? 1 : 0);
+      const interior = Uint8Array.from(topInterior, (value, index) => value || hems[index] ? 1 : 0);
+      const whole = Uint8Array.from(body, (value, index) => value || waist[index] || sides[index] ? 1 : 0);
       const toDataUrl = (alphaFor: (index: number) => number) => {
         const output = context.createImageData(width, height);
         for (let index = 0; index < width * height; index++) {
@@ -216,12 +238,12 @@ function useGarmentMasks(source: string | undefined, side: Side) {
         return canvas.toDataURL("image/png");
       };
       const silhouette = toDataUrl((index) => originalAlpha[index] > 16 && !outside[index] ? 255 : 0);
-      const bodyMask = toDataUrl((index) => body[index] ? 255 : 0);
-      if (active) setMasks({ silhouette, body: bodyMask });
+      const maskUrl = (mask: Uint8Array) => toDataUrl((index) => mask[index] ? 255 : 0);
+      if (active) setMasks({ silhouette, body: maskUrl(body), waist: maskUrl(waist), sides: maskUrl(sides), cord: maskUrl(cord), interior: maskUrl(interior), whole: maskUrl(whole) });
     };
     image.src = source;
     return () => { active = false; };
-  }, [source, side]);
+  }, [source, side, curved]);
   return masks;
 }
 
@@ -242,7 +264,7 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
       ? "/molde-bermuda-reta-frente-transparente.png"
       : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
-  const garmentMasks = useGarmentMasks(moldImage, side);
+  const garmentMasks = useGarmentMasks(moldImage, side, curved);
   const moldBox = side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
   const shape = shorts
     ? side === "front"
@@ -257,26 +279,17 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
         ? "M150 92 L188 106 C204 116 214 133 225 147 C240 167 260 167 275 147 C286 133 296 116 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
         : "M150 92 L188 106 C204 115 215 126 226 137 C241 153 259 153 274 137 C285 126 296 115 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
-  const topInterior = side === "front" ? "M96 103 Q250 127 404 103 L401 122 Q250 146 99 122 Z" : "M80 101 Q250 125 420 101 L417 120 Q250 144 83 120 Z";
-  const waistArea = side === "front" ? "M99 122 Q250 146 401 122 L397 154 Q250 177 103 154 Z" : "M83 120 Q250 144 417 120 L413 152 Q250 175 87 152 Z";
-  const sideAreas = side === "front"
-    ? curved ? ["M105 151 C96 230 83 330 78 400", "M395 151 C404 230 417 330 422 400"] : ["M105 151 L78 420", "M395 151 L422 420"]
-    : curved ? ["M88 150 C78 240 66 340 62 410", "M412 150 C422 240 434 340 438 410"] : ["M88 150 L62 434", "M412 150 L438 434"];
-  const interiorAreas = side === "front"
-    ? curved ? ["M79 399 Q88 421 118 428 Q176 444 225 436", "M275 436 Q324 444 382 428 Q412 421 421 399"] : ["M79 419 Q158 447 225 444", "M275 444 Q342 447 421 419"]
-    : curved ? ["M63 409 Q73 434 106 443 Q172 460 224 449", "M276 449 Q328 460 394 443 Q427 434 437 409"] : ["M63 433 Q154 462 224 454", "M276 454 Q346 462 437 433"];
-  const cordArea = "M250 142 C239 126 214 127 212 142 C210 158 233 158 250 142 C267 158 290 158 288 142 C286 127 261 126 250 142 M244 145 C244 175 239 211 241 250 M256 145 C256 175 261 211 259 250";
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs>
       <clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath>
       {shorts && garmentMasks && <>
         <mask id={silhouetteMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.silhouette} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
         <mask id={bodyMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.body} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
-        <mask id={wholeMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#fff"/><path d={topInterior} fill="#000"/>{interiorAreas.map((path) => <path key={path} d={path} fill="none" stroke="#000" strokeWidth="13" strokeLinecap="round"/>)}{side === "front" && <path d={cordArea} fill="none" stroke="#000" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>}</mask>
-        <mask id={waistMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#000"/><path d={waistArea} fill="#fff"/>{side === "front" && <path d={cordArea} fill="none" stroke="#000" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>}</mask>
-        <mask id={sidesMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#000"/>{sideAreas.map((path) => <path key={path} d={path} fill="none" stroke="#fff" strokeWidth="20" strokeLinecap="round"/>)}</mask>
-        <mask id={cordMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#000"/>{side === "front" && <path d={cordArea} fill="none" stroke="#fff" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>}</mask>
-        <mask id={interiorMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#000"/><path d={topInterior} fill="#fff"/>{interiorAreas.map((path) => <path key={path} d={path} fill="none" stroke="#fff" strokeWidth="13" strokeLinecap="round"/>)}</mask>
+        <mask id={wholeMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.whole} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
+        <mask id={waistMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.waist} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
+        <mask id={sidesMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.sides} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
+        <mask id={cordMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.cord} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
+        <mask id={interiorMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.interior} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
       </>}
     </defs>
     {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
