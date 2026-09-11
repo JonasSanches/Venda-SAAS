@@ -206,6 +206,7 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         return filled;
       };
       const outside = flood([], true);
+      const silhouettePixels = Uint8Array.from(outside, (value, index) => originalAlpha[index] > 16 && !value ? 1 : 0);
       const body = flood(side === "back" ? [[.3, .45], [.7, .45], [.71, .36]] : [[.3, .45], [.7, .45]]);
       const regionSeeds = side === "front"
         ? curved
@@ -215,7 +216,6 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
           ? { waist: [[.22, .15], [.42, .16], [.62, .16], [.82, .15]], top: [[.25, .105], [.5, .112], [.75, .105]], sides: [[.06, .48], [.94, .48]], hems: [[.25, .84], [.75, .84]], cord: [] }
           : { waist: [[.22, .17], [.42, .18], [.62, .18], [.82, .17]], top: [[.25, .125], [.5, .132], [.75, .125]], sides: [[.055, .5], [.945, .5]], hems: [[.25, .84], [.75, .84]], cord: [] };
       const detectedWaist = flood(regionSeeds.waist as Array<[number, number]>);
-      const detectedTopInterior = flood(regionSeeds.top as Array<[number, number]>);
       const seamAllowance = flood([...(regionSeeds.sides as Array<[number, number]>), ...(regionSeeds.hems as Array<[number, number]>)]);
       const cordRegion = flood(regionSeeds.cord as Array<[number, number]>);
       const cord = Uint8Array.from(cordRegion, (value, index) => {
@@ -232,40 +232,30 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const inside = x >= waistProfile.left && x <= waistProfile.right && y >= waistProfile.top + waistProfile.topCurve * curve && y <= waistProfile.bottom + waistProfile.bottomCurve * curve;
         return (value || inside) && !cord[index] ? 1 : 0;
       });
-      const topProfile = side === "front"
-        ? curved ? { left: .12, right: .88, outer: .098, outerCurve: .022, inner: .113, innerCurve: .023 } : { left: .13, right: .87, outer: .089, outerCurve: .012, inner: .103, innerCurve: .011 }
-        : curved ? { left: .15, right: .85, outer: .087, outerCurve: .018, inner: .103, innerCurve: .018 } : { left: .16, right: .84, outer: .108, outerCurve: .018, inner: .126, innerCurve: .018 };
-      const topInterior = Uint8Array.from(detectedTopInterior, (_value, index) => {
-        const x = index % width / width, y = Math.floor(index / width) / height;
-        const position = Math.max(0, Math.min(1, (x - topProfile.left) / (topProfile.right - topProfile.left)));
-        const curve = 4 * position * (1 - position);
-        return x >= topProfile.left && x <= topProfile.right && y >= topProfile.outer + topProfile.outerCurve * curve && y <= topProfile.inner + topProfile.innerCurve * curve ? 1 : 0;
+      const topEdge = new Int32Array(width).fill(-1), bottomEdge = new Int32Array(width).fill(-1);
+      for (let x = 0; x < width; x++) for (let y = 0; y < height; y++) if (silhouettePixels[y * width + x]) {
+        if (topEdge[x] < 0) topEdge[x] = y;
+        bottomEdge[x] = y;
+      }
+      const topThickness = Math.max(7, Math.round(height * .01));
+      const hemThickness = Math.max(11, Math.round(height * .016));
+      const topInterior = Uint8Array.from(silhouettePixels, (value, index) => {
+        const x = index % width, y = Math.floor(index / width);
+        return value && topEdge[x] >= 0 && y <= topEdge[x] + topThickness ? 1 : 0;
       });
       const sideEnd = curved ? .68 : .76;
       const sides = Uint8Array.from(seamAllowance, (value, index) => {
         const x = index % width, y = Math.floor(index / width);
         return value && y / height > .12 && y / height < sideEnd && (x / width < .16 || x / width > .84) ? 1 : 0;
       });
-      const hemProfile = side === "front"
-        ? curved ? { edge: .70, rise: .30 } : { edge: .795, rise: .17 }
-        : curved ? { edge: .75, rise: .28 } : { edge: .77, rise: .28 };
-      const hems = Uint8Array.from(outside, (isOutside, index) => {
-        const x = index % width / width, y = Math.floor(index / width) / height;
-        const distanceFromEdge = Math.min(x, 1 - x);
-        let innerHem = hemProfile.edge + hemProfile.rise * distanceFromEdge;
-        if (side === "front" && !curved) {
-          // A barra reta sobe somente nas viradas laterais e no encontro do
-          // gancho. No restante, acompanha de perto a costura interna diagonal.
-          const sideProtection = Math.max(0, (0.1 - distanceFromEdge) / 0.1) * .035;
-          const crotchProtection = Math.max(0, (distanceFromEdge - .43) / .07) * .06;
-          innerHem -= sideProtection + crotchProtection;
-        }
-        return !isOutside && originalAlpha[index] > 16 && y >= innerHem ? 1 : 0;
+      const hems = Uint8Array.from(silhouettePixels, (value, index) => {
+        const x = index % width, y = Math.floor(index / width);
+        return value && bottomEdge[x] >= 0 && y >= bottomEdge[x] - hemThickness ? 1 : 0;
       });
       const interior = Uint8Array.from(topInterior, (value, index) => value || hems[index] ? 1 : 0);
       // “Estampa toda” usa toda a silhueta externa. Apenas as áreas internas de
       // acabamento (debrum superior e bainhas inferiores) ficam sem estampa.
-      const whole = Uint8Array.from(outside, (value, index) => originalAlpha[index] > 16 && !value && !interior[index] ? 1 : 0);
+      const whole = Uint8Array.from(silhouettePixels, (value, index) => value && !interior[index] ? 1 : 0);
       const toDataUrl = (alphaFor: (index: number) => number) => {
         const output = context.createImageData(width, height);
         for (let index = 0; index < width * height; index++) {
@@ -275,7 +265,7 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         context.putImageData(output, 0, 0);
         return canvas.toDataURL("image/png");
       };
-      const silhouette = toDataUrl((index) => originalAlpha[index] > 16 && !outside[index] ? 255 : 0);
+      const silhouette = toDataUrl((index) => silhouettePixels[index] ? 255 : 0);
       const maskUrl = (mask: Uint8Array) => toDataUrl((index) => mask[index] ? 255 : 0);
       if (active) setMasks({ silhouette, body: maskUrl(body), waist: maskUrl(waist), sides: maskUrl(sides), cord: maskUrl(cord), interior: maskUrl(interior), whole: maskUrl(whole) });
     };
