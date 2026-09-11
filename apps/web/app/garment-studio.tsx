@@ -139,7 +139,7 @@ function optimizeArtwork(file: File): Promise<string> {
   });
 }
 
-function useSilhouetteMask(source?: string) {
+function useSilhouetteMask(source: string | undefined, side: Side) {
   const [mask, setMask] = useState<string>();
   useEffect(() => {
     if (!source) return setMask(undefined);
@@ -164,19 +164,26 @@ function useSilhouetteMask(source?: string) {
         const index = y * width + x;
         if (barrier[index]) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) sealed[index + dy * width + dx] = 1;
       }
-      const outside = new Uint8Array(width * height);
+      const printable = new Uint8Array(width * height);
       const queue = new Int32Array(width * height);
       let head = 0, tail = 0;
-      const add = (index: number) => { if (!sealed[index] && !outside[index]) { outside[index] = 1; queue[tail++] = index; } };
-      for (let x = 0; x < width; x++) { add(x); add((height - 1) * width + x); }
-      for (let y = 0; y < height; y++) { add(y * width); add(y * width + width - 1); }
+      const add = (index: number) => { if (!sealed[index] && !printable[index]) { printable[index] = 1; queue[tail++] = index; } };
+      const seed = (normalizedX: number, normalizedY: number) => {
+        const centerX = Math.round(normalizedX * (width - 1)), centerY = Math.round(normalizedY * (height - 1));
+        for (let radius = 0; radius < 18; radius++) for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) {
+          const x = centerX + dx, y = centerY + dy;
+          if (x >= 0 && x < width && y >= 0 && y < height && !sealed[y * width + x]) { add(y * width + x); return; }
+        }
+      };
+      seed(.3, .45); seed(.7, .45);
+      if (side === "back") seed(.71, .36);
       while (head < tail) {
         const index = queue[head++], x = index % width;
         if (x > 0) add(index - 1); if (x < width - 1) add(index + 1);
         if (index >= width) add(index - width); if (index < width * (height - 1)) add(index + width);
       }
-      for (let index = 0; index < outside.length; index++) {
-        const offset = index * 4, inside = outside[index] ? 0 : 255;
+      for (let index = 0; index < printable.length; index++) {
+        const offset = index * 4, inside = printable[index] ? 255 : 0;
         pixels.data[offset] = 255; pixels.data[offset + 1] = 255; pixels.data[offset + 2] = 255; pixels.data[offset + 3] = inside;
       }
       context.putImageData(pixels, 0, 0);
@@ -184,7 +191,7 @@ function useSilhouetteMask(source?: string) {
     };
     image.src = source;
     return () => { active = false; };
-  }, [source]);
+  }, [source, side]);
   return mask;
 }
 
@@ -199,7 +206,7 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
       ? "/molde-bermuda-reta-frente-transparente.png"
       : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
-  const silhouetteMask = useSilhouetteMask(moldImage);
+  const silhouetteMask = useSilhouetteMask(moldImage, side);
   const moldBox = side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
   const shape = shorts
     ? side === "front"
@@ -214,16 +221,6 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
         ? "M150 92 L188 106 C204 116 214 133 225 147 C240 167 260 167 275 147 C286 133 296 116 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
         : "M150 92 L188 106 C204 115 215 126 226 137 C241 153 259 153 274 137 C285 126 296 115 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
-  const innerWaist = shorts ? side === "front"
-    ? "M45 45 H455 V150 Q250 174 45 150 Z"
-    : "M35 45 H465 V148 Q250 172 35 148 Z"
-    : "";
-  const innerHems = shorts ? side === "front"
-    ? curved ? ["M79 399 Q88 421 118 428 Q176 444 225 436", "M275 436 Q324 444 382 428 Q412 421 421 399"]
-      : ["M79 419 Q158 447 225 444", "M275 444 Q342 447 421 419"]
-    : curved ? ["M63 409 Q73 434 106 443 Q172 460 224 449", "M276 449 Q328 460 394 443 Q427 434 437 409"]
-      : ["M63 433 Q154 462 224 454", "M276 454 Q346 462 437 433"]
-    : [];
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs>
       <clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath>
@@ -242,11 +239,6 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
           transform={`rotate(${layer.rotation ?? 0} ${layer.x * 5} ${layer.y * 6})`}
         /></g>;
     })}
-    {shorts && silhouetteMask && <g mask={`url(#${maskId})`}>
-      <path d={innerWaist} fill="#d9dde2"/>
-      {innerHems.map((hem) => <path key={hem} d={hem} fill="none" stroke="#d9dde2" strokeWidth="11" strokeLinecap="round"/>)}
-      {side === "front" && <path d="M241 142 C242 171 239 209 241 250 M259 142 C258 171 261 209 259 250" fill="none" stroke="#f7f8fa" strokeWidth="3.5" strokeLinecap="round"/>}
-    </g>}
     {shorts && moldImage && <image
       href={moldImage}
       {...moldBox}
