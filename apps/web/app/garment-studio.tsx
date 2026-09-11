@@ -215,7 +215,7 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
           ? { waist: [[.22, .15], [.42, .16], [.62, .16], [.82, .15]], top: [[.25, .105], [.5, .112], [.75, .105]], sides: [[.06, .48], [.94, .48]], hems: [[.25, .84], [.75, .84]], cord: [] }
           : { waist: [[.22, .17], [.42, .18], [.62, .18], [.82, .17]], top: [[.25, .125], [.5, .132], [.75, .125]], sides: [[.055, .5], [.945, .5]], hems: [[.25, .84], [.75, .84]], cord: [] };
       const detectedWaist = flood(regionSeeds.waist as Array<[number, number]>);
-      const topInterior = flood(regionSeeds.top as Array<[number, number]>);
+      const detectedTopInterior = flood(regionSeeds.top as Array<[number, number]>);
       const seamAllowance = flood([...(regionSeeds.sides as Array<[number, number]>), ...(regionSeeds.hems as Array<[number, number]>)]);
       const cordRegion = flood(regionSeeds.cord as Array<[number, number]>);
       const cord = Uint8Array.from(cordRegion, (value, index) => {
@@ -232,13 +232,22 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const inside = x >= waistProfile.left && x <= waistProfile.right && y >= waistProfile.top + waistProfile.topCurve * curve && y <= waistProfile.bottom + waistProfile.bottomCurve * curve;
         return (value || inside) && !cord[index] ? 1 : 0;
       });
+      const topProfile = side === "front"
+        ? curved ? { left: .12, right: .88, outer: .098, outerCurve: .022, inner: .113, innerCurve: .023 } : { left: .13, right: .87, outer: .089, outerCurve: .012, inner: .103, innerCurve: .011 }
+        : curved ? { left: .15, right: .85, outer: .087, outerCurve: .018, inner: .103, innerCurve: .018 } : { left: .16, right: .84, outer: .108, outerCurve: .018, inner: .126, innerCurve: .018 };
+      const topInterior = Uint8Array.from(detectedTopInterior, (_value, index) => {
+        const x = index % width / width, y = Math.floor(index / width) / height;
+        const position = Math.max(0, Math.min(1, (x - topProfile.left) / (topProfile.right - topProfile.left)));
+        const curve = 4 * position * (1 - position);
+        return x >= topProfile.left && x <= topProfile.right && y >= topProfile.outer + topProfile.outerCurve * curve && y <= topProfile.inner + topProfile.innerCurve * curve ? 1 : 0;
+      });
       const sideEnd = curved ? .68 : .76;
       const sides = Uint8Array.from(seamAllowance, (value, index) => {
         const x = index % width, y = Math.floor(index / width);
         return value && y / height > .12 && y / height < sideEnd && (x / width < .16 || x / width > .84) ? 1 : 0;
       });
       const hemProfile = side === "front"
-        ? curved ? { edge: .70, rise: .30 } : { edge: .80, rise: .14 }
+        ? curved ? { edge: .70, rise: .30 } : { edge: .775, rise: .19 }
         : curved ? { edge: .75, rise: .28 } : { edge: .77, rise: .28 };
       const hems = Uint8Array.from(outside, (isOutside, index) => {
         const x = index % width / width, y = Math.floor(index / width) / height;
