@@ -237,8 +237,8 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         if (topEdge[x] < 0) topEdge[x] = y;
         bottomEdge[x] = y;
       }
-      const topThickness = Math.max(7, Math.round(height * .01));
-      const hemThickness = Math.max(11, Math.round(height * .016));
+      const topThickness = Math.max(9, Math.round(height * .014));
+      const hemThickness = Math.max(13, Math.round(height * .019));
       const topInterior = Uint8Array.from(silhouettePixels, (value, index) => {
         const x = index % width, y = Math.floor(index / width);
         return value && topEdge[x] >= 0 && y <= topEdge[x] + topThickness ? 1 : 0;
@@ -250,7 +250,9 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
       });
       const hems = Uint8Array.from(silhouettePixels, (value, index) => {
         const x = index % width, y = Math.floor(index / width);
-        return value && bottomEdge[x] >= 0 && y >= bottomEdge[x] - hemThickness ? 1 : 0;
+        const distanceFromEdge = Math.min(x / width, 1 - x / width);
+        const cornerProtection = Math.max(0, (0.1 - distanceFromEdge) / 0.1) * height * .025;
+        return value && bottomEdge[x] >= 0 && y >= bottomEdge[x] - hemThickness - cornerProtection ? 1 : 0;
       });
       const interior = Uint8Array.from(topInterior, (value, index) => value || hems[index] ? 1 : 0);
       // “Estampa toda” usa toda a silhueta externa. Apenas as áreas internas de
