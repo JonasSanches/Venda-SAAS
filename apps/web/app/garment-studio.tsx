@@ -3,7 +3,9 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 
 type Side = "front" | "back";
-type ArtworkLayer = { id: string; name: string; image: string; x: number; y: number; scale: number; rotation?: number };
+type EditMode = "WHOLE" | "SECTIONS";
+type PrintArea = "WHOLE" | "BODY" | "WAIST" | "SIDES" | "CORD" | "INTERIOR";
+type ArtworkLayer = { id: string; name: string; image: string; x: number; y: number; scale: number; rotation?: number; printArea?: PrintArea };
 type SideDesign = { layers: ArtworkLayer[]; selectedId?: string };
 type Template = "BOARD_SHORTS_SLIT" | "BOARD_SHORTS_STRAIGHT" | "TSHIRT_REGULAR" | "TANK_TOP";
 type DesignData = { front: SideDesign; back: SideDesign };
@@ -16,10 +18,13 @@ const templates: Record<Template, { name: string; note: string }> = {
 };
 
 const initialSide = (): SideDesign => ({ layers: [] });
+const printAreaLabels: Record<PrintArea, string> = { WHOLE: "Estampa toda", BODY: "Corpo da peça", WAIST: "Cintura", SIDES: "Linhas laterais", CORD: "Cordão", INTERIOR: "Interior" };
 
 export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; name: string; price: number; designTemplate: Template; designData: DesignData }) => Promise<void> }) {
   const [template, setTemplate] = useState<Template>("BOARD_SHORTS_SLIT");
   const [side, setSide] = useState<Side>("front");
+  const [editMode, setEditMode] = useState<EditMode>("WHOLE");
+  const [printArea, setPrintArea] = useState<Exclude<PrintArea, "WHOLE">>("BODY");
   const [design, setDesign] = useState<DesignData>({ front: initialSide(), back: initialSide() });
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -28,7 +33,7 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
   const current = currentSide.layers.find((layer) => layer.id === currentSide.selectedId);
   const title = useMemo(() => templates[template], [template]);
 
-  function update(values: Partial<Pick<ArtworkLayer, "x" | "y" | "scale" | "rotation">>) {
+  function update(values: Partial<Pick<ArtworkLayer, "x" | "y" | "scale" | "rotation" | "printArea">>) {
     if (!current) return;
     setDesign((old) => ({ ...old, [side]: { ...old[side], layers: old[side].layers.map((layer) => layer.id === current.id ? { ...layer, ...values } : layer) } }));
   }
@@ -60,7 +65,10 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
     if (currentSide.layers.length >= 10) return setError("Use no máximo 10 camadas em cada lado da peça.");
     try {
       const image = await optimizeArtwork(file);
-      const layer: ArtworkLayer = { id: crypto.randomUUID(), name: file.name, image, x: 50, y: 48, scale: 110, rotation: 0 };
+      const selectedArea: PrintArea = template.startsWith("BOARD_SHORTS") && editMode === "SECTIONS"
+        ? side === "back" && printArea === "CORD" ? "BODY" : printArea
+        : "WHOLE";
+      const layer: ArtworkLayer = { id: crypto.randomUUID(), name: file.name, image, x: 50, y: 48, scale: 110, rotation: 0, printArea: selectedArea };
       setDesign((old) => ({ ...old, [side]: { layers: [...old[side].layers, layer], selectedId: layer.id } }));
       event.target.value = "";
       setError(""); setMessage(`${file.type === "image/png" ? "PNG transparente" : "Imagem"} adicionado como nova camada ${side === "front" ? "na frente" : "nas costas"}.`);
@@ -91,9 +99,13 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
     <div className="template-picker">{(Object.keys(templates) as Template[]).map((key) => <button type="button" key={key} className={template === key ? "active" : ""} onClick={() => setTemplate(key)}><b>{templates[key].name}</b><span>{templates[key].note}</span></button>)}</div>
     <div className="studio-workspace">
       <aside className="studio-controls">
-        <div className="side-switch"><button type="button" className={side === "front" ? "active" : ""} onClick={() => setSide("front")}>Frente</button><button type="button" className={side === "back" ? "active" : ""} onClick={() => setSide("back")}>Costas</button></div>
+        <div className="side-switch"><button type="button" className={side === "front" ? "active" : ""} onClick={() => setSide("front")}>Frente</button><button type="button" className={side === "back" ? "active" : ""} onClick={() => { setSide("back"); if (printArea === "CORD") setPrintArea("BODY"); }}>Costas</button></div>
+        <div className="edit-mode-switch"><button type="button" className={editMode === "SECTIONS" ? "active" : ""} onClick={() => setEditMode("SECTIONS")}>Divisão dos pontos</button><button type="button" className={editMode === "WHOLE" ? "active" : ""} onClick={() => setEditMode("WHOLE")}>Estampa toda</button></div>
+        {editMode === "SECTIONS" && template.startsWith("BOARD_SHORTS") && <label>Parte a estampar<select value={printArea} onChange={(event) => setPrintArea(event.target.value as Exclude<PrintArea, "WHOLE">)}><option value="BODY">Corpo da peça</option><option value="WAIST">Cintura</option><option value="SIDES">Linhas laterais</option><option value="CORD" disabled={side === "back"}>Cordão</option><option value="INTERIOR">Interior</option></select><small>A próxima imagem ficará limitada somente a esta parte.</small></label>}
+        {editMode === "SECTIONS" && !template.startsWith("BOARD_SHORTS") && <small className="studio-mode-note">A divisão por partes está disponível nos moldes de bermuda. Para camisetas, use “Estampa toda”.</small>}
         <label>Adicionar imagem ou estampa<input type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" onChange={upload}/><small>Cada arquivo vira uma camada. PNG transparente pode ser colocado sobre outra imagem.</small></label>
-        <div className="artwork-layers"><b>Camadas · de baixo para cima</b>{currentSide.layers.length === 0 && <small>Nenhuma camada adicionada.</small>}{currentSide.layers.map((layer, index) => <button type="button" key={layer.id} className={layer.id === current?.id ? "active" : ""} onClick={() => selectLayer(layer.id)}><span>{index + 1}</span><em>{layer.name}</em></button>)}</div>
+        <div className="artwork-layers"><b>Camadas · de baixo para cima</b>{currentSide.layers.length === 0 && <small>Nenhuma camada adicionada.</small>}{currentSide.layers.map((layer, index) => <button type="button" key={layer.id} className={layer.id === current?.id ? "active" : ""} onClick={() => selectLayer(layer.id)}><span>{index + 1}</span><em>{layer.name}<small>{printAreaLabels[layer.printArea ?? "WHOLE"]}</small></em></button>)}</div>
+        {current && template.startsWith("BOARD_SHORTS") && <label>Área desta camada<select value={current.printArea ?? "WHOLE"} onChange={(event) => update({ printArea: event.target.value as PrintArea })}><option value="WHOLE">Estampa toda</option><option value="BODY">Corpo da peça</option><option value="WAIST">Cintura</option><option value="SIDES">Linhas laterais</option><option value="CORD" disabled={side === "back"}>Cordão</option><option value="INTERIOR">Interior</option></select></label>}
         <label>Horizontal <input disabled={!current} type="range" min="0" max="100" value={current?.x ?? 50} onChange={(e) => update({ x: Number(e.target.value) })}/></label>
         <label>Vertical <input disabled={!current} type="range" min="0" max="100" value={current?.y ?? 48} onChange={(e) => update({ y: Number(e.target.value) })}/></label>
         <label>Tamanho <input disabled={!current} type="range" min="15" max="200" value={current?.scale ?? 110} onChange={(e) => update({ scale: Number(e.target.value) })}/></label>
@@ -139,10 +151,13 @@ function optimizeArtwork(file: File): Promise<string> {
   });
 }
 
-function useSilhouetteMask(source: string | undefined, side: Side) {
-  const [mask, setMask] = useState<string>();
+type GarmentMasks = { silhouette: string; body: string };
+
+function useGarmentMasks(source: string | undefined, side: Side) {
+  const [masks, setMasks] = useState<GarmentMasks>();
   useEffect(() => {
-    if (!source) return setMask(undefined);
+    if (!source) return setMasks(undefined);
+    setMasks(undefined);
     let active = true;
     const image = new Image();
     image.onload = () => {
@@ -154,45 +169,60 @@ function useSilhouetteMask(source: string | undefined, side: Side) {
       if (!context) return;
       context.drawImage(image, 0, 0, width, height);
       const pixels = context.getImageData(0, 0, width, height);
+      const originalAlpha = new Uint8Array(width * height);
       const barrier = new Uint8Array(width * height);
       for (let index = 0; index < barrier.length; index++) {
         const offset = index * 4;
-        barrier[index] = pixels.data[offset] < 205 && pixels.data[offset + 1] < 205 && pixels.data[offset + 2] < 205 ? 1 : 0;
+        const alpha = pixels.data[offset + 3];
+        originalAlpha[index] = alpha;
+        barrier[index] = alpha > 16 && pixels.data[offset] < 205 && pixels.data[offset + 1] < 205 && pixels.data[offset + 2] < 205 ? 1 : 0;
       }
       const sealed = barrier.slice();
       for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
         const index = y * width + x;
         if (barrier[index]) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) sealed[index + dy * width + dx] = 1;
       }
-      const printable = new Uint8Array(width * height);
-      const queue = new Int32Array(width * height);
-      let head = 0, tail = 0;
-      const add = (index: number) => { if (!sealed[index] && !printable[index]) { printable[index] = 1; queue[tail++] = index; } };
-      const seed = (normalizedX: number, normalizedY: number) => {
+      const flood = (seeds: Array<[number, number]>, borders = false) => {
+        const filled = new Uint8Array(width * height), queue = new Int32Array(width * height);
+        let head = 0, tail = 0;
+        const add = (index: number) => { if (!sealed[index] && !filled[index]) { filled[index] = 1; queue[tail++] = index; } };
+        const seed = (normalizedX: number, normalizedY: number) => {
         const centerX = Math.round(normalizedX * (width - 1)), centerY = Math.round(normalizedY * (height - 1));
         for (let radius = 0; radius < 18; radius++) for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) {
           const x = centerX + dx, y = centerY + dy;
           if (x >= 0 && x < width && y >= 0 && y < height && !sealed[y * width + x]) { add(y * width + x); return; }
         }
+        };
+        if (borders) {
+          for (let x = 0; x < width; x++) { add(x); add((height - 1) * width + x); }
+          for (let y = 0; y < height; y++) { add(y * width); add(y * width + width - 1); }
+        } else seeds.forEach(([x, y]) => seed(x, y));
+        while (head < tail) {
+          const index = queue[head++], x = index % width;
+          if (x > 0) add(index - 1); if (x < width - 1) add(index + 1);
+          if (index >= width) add(index - width); if (index < width * (height - 1)) add(index + width);
+        }
+        return filled;
       };
-      seed(.3, .45); seed(.7, .45);
-      if (side === "back") seed(.71, .36);
-      while (head < tail) {
-        const index = queue[head++], x = index % width;
-        if (x > 0) add(index - 1); if (x < width - 1) add(index + 1);
-        if (index >= width) add(index - width); if (index < width * (height - 1)) add(index + width);
-      }
-      for (let index = 0; index < printable.length; index++) {
-        const offset = index * 4, inside = printable[index] ? 255 : 0;
-        pixels.data[offset] = 255; pixels.data[offset + 1] = 255; pixels.data[offset + 2] = 255; pixels.data[offset + 3] = inside;
-      }
-      context.putImageData(pixels, 0, 0);
-      if (active) setMask(canvas.toDataURL("image/png"));
+      const outside = flood([], true);
+      const body = flood(side === "back" ? [[.3, .45], [.7, .45], [.71, .36]] : [[.3, .45], [.7, .45]]);
+      const toDataUrl = (alphaFor: (index: number) => number) => {
+        const output = context.createImageData(width, height);
+        for (let index = 0; index < width * height; index++) {
+          const offset = index * 4;
+          output.data[offset] = 255; output.data[offset + 1] = 255; output.data[offset + 2] = 255; output.data[offset + 3] = alphaFor(index);
+        }
+        context.putImageData(output, 0, 0);
+        return canvas.toDataURL("image/png");
+      };
+      const silhouette = toDataUrl((index) => originalAlpha[index] > 16 && !outside[index] ? 255 : 0);
+      const bodyMask = toDataUrl((index) => body[index] ? 255 : 0);
+      if (active) setMasks({ silhouette, body: bodyMask });
     };
     image.src = source;
     return () => { active = false; };
   }, [source, side]);
-  return mask;
+  return masks;
 }
 
 function GarmentView({ id, template, side, design }: { id: string; template: Template; side: Side; design: SideDesign }) {
@@ -200,13 +230,19 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
   const curved = template === "BOARD_SHORTS_SLIT";
   const tank = template === "TANK_TOP";
   const clipId = `${id}-clip`;
-  const maskId = `${id}-mask`;
+  const silhouetteMaskId = `${id}-silhouette-mask`;
+  const bodyMaskId = `${id}-body-mask`;
+  const wholeMaskId = `${id}-whole-mask`;
+  const waistMaskId = `${id}-waist-mask`;
+  const sidesMaskId = `${id}-sides-mask`;
+  const cordMaskId = `${id}-cord-mask`;
+  const interiorMaskId = `${id}-interior-mask`;
   const moldImage = shorts
     ? !curved && side === "front"
       ? "/molde-bermuda-reta-frente-transparente.png"
       : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
-  const silhouetteMask = useSilhouetteMask(moldImage, side);
+  const garmentMasks = useGarmentMasks(moldImage, side);
   const moldBox = side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
   const shape = shorts
     ? side === "front"
@@ -221,15 +257,34 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
         ? "M150 92 L188 106 C204 116 214 133 225 147 C240 167 260 167 275 147 C286 133 296 116 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
         : "M150 92 L188 106 C204 115 215 126 226 137 C241 153 259 153 274 137 C285 126 296 115 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
+  const topInterior = side === "front" ? "M96 103 Q250 127 404 103 L401 122 Q250 146 99 122 Z" : "M80 101 Q250 125 420 101 L417 120 Q250 144 83 120 Z";
+  const waistArea = side === "front" ? "M99 122 Q250 146 401 122 L397 154 Q250 177 103 154 Z" : "M83 120 Q250 144 417 120 L413 152 Q250 175 87 152 Z";
+  const sideAreas = side === "front"
+    ? curved ? ["M105 151 C96 230 83 330 78 400", "M395 151 C404 230 417 330 422 400"] : ["M105 151 L78 420", "M395 151 L422 420"]
+    : curved ? ["M88 150 C78 240 66 340 62 410", "M412 150 C422 240 434 340 438 410"] : ["M88 150 L62 434", "M412 150 L438 434"];
+  const interiorAreas = side === "front"
+    ? curved ? ["M79 399 Q88 421 118 428 Q176 444 225 436", "M275 436 Q324 444 382 428 Q412 421 421 399"] : ["M79 419 Q158 447 225 444", "M275 444 Q342 447 421 419"]
+    : curved ? ["M63 409 Q73 434 106 443 Q172 460 224 449", "M276 449 Q328 460 394 443 Q427 434 437 409"] : ["M63 433 Q154 462 224 454", "M276 454 Q346 462 437 433"];
+  const cordArea = "M250 142 C239 126 214 127 212 142 C210 158 233 158 250 142 C267 158 290 158 288 142 C286 127 261 126 250 142 M244 145 C244 175 239 211 241 250 M256 145 C256 175 261 211 259 250";
   return <article className="garment-view"><h3>{side === "front" ? "Frente" : "Costas"}</h3><svg id={id} viewBox="0 0 500 600" overflow="hidden" role="img" aria-label={`${templates[template].name}, ${side === "front" ? "frente" : "costas"}`}>
     <defs>
       <clipPath id={clipId}><path d={shape} fill="#fff" stroke="none" strokeWidth="0"/></clipPath>
-      {shorts && silhouetteMask && <mask id={maskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={silhouetteMask} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>}
+      {shorts && garmentMasks && <>
+        <mask id={silhouetteMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.silhouette} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
+        <mask id={bodyMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.body} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
+        <mask id={wholeMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#fff"/><path d={topInterior} fill="#000"/>{interiorAreas.map((path) => <path key={path} d={path} fill="none" stroke="#000" strokeWidth="13" strokeLinecap="round"/>)}{side === "front" && <path d={cordArea} fill="none" stroke="#000" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>}</mask>
+        <mask id={waistMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#000"/><path d={waistArea} fill="#fff"/>{side === "front" && <path d={cordArea} fill="none" stroke="#000" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>}</mask>
+        <mask id={sidesMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#000"/>{sideAreas.map((path) => <path key={path} d={path} fill="none" stroke="#fff" strokeWidth="20" strokeLinecap="round"/>)}</mask>
+        <mask id={cordMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#000"/>{side === "front" && <path d={cordArea} fill="none" stroke="#fff" strokeWidth="7" strokeLinecap="round" strokeLinejoin="round"/>}</mask>
+        <mask id={interiorMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#000"/><path d={topInterior} fill="#fff"/>{interiorAreas.map((path) => <path key={path} d={path} fill="none" stroke="#fff" strokeWidth="13" strokeLinecap="round"/>)}</mask>
+      </>}
     </defs>
     {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
-    {(!shorts || silhouetteMask) && design.layers.map((layer) => {
+    {(!shorts || garmentMasks) && design.layers.map((layer) => {
       const imageSize = layer.scale * 3;
-      return <g key={layer.id} clipPath={shorts ? undefined : `url(#${clipId})`} mask={shorts ? `url(#${maskId})` : undefined}><image
+      const area = layer.printArea ?? "WHOLE";
+      const areaMaskId = area === "BODY" ? bodyMaskId : area === "WAIST" ? waistMaskId : area === "SIDES" ? sidesMaskId : area === "CORD" ? cordMaskId : area === "INTERIOR" ? interiorMaskId : wholeMaskId;
+      const artwork = <image
           href={layer.image}
           x={layer.x * 5 - imageSize / 2}
           y={layer.y * 6 - imageSize / 2}
@@ -237,7 +292,8 @@ function GarmentView({ id, template, side, design }: { id: string; template: Tem
           height={imageSize}
           preserveAspectRatio="xMidYMid slice"
           transform={`rotate(${layer.rotation ?? 0} ${layer.x * 5} ${layer.y * 6})`}
-        /></g>;
+        />;
+      return shorts ? <g key={layer.id} mask={`url(#${silhouetteMaskId})`}><g mask={`url(#${areaMaskId})`}>{artwork}</g></g> : <g key={layer.id} clipPath={`url(#${clipId})`}>{artwork}</g>;
     })}
     {shorts && moldImage && <image
       href={moldImage}
