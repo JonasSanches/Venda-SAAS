@@ -273,9 +273,18 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const localThickness = hemThickness + outerCornerBoost + crotchBoost;
         return value && bottomEdge[x] >= 0 && y >= bottomEdge[x] - localThickness * 1.8 && edgeDistance[index] <= localThickness ? 1 : 0;
       });
-      const interior = Uint8Array.from(topInterior, (value, index) => value || hems[index] ? 1 : 0);
-      // “Estampa toda” usa toda a silhueta externa. Apenas as áreas internas de
-      // acabamento (debrum superior e bainhas inferiores) ficam sem estampa.
+      const interior = Uint8Array.from(topInterior, (value, index) => {
+        const x = index % width;
+        const edgeRatio = distanceFromGarmentEdge(x);
+        // Regra visual do molde: no alto, protege somente o debrum central
+        // (os pequenos cantos continuam estampáveis). Embaixo, protege apenas
+        // as viradas externas; barra e gancho pertencem à estampa principal.
+        const protectedTop = Boolean(value) && edgeRatio > .075;
+        const protectedBottomCorner = Boolean(hems[index]) && edgeRatio < .075;
+        return protectedTop || protectedBottomCorner ? 1 : 0;
+      });
+      // “Estampa toda” usa toda a silhueta externa, exceto exatamente os
+      // acabamentos internos azuis definidos no desenho de referência.
       const whole = Uint8Array.from(silhouettePixels, (value, index) => value && !interior[index] ? 1 : 0);
       const toDataUrl = (alphaFor: (index: number) => number) => {
         const output = context.createImageData(width, height);
