@@ -277,11 +277,11 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const x = index % width;
         const edgeRatio = distanceFromGarmentEdge(x);
         // Regra visual do molde: no alto, protege somente o debrum central
-        // (os pequenos cantos continuam estampáveis). Embaixo, protege apenas
-        // as viradas externas; barra e gancho pertencem à estampa principal.
+        // (os pequenos cantos continuam estampáveis). Embaixo, protege as duas
+        // bainhas, preservando como estampáveis os cantos externos e o gancho.
         const protectedTop = Boolean(value) && edgeRatio > .075;
-        const protectedBottomCorner = Boolean(hems[index]) && edgeRatio < .075;
-        return protectedTop || protectedBottomCorner ? 1 : 0;
+        const protectedBottomHem = Boolean(hems[index]) && edgeRatio > .075 && edgeRatio < .425;
+        return protectedTop || protectedBottomHem ? 1 : 0;
       });
       // “Estampa toda” usa toda a silhueta externa, exceto exatamente os
       // acabamentos internos azuis definidos no desenho de referência.
