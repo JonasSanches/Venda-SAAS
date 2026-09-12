@@ -329,13 +329,6 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
         ? "M150 92 L188 106 C204 116 214 133 225 147 C240 167 260 167 275 147 C286 133 296 116 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
         : "M150 92 L188 106 C204 115 215 126 226 137 C241 153 259 153 274 137 C285 126 296 115 312 106 L350 92 C353 120 365 153 372 176 C365 202 353 222 334 240 L352 520 Q250 536 148 520 L166 240 C147 222 135 202 128 176 C135 153 147 120 150 92 Z"
       : "M155 105 Q205 140 220 105 Q250 88 280 105 Q295 140 345 105 L440 190 L390 275 L345 235 L330 520 L170 520 L155 235 L110 275 L60 190 Z";
-  const wholePrintPath = side === "front"
-    ? curved
-      ? "M0 107 Q250 118 500 107 L500 405 L425 405 C422 418 405 431 380 439 C345 446 308 453 276 457 L256 370 L250 362 L244 370 L224 457 C192 453 155 446 120 439 C95 431 78 418 75 405 L0 405 Z"
-      : "M0 104 Q250 114 500 104 L500 418 L430 418 C426 430 411 437 392 441 C350 448 311 454 278 457 L256 405 L250 399 L244 405 L222 457 C189 454 150 448 108 441 C89 437 74 430 70 418 L0 418 Z"
-    : curved
-      ? "M0 126 Q250 142 500 126 L500 418 L432 418 C428 431 411 442 389 448 C346 456 310 462 282 466 L257 374 L250 365 L243 374 L218 466 C190 462 154 456 111 448 C89 442 72 431 68 418 L0 418 Z"
-      : "M0 132 Q250 147 500 132 L500 418 L432 418 C428 431 411 441 392 446 C349 454 313 460 282 464 L257 383 L250 374 L243 383 L218 464 C187 460 151 454 108 446 C89 441 72 431 68 418 L0 418 Z";
   const selected = editable ? design.layers.find((layer) => layer.id === design.selectedId) : undefined;
   function startTransform(action: "move" | "scale" | "rotate", event: ReactPointerEvent<SVGElement>) {
     if (!selected || !svgRef.current) return;
@@ -360,11 +353,14 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
       {shorts && garmentMasks && <>
         <mask id={silhouetteMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.silhouette} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
         <mask id={bodyMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.body} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
-        <mask id={wholeMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><rect width="500" height="600" fill="#000"/><path d={wholePrintPath} fill="#fff"/></mask>
+        {/* Estas duas máscaras vêm do mesmo mapa de pixels do molde. Elas são
+            complementares e, por isso, nunca divergem nas curvas do cós,
+            laterais, barras ou gancho. */}
+        <mask id={wholeMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.whole} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
         <mask id={waistMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.waist} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
         <mask id={sidesMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.sides} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
         <mask id={cordMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.cord} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
-        <mask id={interiorMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.silhouette} {...moldBox} preserveAspectRatio="xMidYMid meet"/><path d={wholePrintPath} fill="#000"/></mask>
+        <mask id={interiorMaskId} maskUnits="userSpaceOnUse" x="0" y="0" width="500" height="600"><image href={garmentMasks.interior} {...moldBox} preserveAspectRatio="xMidYMid meet"/></mask>
       </>}
     </defs>
     {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
