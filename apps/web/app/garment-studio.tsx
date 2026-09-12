@@ -239,9 +239,17 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const x = index % width, y = Math.floor(index / width);
         return value && y / height > .12 && y / height < sideEnd && (x / width < .16 || x / width > .84) ? 1 : 0;
       });
-      // As áreas internas não são estimadas por espessura: são os corredores
-      // brancos realmente fechados entre as linhas pretas do próprio molde.
-      const interior = Uint8Array.from(topAllowance, (value, index) => value || hemAllowance[index] ? 1 : 0);
+      // As áreas internas vêm dos corredores brancos entre as linhas pretas.
+      // O limite vertical impede que uma pequena abertura numa linha tracejada
+      // faça o flood-fill escapar da costura e invadir o corpo inteiro da peça.
+      const topLimit = side === "front" ? (curved ? .225 : .205) : (curved ? .215 : .23);
+      const hemLimit = side === "front" ? (curved ? .74 : .81) : (curved ? .78 : .80);
+      const interior = Uint8Array.from(topAllowance, (value, index) => {
+        const y = Math.floor(index / width) / height;
+        const protectedTop = Boolean(value) && y < topLimit;
+        const protectedHem = Boolean(hemAllowance[index]) && y > hemLimit;
+        return protectedTop || protectedHem ? 1 : 0;
+      });
       // “Estampa toda” usa toda a silhueta externa, exceto esses acabamentos.
       const whole = Uint8Array.from(silhouettePixels, (value, index) => value && !interior[index] ? 1 : 0);
       const toDataUrl = (alphaFor: (index: number) => number) => {
