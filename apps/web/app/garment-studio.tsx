@@ -252,7 +252,10 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
       }
       const topLimit = side === "front" ? (curved ? .225 : .205) : (curved ? .215 : .23);
       const hemLimit = side === "front" ? (curved ? .74 : .81) : (curved ? .78 : .80);
-      const outerTrimThickness = Math.max(6, Math.round(height * .007));
+      // O debrum inferior tem duas linhas: a externa da silhueta e a costura
+      // interna. Protegemos toda essa largura, não apenas a borda de pixels,
+      // para a estampa terminar precisamente antes da faixa branca curva.
+      const outerTrimThickness = Math.max(10, Math.round(height * .018));
       const interior = Uint8Array.from(topAllowance, (value, index) => {
         const y = Math.floor(index / width) / height;
         const protectedTop = Boolean(value) && y < topLimit;
