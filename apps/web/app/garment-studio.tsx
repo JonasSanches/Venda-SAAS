@@ -218,7 +218,6 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
       const detectedWaist = flood(regionSeeds.waist as Array<[number, number]>);
       const seamAllowance = flood([...(regionSeeds.sides as Array<[number, number]>), ...(regionSeeds.hems as Array<[number, number]>)]);
       const topAllowance = flood(regionSeeds.top as Array<[number, number]>);
-      const hemAllowance = flood(regionSeeds.hems as Array<[number, number]>);
       const cordRegion = flood(regionSeeds.cord as Array<[number, number]>);
       const cord = Uint8Array.from(cordRegion, (value, index) => {
         const x = index % width, y = Math.floor(index / width);
@@ -239,16 +238,26 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const x = index % width, y = Math.floor(index / width);
         return value && y / height > .12 && y / height < sideEnd && (x / width < .16 || x / width > .84) ? 1 : 0;
       });
-      // As áreas internas vêm dos corredores brancos entre as linhas pretas.
-      // O limite vertical impede que uma pequena abertura numa linha tracejada
-      // faça o flood-fill escapar da costura e invadir o corpo inteiro da peça.
+      // O contorno inferior protegido é a borda externa real da silhueta.
+      // Assim, a faixa interna entre as costuras recebe a estampa, enquanto o
+      // debrum externo e o recorte do gancho permanecem brancos.
+      const edgeDistance = new Uint16Array(width * height); edgeDistance.fill(65535);
+      const edgeQueue = new Int32Array(width * height); let edgeHead = 0, edgeTail = 0;
+      for (let index = 0; index < silhouettePixels.length; index++) if (!silhouettePixels[index]) { edgeDistance[index] = 0; edgeQueue[edgeTail++] = index; }
+      const visitEdge = (from: number, next: number) => { if (edgeDistance[next] > edgeDistance[from] + 1) { edgeDistance[next] = edgeDistance[from] + 1; edgeQueue[edgeTail++] = next; } };
+      while (edgeHead < edgeTail) {
+        const index = edgeQueue[edgeHead++], x = index % width;
+        if (x > 0) visitEdge(index, index - 1); if (x < width - 1) visitEdge(index, index + 1);
+        if (index >= width) visitEdge(index, index - width); if (index < width * (height - 1)) visitEdge(index, index + width);
+      }
       const topLimit = side === "front" ? (curved ? .225 : .205) : (curved ? .215 : .23);
       const hemLimit = side === "front" ? (curved ? .74 : .81) : (curved ? .78 : .80);
+      const outerTrimThickness = Math.max(6, Math.round(height * .007));
       const interior = Uint8Array.from(topAllowance, (value, index) => {
         const y = Math.floor(index / width) / height;
         const protectedTop = Boolean(value) && y < topLimit;
-        const protectedHem = Boolean(hemAllowance[index]) && y > hemLimit;
-        return protectedTop || protectedHem ? 1 : 0;
+        const protectedOuterTrim = Boolean(silhouettePixels[index]) && y > hemLimit && edgeDistance[index] <= outerTrimThickness;
+        return protectedTop || protectedOuterTrim ? 1 : 0;
       });
       // “Estampa toda” usa toda a silhueta externa, exceto esses acabamentos.
       const whole = Uint8Array.from(silhouettePixels, (value, index) => value && !interior[index] ? 1 : 0);
