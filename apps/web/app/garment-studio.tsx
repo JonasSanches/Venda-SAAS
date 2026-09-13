@@ -257,9 +257,13 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
       // para a estampa terminar precisamente antes da faixa branca curva.
       const outerTrimThickness = Math.max(10, Math.round(height * .018));
       const interior = Uint8Array.from(topAllowance, (value, index) => {
-        const y = Math.floor(index / width) / height;
+        const x = index % width / width, y = Math.floor(index / width) / height;
         const protectedTop = Boolean(value) && y < topLimit;
-        const protectedOuterTrim = Boolean(silhouettePixels[index]) && y > hemLimit && edgeDistance[index] <= outerTrimThickness;
+        // O gancho em V não é a barra: é uma divisão do corpo da bermuda.
+        // Portanto, ele continua recebendo a arte, preservando somente o traço
+        // preto que é desenhado pela imagem do molde sobre a estampa.
+        const centralV = side === "front" && x > .42 && x < .58 && y > hemLimit;
+        const protectedOuterTrim = Boolean(silhouettePixels[index]) && !centralV && y > hemLimit && edgeDistance[index] <= outerTrimThickness;
         return protectedTop || protectedOuterTrim ? 1 : 0;
       });
       // “Estampa toda” usa toda a silhueta externa, exceto esses acabamentos.
