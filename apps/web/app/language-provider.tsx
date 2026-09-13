@@ -436,10 +436,21 @@ function translateNode(root: Node, locale: Locale, captureChanges = false) {
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocale] = useState<Locale>("pt-BR");
+  const [hasSession, setHasSession] = useState(false);
   useEffect(() => {
     const saved = localStorage.getItem("vendamais-language") as Locale | null;
     const detected = navigator.language.toLowerCase().startsWith("pt") ? "pt-BR" : "en";
     setLocale(saved === "pt-BR" || saved === "en" ? saved : detected);
+  }, []);
+  useEffect(() => {
+    const syncSession = () => setHasSession(Boolean(localStorage.getItem("varejo-session")));
+    syncSession();
+    window.addEventListener("storage", syncSession);
+    const timer = window.setInterval(syncSession, 1_000);
+    return () => {
+      window.removeEventListener("storage", syncSession);
+      window.clearInterval(timer);
+    };
   }, []);
   useEffect(() => {
     document.documentElement.lang = locale;
@@ -452,5 +463,5 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("vendamais-language", next);
     setLocale(next);
   };
-  return <>{children}<div className="language-switcher" style={{ position: "fixed", top: 12, right: 12, bottom: "auto" }} role="group" aria-label="Idioma / Language"><button className={locale === "pt-BR" ? "active" : ""} onClick={() => choose("pt-BR")} aria-label="Português">PT</button><button className={locale === "en" ? "active" : ""} onClick={() => choose("en")} aria-label="English">EN</button></div></>;
+  return <>{children}{hasSession&&<button className="mobile-logout" onClick={()=>{localStorage.removeItem("varejo-session");location.replace("/")}}>{locale === "en" ? "Sign out" : "Sair"}</button>}<div className="language-switcher" style={{ position: "fixed", top: 12, right: 12, bottom: "auto" }} role="group" aria-label="Idioma / Language"><button className={locale === "pt-BR" ? "active" : ""} onClick={() => choose("pt-BR")} aria-label="Português">PT</button><button className={locale === "en" ? "active" : ""} onClick={() => choose("en")} aria-label="English">EN</button></div></>;
 }

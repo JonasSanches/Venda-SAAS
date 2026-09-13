@@ -15,6 +15,7 @@ type PlatformUser = {
 };
 type AnalyticsReport={summary:{total:number;uniqueVisitors:number;today:number};daily:Array<{day:string;visits:number}>;visits:Array<{id:string;visitedAt:string;ipAddress?:string;path:string;referrer?:string;device?:string;browser?:string;operatingSystem?:string;language?:string;timezone?:string;platform?:string;screenWidth?:number;screenHeight?:number;viewportWidth?:number;viewportHeight?:number;country?:string;region?:string;city?:string}>;pagination:{page:number;pageSize:number;total:number;totalPages:number}};
 type SurveyResponse={id:string;submittedAt:string;name:string;company:string;contact:string;language?:string;ipAddress?:string;answers:Record<string,string[]>};
+type CuratedBook={id:string;title:string;author?:string;year?:string;license:string;source:string;sourceUrl:string;coverUrl:string;pdfUrl:string;score:number;discoveredAt:string};
 
 export default function Admin() {
   const [session, setSession] = useState<Session | null>(null),
@@ -27,6 +28,7 @@ export default function Admin() {
     [detail, setDetail] = useState<any | null>(null),
     [audit, setAudit] = useState<any[]>([]),
     [analytics,setAnalytics]=useState<AnalyticsReport|null>(null),
+    [books,setBooks]=useState<CuratedBook[]>([]),
     [surveys,setSurveys]=useState<SurveyResponse[]>([]),
     [analyticsError,setAnalyticsError]=useState(""),
     [surveyError,setSurveyError]=useState(""),
@@ -71,6 +73,8 @@ export default function Admin() {
     }
   }
   async function loadAnalytics(days=analyticsDays,page=1){setAnalyticsLoading(true);try{setAnalytics(await call(`/analytics?days=${days}&page=${page}`));setAnalyticsError("")}catch(e){setAnalyticsError((e as Error).message)}finally{setAnalyticsLoading(false)}}
+  async function loadBooks(){try{setBooks(await call("/analytics/library"))}catch(e){setError((e as Error).message)}}
+  async function refreshBooks(){setAnalyticsLoading(true);try{await call("/analytics/library/refresh",{});await loadBooks()}catch(e){setError((e as Error).message)}finally{setAnalyticsLoading(false)}}
   useEffect(() => {
     try {
       const saved = JSON.parse(
@@ -90,7 +94,7 @@ export default function Admin() {
     }
   }, []);
   useEffect(() => {
-    if (session) {void load();void call("/analytics/exclude-current-ip",{}).catch(()=>undefined).finally(()=>loadAnalytics(30,1))}
+    if (session) {void load();void loadBooks();void call("/analytics/exclude-current-ip",{}).catch(()=>undefined).finally(()=>loadAnalytics(30,1))}
   }, [session]);
   async function extend(id: string) {
     const value = prompt(
@@ -285,6 +289,10 @@ export default function Admin() {
         <div className="analytics-table-card"><div><h3>Acessos recentes</h3><p>{analytics?.pagination.total??0} registros no período</p></div><div className="analytics-table"><table><thead><tr><th>Data e hora</th><th>IP</th><th>Dispositivo</th><th>Localidade aproximada</th><th>Origem</th></tr></thead><tbody>{analytics?.visits.map(visit=>{const location=[visit.city,visit.region,visit.country,visit.timezone].filter(Boolean).join(" · ");return <tr key={visit.id}><td>{new Date(visit.visitedAt).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})}</td><td><code>{visit.ipAddress||"—"}</code></td><td>{visit.device||visit.platform||"—"}<small>{[visit.browser,visit.operatingSystem,visit.language].filter(Boolean).join(" · ")}</small></td><td>{location||"Não informada"}</td><td className="analytics-referrer">{visit.referrer||"Acesso direto"}</td></tr>})}</tbody></table>{!analytics?.visits.length&&<p className="analytics-empty">Nenhum acesso encontrado.</p>}</div>
         {analytics&&<div className="analytics-pagination"><button className="secondary" disabled={analyticsLoading||analytics.pagination.page<=1} onClick={()=>void loadAnalytics(analyticsDays,analytics.pagination.page-1)}>Anterior</button><span>Página {analytics.pagination.page} de {analytics.pagination.totalPages}</span><button className="secondary" disabled={analyticsLoading||analytics.pagination.page>=analytics.pagination.totalPages} onClick={()=>void loadAnalytics(analyticsDays,analytics.pagination.page+1)}>Próxima</button></div>}</div>
         <p className="analytics-privacy">🔒 IP e dados técnicos são de acesso exclusivo da administração e devem ser usados somente para segurança e análise, com retenção limitada.</p>
+      </section>
+      <section className="curated-library" aria-labelledby="curated-library-title">
+        <div className="curated-library-title"><div><small>CURADORIA LEGAL AUTOMÁTICA</small><h2 id="curated-library-title">Biblioteca privada</h2><p>Obras históricas com licença aberta declarada na fonte. Atualização automática a cada 5 horas.</p></div><button className="secondary" disabled={analyticsLoading} onClick={()=>void refreshBooks()}>{analyticsLoading?"Atualizando...":"Atualizar agora"}</button></div>
+        <div className="curated-books">{books.map(book=><article key={book.id}><img src={book.coverUrl} alt={`Capa de ${book.title}`}/><div><small>{book.source}</small><h3>{book.title}</h3><p>{[book.author,book.year].filter(Boolean).join(" · ")||"Autoria não informada"}</p><span>{book.license}</span><div><a href={book.pdfUrl} target="_blank" rel="noreferrer">Baixar PDF legal</a><a className="curated-source" href={book.sourceUrl} target="_blank" rel="noreferrer">Ver fonte</a></div></div></article>)}{!books.length&&<p className="analytics-empty">A curadoria será preenchida na próxima consulta automática. Você também pode atualizar agora.</p>}</div>
       </section>
       <section className="survey-admin" id="respostas">
         {surveyError&&<div className="error">Não foi possível carregar as respostas: {surveyError}</div>}
