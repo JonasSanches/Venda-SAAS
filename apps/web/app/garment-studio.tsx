@@ -318,25 +318,25 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
             && region.maxEdgeDistance <= shallowDepth
             && regionWidth >= regionHeight * 1.5;
         }));
-        // Alguns moldes dividem uma das barras inferiores em duas faixas por
-        // uma costura adicional. Agrupamos a extensão horizontal que encosta
-        // nessa mesma barra esquerda, sempre usando os limites das linhas.
+        // Alguns moldes dividem uma das barras inferiores em mais de uma
+        // região por costuras adicionais. Agrupamos todas as subfaixas rasas
+        // que tocam a barra esquerda, sempre usando os limites das linhas.
         const leftLowerPanel = [...darkPanels].find((region) => region.minY > height / 2 && region.maxX < width / 2);
         if (leftLowerPanel) {
-          const leftCompanion = regions
-            .filter((region) => {
-              if (darkPanels.has(region) || region.area < minimumRegion || region.minY <= height / 2 || region.maxX >= width / 2) return false;
-              const regionWidth = region.maxX - region.minX + 1;
-              const regionHeight = region.maxY - region.minY + 1;
-              const overlapX = Math.max(0, Math.min(region.maxX, leftLowerPanel.maxX) - Math.max(region.minX, leftLowerPanel.minX) + 1);
-              const overlapY = Math.max(0, Math.min(region.maxY, leftLowerPanel.maxY) - Math.max(region.minY, leftLowerPanel.minY) + 1);
-              return region.maxEdgeDistance <= shallowDepth
-                && regionWidth >= regionHeight * 1.5
-                && overlapX >= Math.min(regionWidth, leftLowerPanel.maxX - leftLowerPanel.minX + 1) * .5
-                && overlapY > 0;
-            })
-            .sort((first, second) => second.area - first.area)[0];
-          if (leftCompanion) darkPanels.add(leftCompanion);
+          const leftFinish = new Set([leftLowerPanel]);
+          let changed = true;
+          while (changed) {
+            changed = false;
+            for (const region of regions) {
+              if (leftFinish.has(region) || region.area < minimumRegion || region.minY <= height / 2 || region.maxX >= width / 2 || region.maxEdgeDistance > shallowDepth) continue;
+              const connectedToFinish = [...leftFinish].some((panel) => {
+                const gapX = Math.max(0, Math.max(region.minX, panel.minX) - Math.min(region.maxX, panel.maxX) - 1);
+                const gapY = Math.max(0, Math.max(region.minY, panel.minY) - Math.min(region.maxY, panel.maxY) - 1);
+                return gapX <= lineGap * 3 && gapY <= lineGap * 3;
+              });
+              if (connectedToFinish) { leftFinish.add(region); darkPanels.add(region); changed = true; }
+            }
+          }
         }
         for (const region of regions) {
           const isOuterAllowance = darkPanels.has(region);
