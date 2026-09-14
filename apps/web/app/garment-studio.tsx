@@ -296,7 +296,6 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         regions.push({ pixels: regionPixels, area: regionPixels.length, minEdgeDistance, maxEdgeDistance, minX, maxX, minY, maxY });
       }
       const largestRegion = regions.reduce<MoldRegion | undefined>((largest, region) => !largest || region.area > largest.area ? region : largest, undefined);
-      const printMask = new Uint8Array(width * height);
       const interior = new Uint8Array(width * height);
       if (largestRegion) {
         // Uma barra/debrum é uma região rasa, encostada no contorno externo.
@@ -342,17 +341,14 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
           const isOuterAllowance = darkPanels.has(region);
           for (const index of region.pixels) {
             if (isOuterAllowance) interior[index] = 1;
-            else if (region.area >= minimumRegion) printMask[index] = 1;
           }
         }
       }
-      const printablePixels = printMask.reduce((total, value) => total + value, 0);
-      const silhouettePixelsCount = silhouettePixels.reduce((total, value) => total + value, 0);
-      // Se uma imagem enviada não tiver linhas suficientemente nítidas, ainda
-      // mostramos uma prévia segura da silhueta em vez de ocultar a estampa.
-      const whole = printablePixels >= silhouettePixelsCount * .16
-        ? printMask
-        : Uint8Array.from(silhouettePixels, (value, index) => value && !sealed[index] ? 1 : 0);
+      // A barreira dilatada serve apenas para descobrir as regiões. Na hora de
+      // desenhar a arte, ela volta a preencher até os traços reais do molde;
+      // caso contrário, cria uma faixa branca artificial em todas as costuras.
+      // Somente os acabamentos escuros identificados acima ficam sem estampa.
+      const whole = Uint8Array.from(silhouettePixels, (value, index) => value && !interior[index] ? 1 : 0);
       const toDataUrl = (alphaFor: (index: number) => number) => {
         const output = context.createImageData(width, height);
         for (let index = 0; index < width * height; index++) {
