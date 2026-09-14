@@ -2,6 +2,7 @@ export type DigitalFormat = "PDF" | "KINDLE";
 export type DigitalProduct = { slug:string; title:string; hook:string; pdfFile:string; kindleFile:string };
 
 export const DIGITAL_PRODUCTS:DigitalProduct[]=[
+  {slug:"as-armas-da-persuasao",title:"As Armas da Persuasão",hook:"Princípios psicológicos para reconhecer como decisões, negociações e escolhas são influenciadas no dia a dia.",pdfFile:"as-armas-da-persuasao.pdf",kindleFile:"as-armas-da-persuasao.epub"},
   {slug:"codigos-de-energia-volume-1",title:"Vibracional — Códigos de Energia, Volume 1",hook:"Símbolos, frequências e relações energéticas apresentados em uma jornada visual.",pdfFile:"codigos-de-energia-volume-1.pdf",kindleFile:"codigos-de-energia-volume-1.epub"},
   {slug:"livro-da-sabedoria-volume-1",title:"Livro da Sabedoria — Volume 1",hook:"Uma leitura sobre conhecimento, bem e mal e os símbolos que atravessam essa dualidade.",pdfFile:"livro-da-sabedoria-volume-1.pdf",kindleFile:"livro-da-sabedoria-volume-1.epub"},
   {slug:"os-manuscritos-escondidos-volume-2",title:"Os Manuscritos Escondidos — Volume 2",hook:"Conhecimentos, símbolos e manuscritos reunidos em uma obra extensa e ilustrada.",pdfFile:"os-manuscritos-escondidos-volume-2.pdf",kindleFile:"os-manuscritos-escondidos-volume-2.epub"},
