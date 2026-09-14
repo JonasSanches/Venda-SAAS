@@ -178,11 +178,25 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         originalAlpha[index] = alpha;
         barrier[index] = alpha > 16 && pixels.data[offset] < 205 && pixels.data[offset + 1] < 205 && pixels.data[offset + 2] < 205 ? 1 : 0;
       }
-      const sealed = barrier.slice();
-      for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
-        const index = y * width + x;
-        if (barrier[index]) for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) sealed[index + dy * width + dx] = 1;
+      // Fecha os pequenos espaços dos pespontos tracejados. A barreira é
+      // extraída do próprio desenho, portanto acompanha qualquer curva ou
+      // recorte do molde — não uma coordenada pré-definida da bermuda.
+      const lineGap = Math.max(3, Math.round(Math.min(width, height) / 260));
+      const lineDistance = new Uint16Array(width * height); lineDistance.fill(65535);
+      const lineQueue = new Int32Array(width * height); let lineHead = 0, lineTail = 0;
+      for (let index = 0; index < barrier.length; index++) if (barrier[index]) { lineDistance[index] = 0; lineQueue[lineTail++] = index; }
+      const growLine = (from: number, next: number) => {
+        if (lineDistance[from] < lineGap && lineDistance[next] > lineDistance[from] + 1) {
+          lineDistance[next] = lineDistance[from] + 1;
+          lineQueue[lineTail++] = next;
+        }
+      };
+      while (lineHead < lineTail) {
+        const index = lineQueue[lineHead++], x = index % width;
+        if (x > 0) growLine(index, index - 1); if (x < width - 1) growLine(index, index + 1);
+        if (index >= width) growLine(index, index - width); if (index < width * (height - 1)) growLine(index, index + width);
       }
+      const sealed = Uint8Array.from(lineDistance, (distance) => distance <= lineGap ? 1 : 0);
       const flood = (seeds: Array<[number, number]>, borders = false) => {
         const filled = new Uint8Array(width * height), queue = new Int32Array(width * height);
         let head = 0, tail = 0;
@@ -210,14 +224,13 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
       const body = flood(side === "back" ? [[.3, .45], [.7, .45], [.71, .36]] : [[.3, .45], [.7, .45]]);
       const regionSeeds = side === "front"
         ? curved
-          ? { waist: [[.22, .17], [.36, .18], [.64, .18], [.78, .17]], top: [[.25, .108], [.5, .115], [.75, .108]], sides: [[.055, .48], [.945, .48]], hems: [[.25, .79], [.75, .79]], cord: [[.405, .187], [.595, .187], [.445, .31], [.555, .31]] }
-          : { waist: [[.22, .16], [.36, .165], [.64, .165], [.78, .16]], top: [[.25, .105], [.5, .11], [.75, .105]], sides: [[.055, .48], [.945, .48]], hems: [[.25, .862], [.75, .862]], cord: [[.415, .155], [.585, .155], [.445, .245], [.555, .245]] }
+          ? { waist: [[.22, .17], [.36, .18], [.64, .18], [.78, .17]], sides: [[.055, .48], [.945, .48]], hems: [[.25, .79], [.75, .79]], cord: [[.405, .187], [.595, .187], [.445, .31], [.555, .31]] }
+          : { waist: [[.22, .16], [.36, .165], [.64, .165], [.78, .16]], sides: [[.055, .48], [.945, .48]], hems: [[.25, .862], [.75, .862]], cord: [[.415, .155], [.585, .155], [.445, .245], [.555, .245]] }
         : curved
-          ? { waist: [[.22, .15], [.42, .16], [.62, .16], [.82, .15]], top: [[.25, .105], [.5, .112], [.75, .105]], sides: [[.06, .48], [.94, .48]], hems: [[.25, .84], [.75, .84]], cord: [] }
-          : { waist: [[.22, .17], [.42, .18], [.62, .18], [.82, .17]], top: [[.25, .125], [.5, .132], [.75, .125]], sides: [[.055, .5], [.945, .5]], hems: [[.25, .84], [.75, .84]], cord: [] };
+          ? { waist: [[.22, .15], [.42, .16], [.62, .16], [.82, .15]], sides: [[.06, .48], [.94, .48]], hems: [[.25, .84], [.75, .84]], cord: [] }
+          : { waist: [[.22, .17], [.42, .18], [.62, .18], [.82, .17]], sides: [[.055, .5], [.945, .5]], hems: [[.25, .84], [.75, .84]], cord: [] };
       const detectedWaist = flood(regionSeeds.waist as Array<[number, number]>);
       const seamAllowance = flood([...(regionSeeds.sides as Array<[number, number]>), ...(regionSeeds.hems as Array<[number, number]>)]);
-      const topAllowance = flood(regionSeeds.top as Array<[number, number]>);
       const cordRegion = flood(regionSeeds.cord as Array<[number, number]>);
       const cord = Uint8Array.from(cordRegion, (value, index) => {
         const x = index % width, y = Math.floor(index / width);
@@ -238,9 +251,9 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const x = index % width, y = Math.floor(index / width);
         return value && y / height > .12 && y / height < sideEnd && (x / width < .16 || x / width > .84) ? 1 : 0;
       });
-      // O contorno inferior protegido é a borda externa real da silhueta.
-      // Assim, a faixa interna entre as costuras recebe a estampa, enquanto o
-      // debrum externo e o recorte do gancho permanecem brancos.
+      // Mede a distância real da silhueta até o fundo. Ela serve apenas para
+      // reconhecer faixas rasas de acabamento; a linha que encerra cada faixa
+      // vem da imagem do molde e não de um valor fixo de altura/largura.
       const edgeDistance = new Uint16Array(width * height); edgeDistance.fill(65535);
       const edgeQueue = new Int32Array(width * height); let edgeHead = 0, edgeTail = 0;
       for (let index = 0; index < silhouettePixels.length; index++) if (!silhouettePixels[index]) { edgeDistance[index] = 0; edgeQueue[edgeTail++] = index; }
@@ -250,24 +263,58 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         if (x > 0) visitEdge(index, index - 1); if (x < width - 1) visitEdge(index, index + 1);
         if (index >= width) visitEdge(index, index - width); if (index < width * (height - 1)) visitEdge(index, index + width);
       }
-      const topLimit = side === "front" ? (curved ? .225 : .205) : (curved ? .215 : .23);
-      const hemLimit = side === "front" ? (curved ? .74 : .81) : (curved ? .78 : .80);
-      // O debrum inferior tem duas linhas: a externa da silhueta e a costura
-      // interna. Protegemos toda essa largura, não apenas a borda de pixels,
-      // para a estampa terminar precisamente antes da faixa branca curva.
-      const outerTrimThickness = Math.max(10, Math.round(height * .018));
-      const interior = Uint8Array.from(topAllowance, (value, index) => {
-        const x = index % width / width, y = Math.floor(index / width) / height;
-        const protectedTop = Boolean(value) && y < topLimit;
-        // O gancho em V não é a barra: é uma divisão do corpo da bermuda.
-        // Portanto, ele continua recebendo a arte, preservando somente o traço
-        // preto que é desenhado pela imagem do molde sobre a estampa.
-        const centralV = side === "front" && x > .42 && x < .58 && y > hemLimit;
-        const protectedOuterTrim = Boolean(silhouettePixels[index]) && !centralV && y > hemLimit && edgeDistance[index] <= outerTrimThickness;
-        return protectedTop || protectedOuterTrim ? 1 : 0;
-      });
-      // “Estampa toda” usa toda a silhueta externa, exceto esses acabamentos.
-      const whole = Uint8Array.from(silhouettePixels, (value, index) => value && !interior[index] ? 1 : 0);
+      type MoldRegion = { pixels: number[]; area: number; minEdgeDistance: number; maxEdgeDistance: number };
+      const labels = new Int32Array(width * height); labels.fill(-1);
+      const regions: MoldRegion[] = [];
+      const regionQueue = new Int32Array(width * height);
+      for (let start = 0; start < silhouettePixels.length; start++) {
+        if (!silhouettePixels[start] || sealed[start] || labels[start] !== -1) continue;
+        const regionId = regions.length;
+        let regionHead = 0, regionTail = 0;
+        let minEdgeDistance = 65535, maxEdgeDistance = 0;
+        const regionPixels: number[] = [];
+        const addRegionPixel = (index: number) => {
+          if (!silhouettePixels[index] || sealed[index] || labels[index] !== -1) return;
+          labels[index] = regionId;
+          regionQueue[regionTail++] = index;
+        };
+        addRegionPixel(start);
+        while (regionHead < regionTail) {
+          const index = regionQueue[regionHead++], x = index % width;
+          regionPixels.push(index);
+          minEdgeDistance = Math.min(minEdgeDistance, edgeDistance[index]);
+          maxEdgeDistance = Math.max(maxEdgeDistance, edgeDistance[index]);
+          if (x > 0) addRegionPixel(index - 1); if (x < width - 1) addRegionPixel(index + 1);
+          if (index >= width) addRegionPixel(index - width); if (index < width * (height - 1)) addRegionPixel(index + width);
+        }
+        regions.push({ pixels: regionPixels, area: regionPixels.length, minEdgeDistance, maxEdgeDistance });
+      }
+      const largestRegion = regions.reduce<MoldRegion | undefined>((largest, region) => !largest || region.area > largest.area ? region : largest, undefined);
+      const printMask = new Uint8Array(width * height);
+      const interior = new Uint8Array(width * height);
+      if (largestRegion) {
+        // Uma barra/debrum é uma região rasa, encostada no contorno externo.
+        // A profundidade é proporcional ao maior painel encontrado no próprio
+        // molde; assim as curvas, pontas e o V são definidos pelas costuras.
+        const shallowDepth = Math.max(lineGap * 4, Math.round(largestRegion.maxEdgeDistance * .22));
+        const minimumRegion = Math.max(8, Math.round(width * height * .00002));
+        for (const region of regions) {
+          const isOuterAllowance = region.area >= minimumRegion
+            && region.minEdgeDistance <= lineGap + 2
+            && region.maxEdgeDistance <= shallowDepth;
+          for (const index of region.pixels) {
+            if (isOuterAllowance) interior[index] = 1;
+            else if (region.area >= minimumRegion) printMask[index] = 1;
+          }
+        }
+      }
+      const printablePixels = printMask.reduce((total, value) => total + value, 0);
+      const silhouettePixelsCount = silhouettePixels.reduce((total, value) => total + value, 0);
+      // Se uma imagem enviada não tiver linhas suficientemente nítidas, ainda
+      // mostramos uma prévia segura da silhueta em vez de ocultar a estampa.
+      const whole = printablePixels >= silhouettePixelsCount * .16
+        ? printMask
+        : Uint8Array.from(silhouettePixels, (value, index) => value && !sealed[index] ? 1 : 0);
       const toDataUrl = (alphaFor: (index: number) => number) => {
         const output = context.createImageData(width, height);
         for (let index = 0; index < width * height; index++) {
