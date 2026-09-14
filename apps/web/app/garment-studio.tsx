@@ -296,7 +296,10 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         // Uma barra/debrum é uma região rasa, encostada no contorno externo.
         // A profundidade é proporcional ao maior painel encontrado no próprio
         // molde; assim as curvas, pontas e o V são definidos pelas costuras.
-        const shallowDepth = Math.max(lineGap * 4, Math.round(largestRegion.maxEdgeDistance * .22));
+        // Inclui cós, barras e debruns: são os painéis externos mais rasos
+        // delimitados pelas linhas do desenho. Os painéis profundos (corpo e
+        // gancho) continuam imprimíveis, mesmo quando encostam no contorno.
+        const shallowDepth = Math.max(lineGap * 4, Math.round(largestRegion.maxEdgeDistance * .25));
         const minimumRegion = Math.max(8, Math.round(width * height * .00002));
         for (const region of regions) {
           const isOuterAllowance = region.area >= minimumRegion
@@ -402,6 +405,9 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
       </>}
     </defs>
     {!shorts && <path d={shape} fill="#f8fafc" stroke="#172033" strokeWidth="4"/>}
+    {/* Cós, barras e debruns que não recebem a arte ficam escuros, em vez de
+        transparentes. A máscara vem das regiões entre as linhas do desenho. */}
+    {shorts && garmentMasks && <rect width="500" height="600" fill="#101318" mask={`url(#${interiorMaskId})`}/>}
     {(!shorts || garmentMasks) && design.layers.map((layer) => {
       const imageSize = layer.scale * 3;
       const area = layer.printArea ?? "WHOLE";
