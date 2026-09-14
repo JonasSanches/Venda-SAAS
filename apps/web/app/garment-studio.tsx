@@ -318,6 +318,26 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
             && region.maxEdgeDistance <= shallowDepth
             && regionWidth >= regionHeight * 1.5;
         }));
+        // Alguns moldes dividem uma das barras inferiores em duas faixas por
+        // uma costura adicional. Agrupamos a extensão horizontal que encosta
+        // nessa mesma barra esquerda, sempre usando os limites das linhas.
+        const leftLowerPanel = [...darkPanels].find((region) => region.minY > height / 2 && region.maxX < width / 2);
+        if (leftLowerPanel) {
+          const leftCompanion = regions
+            .filter((region) => {
+              if (darkPanels.has(region) || region.area < minimumRegion || region.minY <= height / 2 || region.maxX >= width / 2) return false;
+              const regionWidth = region.maxX - region.minX + 1;
+              const regionHeight = region.maxY - region.minY + 1;
+              const overlapX = Math.max(0, Math.min(region.maxX, leftLowerPanel.maxX) - Math.max(region.minX, leftLowerPanel.minX) + 1);
+              const overlapY = Math.max(0, Math.min(region.maxY, leftLowerPanel.maxY) - Math.max(region.minY, leftLowerPanel.minY) + 1);
+              return region.maxEdgeDistance <= shallowDepth
+                && regionWidth >= regionHeight * 1.5
+                && overlapX >= Math.min(regionWidth, leftLowerPanel.maxX - leftLowerPanel.minX + 1) * .5
+                && overlapY > 0;
+            })
+            .sort((first, second) => second.area - first.area)[0];
+          if (leftCompanion) darkPanels.add(leftCompanion);
+        }
         for (const region of regions) {
           const isOuterAllowance = darkPanels.has(region);
           for (const index of region.pixels) {
