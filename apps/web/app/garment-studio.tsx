@@ -263,7 +263,10 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         if (x > 0) visitEdge(index, index - 1); if (x < width - 1) visitEdge(index, index + 1);
         if (index >= width) visitEdge(index, index - width); if (index < width * (height - 1)) visitEdge(index, index + width);
       }
-      type MoldRegion = { pixels: number[]; area: number; minEdgeDistance: number; maxEdgeDistance: number };
+      type MoldRegion = {
+        pixels: number[]; area: number; minEdgeDistance: number; maxEdgeDistance: number;
+        minX: number; maxX: number; minY: number; maxY: number;
+      };
       const labels = new Int32Array(width * height); labels.fill(-1);
       const regions: MoldRegion[] = [];
       const regionQueue = new Int32Array(width * height);
@@ -272,6 +275,7 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const regionId = regions.length;
         let regionHead = 0, regionTail = 0;
         let minEdgeDistance = 65535, maxEdgeDistance = 0;
+        let minX = width, maxX = 0, minY = height, maxY = 0;
         const regionPixels: number[] = [];
         const addRegionPixel = (index: number) => {
           if (!silhouettePixels[index] || sealed[index] || labels[index] !== -1) return;
@@ -280,14 +284,16 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         };
         addRegionPixel(start);
         while (regionHead < regionTail) {
-          const index = regionQueue[regionHead++], x = index % width;
+          const index = regionQueue[regionHead++], x = index % width, y = Math.floor(index / width);
           regionPixels.push(index);
           minEdgeDistance = Math.min(minEdgeDistance, edgeDistance[index]);
           maxEdgeDistance = Math.max(maxEdgeDistance, edgeDistance[index]);
+          minX = Math.min(minX, x); maxX = Math.max(maxX, x);
+          minY = Math.min(minY, y); maxY = Math.max(maxY, y);
           if (x > 0) addRegionPixel(index - 1); if (x < width - 1) addRegionPixel(index + 1);
           if (index >= width) addRegionPixel(index - width); if (index < width * (height - 1)) addRegionPixel(index + width);
         }
-        regions.push({ pixels: regionPixels, area: regionPixels.length, minEdgeDistance, maxEdgeDistance });
+        regions.push({ pixels: regionPixels, area: regionPixels.length, minEdgeDistance, maxEdgeDistance, minX, maxX, minY, maxY });
       }
       const largestRegion = regions.reduce<MoldRegion | undefined>((largest, region) => !largest || region.area > largest.area ? region : largest, undefined);
       const printMask = new Uint8Array(width * height);
@@ -301,12 +307,19 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         // gancho) continuam imprimíveis, mesmo quando encostam no contorno.
         const shallowDepth = Math.max(lineGap * 4, Math.round(largestRegion.maxEdgeDistance * .25));
         const minimumRegion = Math.max(8, Math.round(width * height * .00002));
+        // Só as faixas largas e horizontais de acabamento viram fundo escuro.
+        // Isso preserva as linhas verticais e o meio da bermuda como área de
+        // estampa, mesmo quando suas costuras tocam o contorno externo.
+        const darkPanels = new Set(regions.filter((region) => {
+          const regionWidth = region.maxX - region.minX + 1;
+          const regionHeight = region.maxY - region.minY + 1;
+          return region.area >= minimumRegion
+            && region.minEdgeDistance <= lineGap * 3
+            && region.maxEdgeDistance <= shallowDepth
+            && regionWidth >= regionHeight * 1.5;
+        }));
         for (const region of regions) {
-          const isOuterAllowance = region.area >= minimumRegion
-            // A linha externa foi engrossada para fechar o pesponto; a primeira
-            // faixa interna começa logo depois dessa espessura (não em y/x fixo).
-            && region.minEdgeDistance <= lineGap * 2
-            && region.maxEdgeDistance <= shallowDepth;
+          const isOuterAllowance = darkPanels.has(region);
           for (const index of region.pixels) {
             if (isOuterAllowance) interior[index] = 1;
             else if (region.area >= minimumRegion) printMask[index] = 1;
