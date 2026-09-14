@@ -105,7 +105,7 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
       <aside className="studio-controls">
         <div className="side-switch"><button type="button" className={side === "front" ? "active" : ""} onClick={() => setSide("front")}>Frente</button><button type="button" className={side === "back" ? "active" : ""} onClick={() => { setSide("back"); if (printArea === "CORD") setPrintArea("BODY"); }}>Costas</button></div>
         <div className="edit-mode-switch"><button type="button" className={editMode === "SECTIONS" ? "active" : ""} onClick={() => { setEditMode("SECTIONS"); if (printArea === "WHOLE") setPrintArea("BODY"); }}>Divisão dos pontos</button><button type="button" className={editMode === "WHOLE" ? "active" : ""} onClick={() => setEditMode("WHOLE")}>Estampa toda</button><button type="button" className={editMode === "COMBINED" ? "active" : ""} onClick={() => setEditMode("COMBINED")}>Usar os dois</button></div>
-        {editMode !== "WHOLE" && template.startsWith("BOARD_SHORTS") && <label>{editMode === "COMBINED" ? "Modo da próxima camada" : "Parte a estampar"}<select value={printArea} onChange={(event) => setPrintArea(event.target.value as PrintArea)}>{editMode === "COMBINED" && <option value="WHOLE">Estampa toda</option>}<option value="BODY">Corpo da peça</option><option value="WAIST">Cintura</option><option value="SIDES">Linhas laterais</option><option value="CORD" disabled={side === "back"}>Cordão</option><option value="INTERIOR">Interior</option></select><small>{editMode === "COMBINED" ? "Escolha Estampa toda ou uma parte para cada nova camada." : "A próxima imagem ficará limitada somente a esta parte."}</small></label>}
+        {editMode !== "WHOLE" && template.startsWith("BOARD_SHORTS") && <label>{editMode === "COMBINED" ? "Modo da próxima camada" : "Parte a estampar"}<select value={printArea} onChange={(event) => setPrintArea(event.target.value as PrintArea)}>{editMode === "COMBINED" && <option value="WHOLE">Estampa toda</option>}<option value="BODY">Corpo da peça</option><option value="WAIST">Cintura</option><option value="SIDES">Linhas laterais</option><option value="CORD" disabled={side === "back"}>Cordão</option><option value="INTERIOR">Interior</option></select><small>{editMode === "COMBINED" ? "Escolha Estampa toda ou uma parte para cada nova camada. As áreas seguem os traços do molde." : "A próxima imagem ficará limitada à área delimitada pelos traços do molde."}</small></label>}
         {editMode !== "WHOLE" && !template.startsWith("BOARD_SHORTS") && <small className="studio-mode-note">A divisão por partes está disponível nos moldes de bermuda. Para camisetas, use “Estampa toda”.</small>}
         <label>Adicionar imagem ou estampa<input type="file" accept="image/png,image/jpeg,.png,.jpg,.jpeg" onChange={upload}/><small>Cada arquivo vira uma camada. PNG transparente pode ser colocado sobre outra imagem.</small></label>
         <div className="artwork-layers"><b>Camadas · de baixo para cima</b>{currentSide.layers.length === 0 && <small>Nenhuma camada adicionada.</small>}{currentSide.layers.map((layer, index) => <button type="button" key={layer.id} className={layer.id === current?.id ? "active" : ""} onClick={() => selectLayer(layer.id)}><span>{index + 1}</span><em>{layer.name}<small>{printAreaLabels[layer.printArea ?? "WHOLE"]}</small></em></button>)}</div>
@@ -154,7 +154,7 @@ function optimizeArtwork(file: File): Promise<string> {
 
 type GarmentMasks = { silhouette: string; body: string; waist: string; sides: string; cord: string; interior: string; whole: string };
 
-function useGarmentMasks(source: string | undefined, side: Side, curved: boolean) {
+function useGarmentMasks(source: string | undefined) {
   const [masks, setMasks] = useState<GarmentMasks>();
   useEffect(() => {
     if (!source) return setMasks(undefined);
@@ -197,21 +197,12 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         if (index >= width) growLine(index, index - width); if (index < width * (height - 1)) growLine(index, index + width);
       }
       const sealed = Uint8Array.from(lineDistance, (distance) => distance <= lineGap ? 1 : 0);
-      const flood = (seeds: Array<[number, number]>, borders = false) => {
+      const floodOutside = () => {
         const filled = new Uint8Array(width * height), queue = new Int32Array(width * height);
         let head = 0, tail = 0;
         const add = (index: number) => { if (!sealed[index] && !filled[index]) { filled[index] = 1; queue[tail++] = index; } };
-        const seed = (normalizedX: number, normalizedY: number) => {
-        const centerX = Math.round(normalizedX * (width - 1)), centerY = Math.round(normalizedY * (height - 1));
-        for (let radius = 0; radius < 18; radius++) for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) {
-          const x = centerX + dx, y = centerY + dy;
-          if (x >= 0 && x < width && y >= 0 && y < height && !sealed[y * width + x]) { add(y * width + x); return; }
-        }
-        };
-        if (borders) {
-          for (let x = 0; x < width; x++) { add(x); add((height - 1) * width + x); }
-          for (let y = 0; y < height; y++) { add(y * width); add(y * width + width - 1); }
-        } else seeds.forEach(([x, y]) => seed(x, y));
+        for (let x = 0; x < width; x++) { add(x); add((height - 1) * width + x); }
+        for (let y = 0; y < height; y++) { add(y * width); add(y * width + width - 1); }
         while (head < tail) {
           const index = queue[head++], x = index % width;
           if (x > 0) add(index - 1); if (x < width - 1) add(index + 1);
@@ -219,38 +210,8 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         }
         return filled;
       };
-      const outside = flood([], true);
+      const outside = floodOutside();
       const silhouettePixels = Uint8Array.from(outside, (value, index) => originalAlpha[index] > 16 && !value ? 1 : 0);
-      const body = flood(side === "back" ? [[.3, .45], [.7, .45], [.71, .36]] : [[.3, .45], [.7, .45]]);
-      const regionSeeds = side === "front"
-        ? curved
-          ? { waist: [[.22, .17], [.36, .18], [.64, .18], [.78, .17]], sides: [[.055, .48], [.945, .48]], hems: [[.25, .79], [.75, .79]], cord: [[.405, .187], [.595, .187], [.445, .31], [.555, .31]] }
-          : { waist: [[.22, .16], [.36, .165], [.64, .165], [.78, .16]], sides: [[.055, .48], [.945, .48]], hems: [[.25, .862], [.75, .862]], cord: [[.415, .155], [.585, .155], [.445, .245], [.555, .245]] }
-        : curved
-          ? { waist: [[.22, .15], [.42, .16], [.62, .16], [.82, .15]], sides: [[.06, .48], [.94, .48]], hems: [[.25, .84], [.75, .84]], cord: [] }
-          : { waist: [[.22, .17], [.42, .18], [.62, .18], [.82, .17]], sides: [[.055, .5], [.945, .5]], hems: [[.25, .84], [.75, .84]], cord: [] };
-      const detectedWaist = flood(regionSeeds.waist as Array<[number, number]>);
-      const seamAllowance = flood([...(regionSeeds.sides as Array<[number, number]>), ...(regionSeeds.hems as Array<[number, number]>)]);
-      const cordRegion = flood(regionSeeds.cord as Array<[number, number]>);
-      const cord = Uint8Array.from(cordRegion, (value, index) => {
-        const x = index % width, y = Math.floor(index / width);
-        return value && x / width > .32 && x / width < .68 && y / height > .1 && y / height < .46 ? 1 : 0;
-      });
-      const waistProfile = side === "front"
-        ? curved ? { left: .12, right: .88, top: .098, topCurve: .022, bottom: .166, bottomCurve: .052 } : { left: .13, right: .87, top: .088, topCurve: .014, bottom: .145, bottomCurve: .036 }
-        : curved ? { left: .15, right: .85, top: .087, topCurve: .018, bottom: .166, bottomCurve: .032 } : { left: .16, right: .84, top: .108, topCurve: .018, bottom: .182, bottomCurve: .032 };
-      const waist = Uint8Array.from(detectedWaist, (value, index) => {
-        const x = index % width / width, y = Math.floor(index / width) / height;
-        const position = Math.max(0, Math.min(1, (x - waistProfile.left) / (waistProfile.right - waistProfile.left)));
-        const curve = 4 * position * (1 - position);
-        const inside = x >= waistProfile.left && x <= waistProfile.right && y >= waistProfile.top + waistProfile.topCurve * curve && y <= waistProfile.bottom + waistProfile.bottomCurve * curve;
-        return (value || inside) && !cord[index] ? 1 : 0;
-      });
-      const sideEnd = curved ? .68 : .76;
-      const sides = Uint8Array.from(seamAllowance, (value, index) => {
-        const x = index % width, y = Math.floor(index / width);
-        return value && y / height > .12 && y / height < sideEnd && (x / width < .16 || x / width > .84) ? 1 : 0;
-      });
       // Mede a distância real da silhueta até o fundo. Ela serve apenas para
       // reconhecer faixas rasas de acabamento; a linha que encerra cada faixa
       // vem da imagem do molde e não de um valor fixo de altura/largura.
@@ -296,59 +257,120 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         regions.push({ pixels: regionPixels, area: regionPixels.length, minEdgeDistance, maxEdgeDistance, minX, maxX, minY, maxY });
       }
       const largestRegion = regions.reduce<MoldRegion | undefined>((largest, region) => !largest || region.area > largest.area ? region : largest, undefined);
-      const interior = new Uint8Array(width * height);
+      const minimumRegion = Math.max(8, Math.round(width * height * .00002));
+      const significantRegions = regions.filter((region) => region.area >= minimumRegion);
+      const measure = (region: MoldRegion) => {
+        const regionWidth = region.maxX - region.minX + 1;
+        const regionHeight = region.maxY - region.minY + 1;
+        return { width: regionWidth, height: regionHeight, centerX: region.minX + regionWidth / 2, centerY: region.minY + regionHeight / 2 };
+      };
+      const mainSeedArea = Math.max(0, ...significantRegions.map((region) => region.area));
+      // Os maiores espaços fechados pelas costuras formam os painéis principais
+      // da peça. Eles fornecem o eixo e a referência das demais regiões, sem
+      // depender de coordenadas específicas deste molde.
+      const mainSeedPanels = significantRegions.filter((region) => region.area >= mainSeedArea * .12);
+      const panelReference = mainSeedPanels.length ? mainSeedPanels : significantRegions;
+      const panelMinX = Math.min(width, ...panelReference.map((region) => region.minX));
+      const panelMaxX = Math.max(0, ...panelReference.map((region) => region.maxX));
+      const panelWidth = Math.max(1, panelMaxX - panelMinX + 1);
+      const panelCenterX = panelMinX + panelWidth / 2;
+      const panelCenterY = panelReference.length ? panelReference.reduce((sum, region) => sum + measure(region).centerY, 0) / panelReference.length : 0;
+      const shallowDepth = largestRegion ? Math.max(lineGap * 4, Math.round(largestRegion.maxEdgeDistance * .25)) : 0;
+      const closeEnough = (first: MoldRegion, second: MoldRegion) => {
+        const gapX = Math.max(0, Math.max(first.minX, second.minX) - Math.min(first.maxX, second.maxX) - 1);
+        const gapY = Math.max(0, Math.max(first.minY, second.minY) - Math.min(first.maxY, second.maxY) - 1);
+        return gapX <= lineGap * 3 && gapY <= lineGap * 3;
+      };
+      const darkPanels = new Set<MoldRegion>();
       if (largestRegion) {
-        // Uma barra/debrum é uma região rasa, encostada no contorno externo.
-        // A profundidade é proporcional ao maior painel encontrado no próprio
-        // molde; assim as curvas, pontas e o V são definidos pelas costuras.
-        // Inclui cós, barras e debruns: são os painéis externos mais rasos
-        // delimitados pelas linhas do desenho. Os painéis profundos (corpo e
-        // gancho) continuam imprimíveis, mesmo quando encostam no contorno.
-        const shallowDepth = Math.max(lineGap * 4, Math.round(largestRegion.maxEdgeDistance * .25));
-        const minimumRegion = Math.max(8, Math.round(width * height * .00002));
-        // Só as faixas largas e horizontais de acabamento viram fundo escuro.
-        // Isso preserva as linhas verticais e o meio da bermuda como área de
-        // estampa, mesmo quando suas costuras tocam o contorno externo.
-        const darkPanels = new Set(regions.filter((region) => {
-          const regionWidth = region.maxX - region.minX + 1;
-          const regionHeight = region.maxY - region.minY + 1;
-          return region.area >= minimumRegion
-            && region.minEdgeDistance <= lineGap * 3
-            && region.maxEdgeDistance <= shallowDepth
-            && regionWidth >= regionHeight * 1.5;
-        }));
-        // Alguns moldes dividem uma das barras inferiores em mais de uma
-        // região por costuras adicionais. Agrupamos todas as subfaixas rasas
-        // que tocam a barra esquerda, sempre usando os limites das linhas.
-        const leftLowerPanel = [...darkPanels].find((region) => region.minY > height / 2 && region.maxX < width / 2);
-        if (leftLowerPanel) {
-          const leftFinish = new Set([leftLowerPanel]);
-          let changed = true;
-          while (changed) {
-            changed = false;
-            for (const region of regions) {
-              if (leftFinish.has(region) || region.area < minimumRegion || region.minY <= height / 2 || region.maxX >= width / 2 || region.maxEdgeDistance > shallowDepth) continue;
-              const connectedToFinish = [...leftFinish].some((panel) => {
-                const gapX = Math.max(0, Math.max(region.minX, panel.minX) - Math.min(region.maxX, panel.maxX) - 1);
-                const gapY = Math.max(0, Math.max(region.minY, panel.minY) - Math.min(region.maxY, panel.maxY) - 1);
-                return gapX <= lineGap * 3 && gapY <= lineGap * 3;
-              });
-              if (connectedToFinish) { leftFinish.add(region); darkPanels.add(region); changed = true; }
-            }
-          }
+        // Os acabamentos sem estampa são faixas rasas que encostam no contorno
+        // externo e são fechadas pelo próprio traço. A expansão ocorre somente
+        // nas barras inferiores conectadas, nunca no cós ou no corpo central.
+        for (const region of significantRegions) {
+          const { width: regionWidth, height: regionHeight } = measure(region);
+          if (region.minEdgeDistance <= lineGap * 3 && region.maxEdgeDistance <= shallowDepth && regionWidth >= regionHeight * 1.5) darkPanels.add(region);
         }
-        for (const region of regions) {
-          const isOuterAllowance = darkPanels.has(region);
-          for (const index of region.pixels) {
-            if (isOuterAllowance) interior[index] = 1;
+        let changed = true;
+        while (changed) {
+          changed = false;
+          for (const region of significantRegions) {
+            if (darkPanels.has(region) || region.maxEdgeDistance > shallowDepth || measure(region).centerY <= panelCenterY) continue;
+            const isConnectedToLowerFinish = [...darkPanels].some((finish) => {
+              const sameSide = (measure(region).centerX - panelCenterX) * (measure(finish).centerX - panelCenterX) > 0;
+              return measure(finish).centerY > panelCenterY && sameSide && closeEnough(region, finish);
+            });
+            if (isConnectedToLowerFinish) { darkPanels.add(region); changed = true; }
           }
         }
       }
-      // A barreira dilatada serve apenas para descobrir as regiões. Na hora de
-      // desenhar a arte, ela volta a preencher até os traços reais do molde;
-      // caso contrário, cria uma faixa branca artificial em todas as costuras.
-      // Somente os acabamentos escuros identificados acima ficam sem estampa.
+      const interior = new Uint8Array(width * height);
+      for (const region of darkPanels) for (const index of region.pixels) interior[index] = 1;
+      // A dilatação só descobre as regiões. A arte volta até o traço original;
+      // assim não surgem faixas brancas artificiais entre costuras.
       const whole = Uint8Array.from(silhouettePixels, (value, index) => value && !interior[index] ? 1 : 0);
+      const printableRegions = significantRegions.filter((region) => !darkPanels.has(region));
+      const largestPrintableArea = Math.max(0, ...printableRegions.map((region) => region.area));
+      const mainPanels = printableRegions.filter((region) => region.area >= largestPrintableArea * .12);
+      const printablePanelReference = mainPanels.length ? mainPanels : printableRegions;
+      const bodyMinX = Math.min(width, ...printablePanelReference.map((region) => region.minX));
+      const bodyMaxX = Math.max(0, ...printablePanelReference.map((region) => region.maxX));
+      const bodyMinY = Math.min(height, ...printablePanelReference.map((region) => region.minY));
+      const bodyWidth = Math.max(1, bodyMaxX - bodyMinX + 1);
+      const bodyCenterX = bodyMinX + bodyWidth / 2;
+      const verticalOverlap = (first: MoldRegion, second: MoldRegion) => Math.max(0, Math.min(first.maxY, second.maxY) - Math.max(first.minY, second.minY) + 1);
+      const hasMirror = (region: MoldRegion, candidates: MoldRegion[]) => {
+        const current = measure(region);
+        return candidates.some((other) => {
+          if (other === region) return false;
+          const mirrored = measure(other);
+          const oppositeSides = (current.centerX - bodyCenterX) * (mirrored.centerX - bodyCenterX) < 0;
+          const alignment = Math.abs((current.centerX - bodyCenterX) + (mirrored.centerX - bodyCenterX));
+          return oppositeSides && alignment <= Math.max(current.width, mirrored.width) * 1.5 + lineGap * 4 && verticalOverlap(region, other) >= Math.min(current.height, mirrored.height) * .3;
+        });
+      };
+      // Cada parte é descoberta pelos espaços que as costuras realmente fecham.
+      // Não há sementes por porcentagem, curvas ou limites próprios de um tipo
+      // de bermuda; se o desenho não fechar uma área, ela permanece no corpo.
+      const waistRegions = printableRegions.filter((region) => {
+        const current = measure(region);
+        return region.area >= Math.max(minimumRegion * 10, largestPrintableArea * .015)
+          && current.centerY < bodyMinY
+          && current.width >= current.height * 1.25;
+      });
+      const sideCandidates = printableRegions.filter((region) => {
+        const current = measure(region);
+        return !waistRegions.includes(region)
+          && region.minEdgeDistance <= lineGap * 3
+          && region.maxEdgeDistance <= shallowDepth
+          && current.height >= current.width * 1.5;
+      });
+      const sideRegions = sideCandidates.filter((region) => hasMirror(region, sideCandidates));
+      const leftWaist = waistRegions.filter((region) => measure(region).centerX < bodyCenterX).sort((first, second) => second.maxX - first.maxX)[0];
+      const rightWaist = waistRegions.filter((region) => measure(region).centerX > bodyCenterX).sort((first, second) => first.minX - second.minX)[0];
+      const waistHeight = Math.max(0, ...waistRegions.map((region) => measure(region).height));
+      const cordCandidates = leftWaist && rightWaist ? printableRegions.filter((region) => {
+        const current = measure(region);
+        const withinWaistOpening = current.centerX >= leftWaist.maxX - waistHeight && current.centerX <= rightWaist.minX + waistHeight;
+        const nearWaist = region.minY <= Math.max(leftWaist.maxY, rightWaist.maxY) + waistHeight * 1.5;
+        const compact = region.area <= Math.max(minimumRegion * 10, largestPrintableArea * .02) && current.height <= current.width * 6;
+        return !waistRegions.includes(region) && !sideRegions.includes(region) && withinWaistOpening && nearWaist && compact;
+      }) : [];
+      const cordRegions = cordCandidates.filter((region) => hasMirror(region, cordCandidates));
+      // As máscaras específicas não se sobrepõem. Tudo que restar da área
+      // imprimível pertence ao corpo, inclusive os pixels das linhas que serão
+      // cobertas pelo desenho do molde no topo.
+      const claimed = new Uint8Array(width * height);
+      const takeRegions = (selectedRegions: MoldRegion[]) => {
+        const mask = new Uint8Array(width * height);
+        for (const region of selectedRegions) for (const index of region.pixels) {
+          if (!claimed[index]) { mask[index] = 1; claimed[index] = 1; }
+        }
+        return mask;
+      };
+      const waist = takeRegions(waistRegions);
+      const sides = takeRegions(sideRegions);
+      const cord = takeRegions(cordRegions);
+      const body = Uint8Array.from(whole, (value, index) => value && !claimed[index] ? 1 : 0);
       const toDataUrl = (alphaFor: (index: number) => number) => {
         const output = context.createImageData(width, height);
         for (let index = 0; index < width * height; index++) {
@@ -364,7 +386,7 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
     };
     image.src = source;
     return () => { active = false; };
-  }, [source, side, curved]);
+  }, [source]);
   return masks;
 }
 
@@ -386,7 +408,7 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
       ? "/molde-bermuda-reta-frente-transparente.png"
       : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
-  const garmentMasks = useGarmentMasks(moldImage, side, curved);
+  const garmentMasks = useGarmentMasks(moldImage);
   const moldBox = side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
   const shape = shorts
     ? side === "front"
