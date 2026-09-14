@@ -303,7 +303,9 @@ function useGarmentMasks(source: string | undefined, side: Side, curved: boolean
         const minimumRegion = Math.max(8, Math.round(width * height * .00002));
         for (const region of regions) {
           const isOuterAllowance = region.area >= minimumRegion
-            && region.minEdgeDistance <= lineGap + 2
+            // A linha externa foi engrossada para fechar o pesponto; a primeira
+            // faixa interna começa logo depois dessa espessura (não em y/x fixo).
+            && region.minEdgeDistance <= lineGap * 2
             && region.maxEdgeDistance <= shallowDepth;
           for (const index of region.pixels) {
             if (isOuterAllowance) interior[index] = 1;
