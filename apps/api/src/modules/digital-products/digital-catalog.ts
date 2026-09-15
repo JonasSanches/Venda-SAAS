@@ -1,5 +1,8 @@
 export type DigitalFormat = "PDF" | "KINDLE";
-export type DigitalProduct = { slug:string; title:string; hook:string; pages:number; pdfFile:string; kindleFile:string };
+export type DigitalProduct = { slug:string; title:string; hook:string; pages:number; pdfFile:string; kindleFile:string; prices?:Partial<Record<DigitalFormat,number>> };
+
+const STANDARD_PRICES:Record<DigitalFormat,number>={PDF:11.99,KINDLE:39.99};
+export const digitalPrices=(product:DigitalProduct):Record<DigitalFormat,number>=>({...STANDARD_PRICES,...product.prices});
 
 export const DIGITAL_PRODUCTS:DigitalProduct[]=[
   {slug:"as-armas-da-persuasao",title:"As Armas da Persuasão",hook:"Princípios psicológicos para reconhecer como decisões, negociações e escolhas são influenciadas no dia a dia.",pages:225,pdfFile:"as-armas-da-persuasao.pdf",kindleFile:"as-armas-da-persuasao.epub"},
@@ -15,7 +18,8 @@ export const DIGITAL_PRODUCTS:DigitalProduct[]=[
   {slug:"despertar-alcalino-parte-1",title:"Despertar Alcalino — Parte 1",hook:"A abertura de uma série sobre alimentação, hábitos e a busca por saúde verdadeira.",pages:9,pdfFile:"despertar-alcalino-parte-1.pdf",kindleFile:"despertar-alcalino-parte-1.epub"},
   {slug:"despertar-alcalino-parte-2",title:"Despertar Alcalino — Parte 2",hook:"Uma leitura provocativa sobre indústria, escolhas alimentares e comportamento.",pages:16,pdfFile:"despertar-alcalino-parte-2.pdf",kindleFile:"despertar-alcalino-parte-2.epub"},
   {slug:"despertar-alcalino-parte-3",title:"Despertar Alcalino — Parte 3",hook:"Compare alimentos orgânicos e industrializados e descubra os argumentos da obra.",pages:14,pdfFile:"despertar-alcalino-parte-3.pdf",kindleFile:"despertar-alcalino-parte-3.epub"},
-  {slug:"despertar-alcalino-parte-4",title:"Despertar Alcalino — Parte 4",hook:"Mentalidade, consciência e a ideia de que mudanças profundas começam por dentro.",pages:17,pdfFile:"despertar-alcalino-parte-4.pdf",kindleFile:"despertar-alcalino-parte-4.epub"}
+  {slug:"despertar-alcalino-parte-4",title:"Despertar Alcalino — Parte 4",hook:"Mentalidade, consciência e a ideia de que mudanças profundas começam por dentro.",pages:17,pdfFile:"despertar-alcalino-parte-4.pdf",kindleFile:"despertar-alcalino-parte-4.epub"},
+  {slug:"pai-rico-pai-pobre-edicao-de-20-anos",title:"Pai Rico, Pai Pobre — Edição de 20 Anos",hook:"Uma leitura sobre educação financeira, ativos, passivos e escolhas para construir mais autonomia.",pages:308,prices:{PDF:7.90},pdfFile:"pai-rico-pai-pobre-edicao-de-20-anos.pdf",kindleFile:"pai-rico-pai-pobre-edicao-de-20-anos.epub"}
 ];
 
-export const digitalPrice=(format:DigitalFormat)=>format==="PDF"?11.99:39.99;
+export const digitalPrice=(product:DigitalProduct,format:DigitalFormat)=>digitalPrices(product)[format];

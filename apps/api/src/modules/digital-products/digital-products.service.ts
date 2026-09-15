@@ -3,18 +3,18 @@ import { prisma } from "@varejo/database";
 import { createReadStream, existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
-import { DIGITAL_PRODUCTS, DigitalFormat, digitalPrice } from "./digital-catalog";
+import { DIGITAL_PRODUCTS, DigitalFormat, digitalPrice, digitalPrices } from "./digital-catalog";
 
 @Injectable()
 export class DigitalProductsService{
   private token(){const value=process.env.MERCADO_PAGO_ACCESS_TOKEN;if(!value)throw new BadRequestException("Pagamento temporariamente indisponível");return value}
   private directory(){return process.env.DIGITAL_PRODUCTS_DIR??"/app/storage/digital-products"}
   private file(product:{pdfFile:string;kindleFile:string},format:DigitalFormat){return resolve(this.directory(),format==="PDF"?"pdf":"kindle",format==="PDF"?product.pdfFile:product.kindleFile)}
-  catalog(){return DIGITAL_PRODUCTS.map(({pdfFile,kindleFile,...product})=>({...product,cover:`/pdf-covers/${product.slug}.png`,preview:`/pdf-previews/${product.slug}.jpg`,previewPages:[1,2,3].map(page=>`/pdf-previews/pages/${product.slug}-${page}.jpg`),prices:{PDF:11.99,KINDLE:39.99},available:{PDF:existsSync(this.file({pdfFile,kindleFile},"PDF")),KINDLE:existsSync(this.file({pdfFile,kindleFile},"KINDLE"))}}))}
+  catalog(){return DIGITAL_PRODUCTS.map(product=>{const{pdfFile,kindleFile,prices:_,...publicProduct}=product;return{...publicProduct,cover:`/pdf-covers/${product.slug}.png`,preview:`/pdf-previews/${product.slug}.jpg`,previewPages:[1,2,3].map(page=>`/pdf-previews/pages/${product.slug}-${page}.jpg`),prices:digitalPrices(product),available:{PDF:existsSync(this.file({pdfFile,kindleFile},"PDF")),KINDLE:existsSync(this.file({pdfFile,kindleFile},"KINDLE"))}}})}
   private product(slug:string){const product=DIGITAL_PRODUCTS.find(item=>item.slug===slug);if(!product)throw new NotFoundException("Livro não encontrado");return product}
   async checkout(slug:string,format:DigitalFormat,email:string){
     const product=this.product(slug);if(!existsSync(this.file(product,format)))throw new BadRequestException("Esta edição ainda está sendo preparada para venda");
-    const amount=digitalPrice(format),externalReference=`digital-${randomUUID()}`,downloadToken=randomUUID(),base=(process.env.PUBLIC_APP_URL??"https://www.vendamais-app.com").replace(/\/$/,"");
+    const amount=digitalPrice(product,format),externalReference=`digital-${randomUUID()}`,downloadToken=randomUUID(),base=(process.env.PUBLIC_APP_URL??"https://www.vendamais-app.com").replace(/\/$/,"");
     const purchase=await prisma.digitalPurchase.create({data:{externalReference,downloadToken,productSlug:slug,format,email:email.toLowerCase(),amount}});
     const callback=`${base}/biblioteca?compra=${purchase.id}&token=${downloadToken}`;
     const response=await fetch("https://api.mercadopago.com/checkout/preferences",{method:"POST",headers:{Authorization:`Bearer ${this.token()}`,"Content-Type":"application/json","X-Idempotency-Key":externalReference},body:JSON.stringify({items:[{id:`livro-${slug}-${format.toLowerCase()}`,title:`${product.title} — ${format==="PDF"?"PDF":"Kindle (EPUB)"}`,description:"Livro digital com liberação após a confirmação do pagamento",quantity:1,currency_id:"BRL",unit_price:amount}],payer:{email},external_reference:externalReference,notification_url:`${base}/api/digital-products/webhook`,back_urls:{success:`${callback}&resultado=sucesso`,pending:`${callback}&resultado=pendente`,failure:`${callback}&resultado=falha`},auto_return:"approved",payment_methods:{installments:1},statement_descriptor:"OMEGA LIVROS"})});
