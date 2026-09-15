@@ -491,6 +491,30 @@ model DigitalPurchase {
   @@map("digital_purchases")
 }
 
+// This account is deliberately separate from Tenant/User. A library member is
+// a buyer of digital books, not a user of a Venda+ business account.
+model LibraryMembership {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  status            String    @default("PENDING")
+  amount            Decimal   @default(59.90) @db.Decimal(10, 2)
+  externalReference String    @unique @map("external_reference")
+  checkoutToken     String    @unique @map("checkout_token")
+  providerPaymentId String?   @map("provider_payment_id")
+  preferenceId      String?   @map("preference_id")
+  checkoutUrl       String?   @map("checkout_url")
+  paymentMethod     String?   @map("payment_method")
+  paidAt            DateTime? @map("paid_at")
+  sessionVersion    Int       @default(0) @map("session_version")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@index([email, createdAt])
+  @@map("library_memberships")
+}
+
 model CuratedBook {
   id          String   @id @default(uuid()) @db.Uuid
   source      String

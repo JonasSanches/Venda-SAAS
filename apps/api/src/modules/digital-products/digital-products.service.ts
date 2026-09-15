@@ -39,4 +39,10 @@ export class DigitalProductsService{
     const product=this.product(purchase.productSlug),file=this.file(product,purchase.format as DigitalFormat);if(!existsSync(file))throw new NotFoundException("Arquivo temporariamente indisponível");
     await prisma.digitalPurchase.update({where:{id},data:{downloadCount:{increment:1},lastDownloadedAt:new Date()}});return{stream:createReadStream(file),name:purchase.format==="PDF"?product.pdfFile:product.kindleFile,type:purchase.format==="PDF"?"application/pdf":"application/epub+zip"};
   }
+  async memberDownload(slug:string,format:string){
+    if(format!=="PDF"&&format!=="KINDLE")throw new NotFoundException("Formato não encontrado");
+    const product=this.product(slug),file=this.file(product,format);
+    if(!existsSync(file))throw new NotFoundException("Esta edição ainda está sendo preparada para a área de membros");
+    return{stream:createReadStream(file),name:format==="PDF"?product.pdfFile:product.kindleFile,type:format==="PDF"?"application/pdf":"application/epub+zip"};
+  }
 }
