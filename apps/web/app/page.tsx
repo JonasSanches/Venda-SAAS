@@ -690,9 +690,9 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       <section className="product-showcase" aria-labelledby="product-showcase-title">
         <div className="showcase-heading">
           <small>ERP COMERCIAL E FISCAL BRASILEIRO</small>
-          <h2 id="product-showcase-title">Um ERP de vendas, atendimento, faturamento e nota fiscal para quem opera no Brasil.</h2>
-          <p>O Venda+ é um ERP que reúne atendimento, PDV, vendas, estoque, faturamento e emissão fiscal em uma única operação. A estrutura tributária é preparada para acompanhar as notas técnicas e as regras da Reforma Tributária, conforme o cronograma oficial de implantação.</p>
-          <div className="showcase-principles"><span><b>Vendas e atendimento integrados</b><small>do balcão ao pós-venda, com a equipe trabalhando na mesma informação</small></span><span><b>Faturamento sob controle</b><small>vendas, caixa, estoque e indicadores para decidir com dados reais</small></span><span><b>Fiscal brasileiro em evolução</b><small>NF-e, NFS-e e regras tributárias acompanhadas conforme notas técnicas oficiais</small></span></div>
+          <h2 id="product-showcase-title">Um ERP de vendas, atendimento, faturamento e nota fiscal.</h2>
+          <p>O Venda+ reúne atendimento automatizado, PDV, vendas, estoque, faturamento e emissão fiscal em uma única operação. A estrutura tributária é preparada para acompanhar as notas técnicas e as regras da Reforma Tributária, conforme o cronograma oficial de implantação.</p>
+          <div className="showcase-principles"><span><b>Atendimento ao cliente automatizado</b><small>extremamente funcional, rápido e organizado do primeiro contato ao pós-venda</small></span><span><b>Vendas e faturamento sob controle</b><small>PDV, caixa, estoque e indicadores para decidir com dados reais</small></span><span><b>Nota Fiscal Eletrônica · NF-e</b><small>emissão fiscal e regras tributárias acompanhadas conforme notas técnicas oficiais</small></span></div>
         </div>
         {zoomedPreview && <button className="preview-backdrop" aria-label="Fechar visualização ampliada" onClick={() => setZoomedPreview(null)} />}
         <div className="showcase-grid operational-showcase-grid">
