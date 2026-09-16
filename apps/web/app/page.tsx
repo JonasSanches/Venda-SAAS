@@ -692,7 +692,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <small>ERP COMERCIAL E FISCAL BRASILEIRO</small>
           <h2 id="product-showcase-title">Um ERP de vendas, atendimento, faturamento e nota fiscal.</h2>
           <p>O Venda+ reúne atendimento automatizado, PDV, vendas, estoque, faturamento e emissão fiscal em uma única operação. A estrutura tributária é preparada para acompanhar as notas técnicas e as regras da Reforma Tributária, conforme o cronograma oficial de implantação.</p>
-          <div className="showcase-principles"><span><b>Atendimento ao cliente automatizado</b><small>extremamente funcional, rápido e organizado do primeiro contato ao pós-venda</small></span><span><b>Vendas e faturamento sob controle</b><small>PDV, caixa, estoque e indicadores para decidir com dados reais</small></span><span><b>Nota Fiscal Eletrônica · NF-e</b><small>emissão fiscal e regras tributárias acompanhadas conforme notas técnicas oficiais</small></span></div>
+          <div className="showcase-principles"><span><b>Atendimento ao cliente automatizado</b><small>extremamente funcional e customizado: uma IA que responde do seu jeito, como o seu negócio. Nossa responsabilidade é dar tempo e segurança para você.</small></span><span><b>Vendas e faturamento sob controle</b><small>PDV, caixa, estoque e indicadores para decidir com dados reais</small></span><span><b>Nota Fiscal Eletrônica · NF-e</b><small>emissão fiscal e regras tributárias acompanhadas conforme notas técnicas oficiais</small></span></div>
         </div>
         {zoomedPreview && <button className="preview-backdrop" aria-label="Fechar visualização ampliada" onClick={() => setZoomedPreview(null)} />}
         <div className="showcase-grid operational-showcase-grid">

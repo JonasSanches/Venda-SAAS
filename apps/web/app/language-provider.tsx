@@ -96,6 +96,7 @@ const english: Record<string, string> = {
   "O limite é a nossa imaginação, alinhada às necessidades do seu negócio. Conheça três pontos essenciais de uma operação conectada, simples de entender e pronta para crescer com você.": "The limit is our imagination, aligned with your business needs. Discover three essential parts of a connected operation that is easy to understand and ready to grow with you.",
   "Vendas e atendimento integrados": "Integrated sales and customer service",
   "Atendimento ao cliente automatizado": "Automated customer service",
+  "extremamente funcional e customizado: uma IA que responde do seu jeito, como o seu negócio. Nossa responsabilidade é dar tempo e segurança para você.": "extremely functional and customized: an AI that responds your way, just like your business. Our responsibility is to give you time and security.",
   "extremamente funcional, rápido e organizado do primeiro contato ao pós-venda": "extremely functional, fast and organized from the first contact to post-sale",
   "do balcão ao pós-venda, com a equipe trabalhando na mesma informação": "from the counter to post-sale, with the whole team working from the same information",
   "Faturamento sob controle": "Billing under control",
