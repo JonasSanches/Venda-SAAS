@@ -12,5 +12,6 @@ export class ProductsService {
     return this.store.addProduct(currentTenantId(), input);
   }
   import(items:ImportProductDto[]){return this.store.importProducts(currentTenantId(),items,currentBranchId())}
+  updateCost(id:string,cost:number){return this.store.updateProductCost(currentTenantId(),id,cost)}
   updateFiscal(id:string,input:ProductFiscalDto){return this.store.updateProductFiscal(currentTenantId(),id,input)}
 }

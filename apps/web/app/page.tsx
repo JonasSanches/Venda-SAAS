@@ -12,6 +12,7 @@ type Product = {
   barcode?: string;
   name: string;
   price: number;
+  cost?: number;
   ncm?: string;
   active: boolean;
   quantity: number;
@@ -25,7 +26,9 @@ type Order = {
   paymentMethod: string;
   total: number;
   status: "PAID" | "CANCELLED";
+  channel?: "PDV" | "DELIVERY" | "ENTREGA";
   createdAt: string;
+  deliveredAt?: string;
 };
 type Summary = {
   products: number;
@@ -33,6 +36,21 @@ type Summary = {
   orders: number;
   revenue: number;
   cashOpen: boolean;
+};
+type DashboardData = {
+  revenueToday: number;
+  revenueChange: number;
+  realMargin: number;
+  marginChange: number;
+  cashDivergence: number;
+  cashDivergenceCount: number;
+  stockRisk: number;
+  stockRiskThreshold: number;
+  lateDeliveries: number;
+  deliveryAlertMinutes: number;
+  rejectedInvoices: number;
+  revenueTrend: number[];
+  marginTrend: number[];
 };
 type BranchInfo = { id: string; name: string; state: string };
 type SystemTheme = "green" | "blue" | "lilac" | "gray" | "brown";
@@ -400,6 +418,7 @@ export default function Home() {
           <Branch session={session} onSelect={selectBranch} />
         ) : page === "Configurações" ? (
           <ThemeSettings
+            token={session.accessToken}
             theme={theme}
             onChange={(next) => {
               setTheme(next);
@@ -407,7 +426,7 @@ export default function Home() {
             }}
           />
         ) : (
-          <Overview summary={summary} onNavigate={setPage} page={page} />
+          <Overview summary={summary} token={session.accessToken} onNavigate={setPage} page={page} />
         )}
       </section>
       {passwordOpen && (
@@ -419,12 +438,16 @@ export default function Home() {
     </main>
   );
 }
-function ThemeSettings({ theme, onChange }: { theme: SystemTheme; onChange: (theme: SystemTheme) => void }) {
+function ThemeSettings({ token, theme, onChange }: { token:string; theme: SystemTheme; onChange: (theme: SystemTheme) => void }) {
+  const [minutes,setMinutes]=useState(45),[message,setMessage]=useState(""),[error,setError]=useState("");
+  useEffect(()=>{request<DashboardData>("/sales/dashboard",token).then(data=>setMinutes(data.deliveryAlertMinutes)).catch(cause=>setError((cause as Error).message))},[token]);
+  async function saveOperations(event:FormEvent<HTMLFormElement>){event.preventDefault();try{await request("/sales/dashboard/settings",token,{method:"PUT",body:JSON.stringify({deliveryAlertMinutes:minutes})});setMessage("Configuração operacional salva.");setError("")}catch(cause){setError((cause as Error).message);setMessage("")}}
   return <section className="theme-settings">
     <div className="theme-settings-heading"><small>PERSONALIZAÇÃO DO SISTEMA</small><h2>Escolha as cores da sua operação.</h2><p>A aparência é salva apenas para esta empresa e pode ser alterada quando quiser.</p></div>
     <div className="theme-options">{systemThemes.map((option) => <button type="button" key={option.id} className={`theme-option ${theme === option.id ? "selected" : ""}`} onClick={() => onChange(option.id)} aria-pressed={theme === option.id}>
       <i className={`theme-sample ${option.id}`}><span /><b /><em /></i><strong>{option.name}</strong><small>{option.description}</small>{theme === option.id && <mark>Selecionado</mark>}
     </button>)}</div>
+    <form className="dashboard-settings" onSubmit={saveOperations}><div><small>ALERTAS OPERACIONAIS</small><h3>Tempo máximo para entrega</h3><p>Pedidos de entrega acima desse tempo aparecem como alerta na página inicial.</p></div><label>Minutos<input type="number" min="5" max="240" step="1" value={minutes} onChange={event=>setMinutes(Number(event.target.value))}/></label><button>Salvar limite</button>{message&&<span className="success">{message}</span>}{error&&<span className="error">{error}</span>}</form>
   </section>;
 }
 function ChangePassword({
@@ -774,13 +797,22 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
 }
 function Overview({
   summary,
+  token,
   onNavigate,
   page,
 }: {
   summary: Summary;
+  token: string;
   onNavigate: (p: string) => void;
   page: string;
 }) {
+  const [dashboard,setDashboard]=useState<DashboardData|null>(null),[dashboardError,setDashboardError]=useState("");
+  useEffect(()=>{
+    if(page!=="Visão geral")return;
+    let active=true;
+    request<DashboardData>("/sales/dashboard",token).then(data=>{if(active){setDashboard(data);setDashboardError("")}}).catch(cause=>{if(active)setDashboardError((cause as Error).message)});
+    return()=>{active=false};
+  },[page,token,summary.orders,summary.revenue,summary.stockUnits]);
   if (page === "Fiscal") return <CommercialFiscal />;
   if (page !== "Visão geral")
     return (
@@ -791,17 +823,14 @@ function Overview({
         </p>
       </div>
     );
-  const metrics = [
-    [
-      "Faturamento",
-      summary.revenue.toLocaleString("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      }),
-    ],
-    ["Vendas", String(summary.orders)],
-    ["Itens em estoque", String(summary.stockUnits)],
-    ["Produtos", String(summary.products)],
+  const data=dashboard??{revenueToday:0,revenueChange:0,realMargin:0,marginChange:0,cashDivergence:0,cashDivergenceCount:0,stockRisk:0,stockRiskThreshold:5,lateDeliveries:0,deliveryAlertMinutes:45,rejectedInvoices:0,revenueTrend:[0,0],marginTrend:[0,0]};
+  const cards=[
+    {id:"revenue",label:"Receita hoje",value:money(data.revenueToday),detail:`${data.revenueChange>=0?"+":""}${data.revenueChange.toLocaleString("pt-BR")}% vs. ontem`,trend:data.revenueTrend,tone:data.revenueChange>=0?"good":"danger"},
+    {id:"margin",label:"Margem real",value:`${data.realMargin.toLocaleString("pt-BR")}%`,detail:`${data.marginChange>=0?"+":""}${data.marginChange.toLocaleString("pt-BR")} p.p. vs. ontem`,trend:data.marginTrend,tone:data.marginChange>=0?"good":"danger"},
+    {id:"cash",label:"Divergência de caixa",value:money(data.cashDivergence),detail:`${data.cashDivergenceCount} ${data.cashDivergenceCount===1?"caixa divergente":"caixas divergentes"}`,trend:[0,data.cashDivergence],tone:data.cashDivergence>0?"danger":"good"},
+    {id:"stock",label:"Itens com risco de ruptura",value:String(data.stockRisk),detail:`Saldo atual ≤ ${data.stockRiskThreshold} unidades`,trend:[0,data.stockRisk],tone:data.stockRisk>0?"warning":"good"},
+    {id:"delivery",label:`Entregas acima de ${data.deliveryAlertMinutes} min`,value:String(data.lateDeliveries),detail:"Em atraso ou concluídas fora do limite",trend:[0,data.lateDeliveries],tone:data.lateDeliveries>0?"danger":"good"},
+    {id:"invoice",label:"NF-e rejeitadas",value:String(data.rejectedInvoices),detail:"Documentos rejeitados hoje",trend:[0,data.rejectedInvoices],tone:data.rejectedInvoices>0?"danger":"good"},
   ];
   return (
     <>
@@ -809,12 +838,13 @@ function Overview({
         <strong>Operação conectada</strong>
         <span>Vendas realizadas no PDV baixam o estoque automaticamente.</span>
       </div>
-      <div className="metrics">
-        {metrics.map(([label, value]) => (
-          <article key={label}>
-            <span>{label}</span>
-            <strong>{value}</strong>
-            <small>Dados reais da demonstração</small>
+      {dashboardError&&<div className="error">Não foi possível atualizar os indicadores: {dashboardError}</div>}
+      <div className={`executive-metrics ${dashboard?"":"loading"}`} aria-busy={!dashboard}>
+        {cards.map(card => (
+          <article key={card.id} className={card.tone}>
+            <div className="metric-card-heading"><span>{card.label}</span><DashboardIcon name={card.id}/></div>
+            <strong>{card.value}</strong>
+            <div className="metric-card-footer"><small>{card.detail}</small><Sparkline values={card.trend}/></div>
           </article>
         ))}
       </div>
@@ -836,6 +866,19 @@ function Overview({
       </div>
     </>
   );
+}
+function DashboardIcon({name}:{name:string}){
+  const common={width:25,height:25,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:1.7,strokeLinecap:"round" as const,strokeLinejoin:"round" as const,"aria-hidden":true};
+  if(name==="revenue")return <svg {...common}><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/><path d="m3 6 5-3 5 3 7-4"/></svg>;
+  if(name==="margin")return <svg {...common}><path d="m3 17 6-6 4 3 8-9"/><path d="M15 5h6v6"/></svg>;
+  if(name==="cash")return <svg {...common}><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/></svg>;
+  if(name==="stock")return <svg {...common}><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m4.5 7.7 7.5 4 7.5-4M12 12v9"/></svg>;
+  if(name==="delivery")return <svg {...common}><path d="M3 6h11v11H3zM14 10h4l3 3v4h-7z"/><circle cx="7" cy="19" r="2"/><circle cx="18" cy="19" r="2"/></svg>;
+  return <svg {...common}><path d="M6 3h9l4 4v14H6zM15 3v5h4"/><path d="M9 13h6M9 17h4"/></svg>;
+}
+function Sparkline({values}:{values:number[]}){
+  const safe=values.length>1?values:[0,...values],min=Math.min(...safe),max=Math.max(...safe),range=max-min||1,points=safe.map((value,index)=>`${(index/(safe.length-1))*64},${25-((value-min)/range)*20}`).join(" ");
+  return <svg className="sparkline" viewBox="0 0 64 30" preserveAspectRatio="none" aria-hidden="true"><polyline points={points}/></svg>;
 }
 function Products({
   products,
@@ -863,6 +906,7 @@ function Products({
           barcode: form.get("barcode") || undefined,
           name: form.get("name"),
           price: Number(form.get("price")),
+          cost: Number(form.get("cost") || 0),
           ncm: form.get("ncm") || undefined,
         }),
       });
@@ -1001,6 +1045,10 @@ function Products({
             <input name="price" type="number" min="0" step="0.01" required />
           </label>
           <label>
+            Custo unitário
+            <input name="cost" type="number" min="0" step="0.0001" defaultValue="0" required />
+          </label>
+          <label>
             Quantidade inicial
             <input
               name="quantity"
@@ -1032,6 +1080,7 @@ function Products({
           <span>Produto</span>
           <span>NCM</span>
           <span>Preço</span>
+          <span>Custo</span>
           <span>Quantidade</span>
           <span>Cadastro</span>
         </div>
@@ -1042,6 +1091,7 @@ function Products({
             <strong>{p.name}</strong>
             <span>{p.ncm ?? "—"}</span>
             <span>{money(p.price)}</span>
+            <ProductCostEditor product={p} token={token} onSaved={onCreated}/>
             <b>{p.quantity ?? 0}</b>
             <time>{new Date(p.createdAt).toLocaleString("pt-BR")}</time>
           </div>
@@ -1049,6 +1099,11 @@ function Products({
       </div>
     </>
   );
+}
+function ProductCostEditor({product,token,onSaved}:{product:Product;token:string;onSaved:()=>void}){
+  const [cost,setCost]=useState(product.cost??0),[saving,setSaving]=useState(false),[status,setStatus]=useState("");
+  useEffect(()=>setCost(product.cost??0),[product.cost]);
+  return <form className="product-cost-editor" onSubmit={async event=>{event.preventDefault();setSaving(true);setStatus("");try{await request(`/products/${product.id}/cost`,token,{method:"PUT",body:JSON.stringify({cost})});setStatus("✓");onSaved()}catch{setStatus("!")}finally{setSaving(false)}}}><input aria-label={`Custo de ${product.name}`} type="number" min="0" step="0.0001" value={cost} onChange={event=>{setCost(Number(event.target.value));setStatus("")}}/><button type="submit" disabled={saving} title={status==="!"?"Não foi possível salvar o custo":undefined}>{saving?"…":status||"Salvar"}</button></form>;
 }
 function Inventory({
   token,
@@ -1201,6 +1256,7 @@ function Pdv({
   const [cart, setCart] = useState<Record<string, number>>({});
   const [orders, setOrders] = useState<Order[]>([]);
   const [method, setMethod] = useState("PIX");
+  const [channel, setChannel] = useState<"PDV"|"DELIVERY">("PDV");
   const [message, setMessage] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
   const [barcode, setBarcode] = useState("");
@@ -1245,7 +1301,7 @@ function Pdv({
         .map(([productId, quantity]) => ({ productId, quantity }));
       const order = await request<Order>("/sales/checkout", token, {
         method: "POST",
-        body: JSON.stringify({ items, paymentMethod: method }),
+        body: JSON.stringify({ items, paymentMethod: method, channel }),
       });
       setCart({});
       setMessage(`Venda #${order.number} concluída — ${money(order.total)}`);
@@ -1255,6 +1311,7 @@ function Pdv({
       setMessage((err as Error).message);
     }
   }
+  async function markDelivered(orderId:string){try{await request(`/sales/orders/${orderId}/deliver`,token,{method:"POST"});setMessage("Entrega concluída e tempo registrado.");await load();onSale()}catch(err){setMessage((err as Error).message)}}
   return (
     <div className="pdv">
       <section>
@@ -1285,7 +1342,8 @@ function Pdv({
           <div className="order" key={o.id}>
             <span>#{o.number}</span>
             <strong>{money(o.total)}</strong>
-            <small>{o.paymentMethod}</small>
+            <small>{o.channel==="DELIVERY"||o.channel==="ENTREGA"?(o.deliveredAt?"Entrega concluída":"Entrega em andamento"):o.paymentMethod}</small>
+            {(o.channel==="DELIVERY"||o.channel==="ENTREGA")&&!o.deliveredAt&&<button type="button" className="secondary order-deliver" onClick={()=>void markDelivered(o.id)}>Marcar entregue</button>}
           </div>
         ))}
       </section>
@@ -1326,6 +1384,13 @@ function Pdv({
           <span>Total</span>
           <strong>{money(total)}</strong>
         </div>
+        <label>
+          Tipo da venda
+          <select value={channel} onChange={(e) => setChannel(e.target.value as "PDV"|"DELIVERY")}>
+            <option value="PDV">Balcão / loja</option>
+            <option value="DELIVERY">Entrega</option>
+          </select>
+        </label>
         <label>
           Pagamento
           <select value={method} onChange={(e) => setMethod(e.target.value)}>

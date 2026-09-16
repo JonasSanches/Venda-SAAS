@@ -9,6 +9,7 @@ export class CreateProductDto {
   @ApiProperty({ required: false }) @IsOptional() @IsObject() designData?: Record<string, unknown>;
   @ApiProperty() @IsString() @Length(2, 160) name!: string;
   @ApiProperty() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) price!: number;
+  @ApiProperty({ required: false }) @IsOptional() @IsNumber({ maxDecimalPlaces: 4 }) @Min(0) cost?: number;
   @ApiProperty({ required: false }) @IsOptional() @IsString() @Length(8, 8) ncm?: string;
 }
 export class ImportProductDto extends CreateProductDto {
@@ -25,3 +26,4 @@ export class ProductFiscalDto {
   @ApiProperty() @IsString() pisCst!: string;
   @ApiProperty() @IsString() cofinsCst!: string;
 }
+export class ProductCostDto { @ApiProperty() @IsNumber({ maxDecimalPlaces: 4 }) @Min(0) cost!:number; }

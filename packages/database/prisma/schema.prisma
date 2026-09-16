@@ -87,6 +87,7 @@ model Tenant {
   trialExpiresAt  DateTime?        @map("trial_expires_at")
   subscriptionPlan String?        @map("subscription_plan")
   subscriptionExpiresAt DateTime? @map("subscription_expires_at")
+  deliveryAlertMinutes Int        @default(45) @map("delivery_alert_minutes")
   createdAt       DateTime         @default(now()) @map("created_at")
   updatedAt       DateTime         @updatedAt @map("updated_at")
   branches        Branch[]
@@ -302,6 +303,7 @@ model Order {
   discount        Decimal          @default(0) @db.Decimal(14, 2)
   total           Decimal          @db.Decimal(14, 2)
   createdAt       DateTime         @default(now()) @map("created_at")
+  deliveredAt     DateTime?        @map("delivered_at")
   cancelledAt     DateTime?        @map("cancelled_at")
   cancelReason    String?          @map("cancel_reason")
   branch          Branch           @relation(fields: [branchId], references: [id])
@@ -312,6 +314,7 @@ model Order {
 
   @@unique([tenantId, branchId, number])
   @@index([tenantId, createdAt])
+  @@index([tenantId, branchId, channel, createdAt])
   @@map("orders")
 }
 
@@ -388,6 +391,7 @@ model OrderItem {
   productId String  @map("product_id") @db.Uuid
   quantity  Decimal @db.Decimal(14, 3)
   unitPrice Decimal @map("unit_price") @db.Decimal(14, 2)
+  unitCost  Decimal? @map("unit_cost") @db.Decimal(14, 4)
   total     Decimal @db.Decimal(14, 2)
   order     Order   @relation(fields: [orderId], references: [id])
   product   Product @relation(fields: [productId], references: [id])
