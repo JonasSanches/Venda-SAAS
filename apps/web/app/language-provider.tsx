@@ -141,6 +141,8 @@ const english: Record<string, string> = {
   "Controle um catálogo amplo, movimentações de estoque, caixa e diferentes usuários.": "Control a broad catalog, inventory movements, cash flow and different users.",
   "Locadoras de veículos": "Vehicle rental companies",
   "Adapte cadastros, cobranças, responsáveis e filiais ao processo da sua operação.": "Adapt records, payments, owners and branches to your operational process.",
+  "Imobiliárias e corretores": "Real estate agencies and brokers",
+  "Centralize imóveis, empreendimentos, clientes, corretores, visitas e propostas para acompanhar cada oportunidade até o fechamento.": "Centralize properties, developments, clients, brokers, visits and proposals to track every opportunity through closing.",
   "CONTROLE QUE GERA VALOR": "CONTROL THAT CREATES VALUE",
   "Transforme cada venda em informação para decidir melhor.": "Turn every sale into information for better decisions.",
   "O Venda+ reúne a operação em painéis simples: o caixa registra, o estoque acompanha, a gestão compara e você controla acessos, filiais e resultados de onde estiver.": "Venda+ brings your operation into simple dashboards: cash is recorded, inventory is tracked, management compares results, and you control access and branches from anywhere.",
