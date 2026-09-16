@@ -23,7 +23,7 @@ done
 chmod 750 deploy/vps/auto-deploy.sh deploy/vps/monitor.sh deploy/vps/backup-config.sh
 if [[ "$units_changed" -eq 1 ]]; then
   systemctl daemon-reload
-  systemctl enable --now vendamais-monitor.timer vendamais-backup.timer
+  systemctl enable --now vendamais-deploy.timer vendamais-monitor.timer vendamais-backup.timer
 fi
 
 git fetch --quiet origin main
