@@ -7,7 +7,7 @@ type Lang = "pt" | "en";
 
 const copy = {
   pt: {
-    welcome: "Olá! Sou o assistente do Venda+. Explico tudo com palavras simples e exemplos. Você pode perguntar sobre preços mensais, semestrais e anuais, painéis de vendas, estoque, entregas configuráveis, caixa, usuários, segurança, pagamento, teste grátis ou suporte 24 horas.",
+    welcome: "Olá! Sou o assistente do Venda+. Uso as informações oficiais do site para responder com clareza. Posso ajudar com o sistema, planos, teste grátis, pagamentos, biblioteca digital, livros, área de membros, segurança e suporte.",
     title: "Assistente Venda+",
     status: "Online • atendimento 24h",
     plans: "Planos",
@@ -15,13 +15,15 @@ const copy = {
     dashboards: "Painéis e gráficos",
     trial: "Teste grátis",
     support: "Suporte",
+    library: "Biblioteca",
+    members: "Área de membros",
     whatsapp: "Falar com uma pessoa no WhatsApp",
     placeholder: "Digite sua dúvida...",
     send: "Enviar",
     open: "Abrir atendimento",
   },
   en: {
-    welcome: "Hi! I'm the Venda+ assistant. I explain everything in plain language and with examples. Ask me about monthly, semiannual and annual pricing, sales dashboards, inventory, configurable deliveries, cash control, users, security, payments, the free trial or 24/7 support.",
+    welcome: "Hi! I'm the Venda+ assistant. I use official website information to answer clearly. Ask me about the system, plans, free trial, payments, digital library, books, member area, security or support.",
     title: "Venda+ Assistant",
     status: "Online • 24/7 assistance",
     plans: "Plans",
@@ -29,6 +31,8 @@ const copy = {
     dashboards: "Dashboards and charts",
     trial: "Free trial",
     support: "Support",
+    library: "Library",
+    members: "Member area",
     whatsapp: "Talk to a person on WhatsApp",
     placeholder: "Type your question...",
     send: "Send",
@@ -41,15 +45,42 @@ function currentLanguage(): Lang {
   return (localStorage.getItem("vendamais-language") === "en" || document.documentElement.lang === "en") ? "en" : "pt";
 }
 
-function renderMessage(text: string) {
-  return text.split(/(https:\/\/wa\.me\/5511978436640)/g).map((part, index) => part.startsWith("https://")
-    ? <a href={part} target="_blank" rel="noopener noreferrer" key={index}>Abrir WhatsApp</a>
-    : part);
+const officialLinks: Record<string, { pt: string; en: string; external?: boolean }> = {
+  "https://wa.me/5511978436640": { pt: "Abrir WhatsApp", en: "Open WhatsApp", external: true },
+  "https://www.vendamais-app.com/biblioteca": { pt: "Abrir biblioteca", en: "Open library" },
+  "https://www.vendamais-app.com/biblioteca/membros": { pt: "Abrir área de membros", en: "Open member area" },
+  "https://www.vendamais-app.com/teste": { pt: "Solicitar teste grátis", en: "Request free trial" },
+  "https://www.omega-ia.com": { pt: "Conhecer a Omega", en: "Meet Omega", external: true },
+};
+
+function renderMessage(text: string, lang: Lang) {
+  const expression = new RegExp(`(${Object.keys(officialLinks).map((link) => link.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`, "g");
+  return text.split(expression).map((part, index) => {
+    const link = officialLinks[part];
+    if (!link) return part;
+    return <a href={part} target={link.external ? "_blank" : undefined} rel={link.external ? "noopener noreferrer" : undefined} key={index}>{link[lang]}</a>;
+  });
 }
 
 function answer(question: string, lang: Lang) {
   const value = question.toLocaleLowerCase("pt-BR");
   const has = (...terms: string[]) => terms.some((term) => value.includes(term));
+  if (has("área de membros", "area de membros", "membro", "membership", "acesso completo", "todos os livros"))
+    return lang === "en"
+      ? "The Library Member Area is separate from the Venda+ business system. With a one-time payment of R$59.90, you create your own email and password and can download every currently available book edition in PDF and Kindle · EPUB.\n\nSome exclusive member content is still being prepared. The access already includes the library titles that are available at the time.\n\nOpen the member area: https://www.vendamais-app.com/biblioteca/membros"
+      : "A Área de Membros é exclusiva da Biblioteca e separada do sistema de gestão Venda+. Com um pagamento único de R$ 59,90, você cria seu próprio e-mail e senha e pode baixar todas as edições de livros já disponíveis em PDF e Kindle · EPUB.\n\nAlguns conteúdos exclusivos ainda estão em preparação. O acesso já inclui os títulos disponíveis na biblioteca no momento.\n\nAbrir a área de membros: https://www.vendamais-app.com/biblioteca/membros";
+  if (has("como comprar", "comprar livro", "download", "baixar livro", "pagamento livro", "book purchase", "buy book", "download book"))
+    return lang === "en"
+      ? "To buy an individual book, open the library, choose PDF or Kindle · EPUB, enter your email and continue to Mercado Pago. The download is released only after the payment is approved.\n\nFor access to all currently available titles, the Member Area offers a one-time R$59.90 purchase.\n\nLibrary: https://www.vendamais-app.com/biblioteca\nMember Area: https://www.vendamais-app.com/biblioteca/membros"
+      : "Para comprar um livro avulso, abra a biblioteca, escolha PDF ou Kindle · EPUB, informe seu e-mail e prossiga para o Mercado Pago. O download é liberado somente depois da aprovação do pagamento.\n\nPara acessar todos os títulos já disponíveis, a Área de Membros oferece uma compra única de R$ 59,90.\n\nBiblioteca: https://www.vendamais-app.com/biblioteca\nÁrea de membros: https://www.vendamais-app.com/biblioteca/membros";
+  if (has("biblioteca", "livro", "livros", "ebook", "e-book", "pdf", "kindle", "epub", "leitura", "persuasão", "persuasao", "pai rico", "inteligência artificial", "inteligencia artificial"))
+    return lang === "en"
+      ? "Venda+ has a digital library organized by subject: business, sales and finance; artificial intelligence and technology; health and well-being; and spirituality, symbolism and self-knowledge.\n\nEach title displays its cover, selected preview pages and number of pages. The PDF format starts at R$7.90; Kindle · EPUB editions use the standard R$39.99 price when available. Availability varies by book and the download is released after Mercado Pago approves the payment.\n\nOpen the library: https://www.vendamais-app.com/biblioteca"
+      : "O Venda+ tem uma Biblioteca Digital organizada por assunto: negócios, vendas e finanças; inteligência artificial e tecnologia; saúde e bem-estar; e espiritualidade, simbolismo e autoconhecimento.\n\nCada título mostra capa, páginas de prévia e quantidade de páginas. O PDF parte de R$ 7,90; as edições Kindle · EPUB usam o preço padrão de R$ 39,99 quando disponíveis. A disponibilidade varia por livro e o download é liberado após a aprovação do Mercado Pago.\n\nAbrir a biblioteca: https://www.vendamais-app.com/biblioteca";
+  if (has("onde", "página", "pagina", "link", "site", "navegar", "navigation", "where"))
+    return lang === "en"
+      ? "The official Venda+ pages are:\n\n• Free trial: https://www.vendamais-app.com/teste\n• Digital library: https://www.vendamais-app.com/biblioteca\n• Library Member Area: https://www.vendamais-app.com/biblioteca/membros\n\nYou can also tell me what you want to do and I will point you to the right page."
+      : "As páginas oficiais do Venda+ são:\n\n• Teste grátis: https://www.vendamais-app.com/teste\n• Biblioteca Digital: https://www.vendamais-app.com/biblioteca\n• Área de Membros da Biblioteca: https://www.vendamais-app.com/biblioteca/membros\n\nVocê também pode me dizer o que deseja fazer que eu indico a página certa.";
   if (has("anual", "annual", "semestral", "semiannual", "desconto", "discount", "parcela", "installment"))
     return lang === "en"
       ? "Venda+ offers three billing periods for every plan:\n\n• MONTHLY: regular price and 30 days of access.\n• SEMIANNUAL: 20% off the total of 6 months and 180 days of access.\n• ANNUAL: 30% off the total of 12 months and 365 days of access.\n\nESSENTIAL: R$129 monthly, R$619.20 semiannual, or R$1,083.60 annual.\nPERFORMANCE: R$249 monthly, R$1,195.20 semiannual, or R$2,091.60 annual.\nSCALE: R$499 monthly, R$2,395.20 semiannual, or R$4,191.60 annual.\n\nPix, debit card and boleto charge the full selected period. For credit cards, Mercado Pago may offer up to 6 or 12 installments, subject to approval and account availability. This is not an automatic recurring subscription: the customer authorizes the payment."
@@ -131,8 +162,8 @@ function answer(question: string, lang: Lang) {
       ? "Venda+ runs in the internet browser, such as Chrome, Safari or Edge. There is no program to install for normal use.\n\nOn a computer, the system uses the larger screen to display more information. On a phone or tablet, menus and content reorganize themselves to fit the smaller screen. The same account can be used according to the employee's permission."
       : "O Venda+ funciona no navegador de internet, como Chrome, Safari ou Edge. Não é necessário instalar um programa para o uso normal.\n\nNo computador, o sistema aproveita a tela maior para mostrar mais informações. No celular ou tablet, os menus e conteúdos se reorganizam para caber na tela menor. A mesma conta pode ser usada de acordo com a permissão do funcionário.";
   return lang === "en"
-    ? "I don't have reliable information about that in the official Venda+ content, so I won't invent an answer. Please speak directly with our team on WhatsApp at +55 11 97843-6640.\n\nOpen WhatsApp: https://wa.me/5511978436640"
-    : "Não encontrei uma informação confiável sobre isso no conteúdo oficial do Venda+, então não vou inventar uma resposta. Fale diretamente com nossa equipe pelo WhatsApp +55 11 97843-6640.\n\nAbrir WhatsApp: https://wa.me/5511978436640";
+    ? "I don't have reliable information about that in the official Venda+ content, so I won't invent an answer. I can help with plans, the system, free trial, payments, digital library, books, member area, security and support. For a specific question, speak to our team on WhatsApp.\n\nOpen WhatsApp: https://wa.me/5511978436640"
+    : "Não encontrei uma informação confiável sobre isso no conteúdo oficial do Venda+, então não vou inventar uma resposta. Posso ajudar com planos, sistema, teste grátis, pagamentos, biblioteca digital, livros, área de membros, segurança e suporte. Para uma questão específica, fale com nossa equipe pelo WhatsApp.\n\nAbrir WhatsApp: https://wa.me/5511978436640";
 }
 
 export function ChatAssistant() {
@@ -169,8 +200,8 @@ export function ChatAssistant() {
   return <div className={`sales-chat ${open ? "open" : ""}`}>
     {open && <section className="sales-chat-panel" role="dialog" aria-label={labels.title}>
       <header><div><strong>{labels.title}</strong><small>{labels.status}</small></div><button onClick={() => setOpen(false)} aria-label="Fechar / Close">×</button></header>
-      <div className="sales-chat-messages">{messages.map((message, index) => <p key={index} className={message.from}>{renderMessage(message.text)}</p>)}<div ref={end}/></div>
-      <div className="sales-chat-shortcuts"><button onClick={() => ask(labels.plans)}>{labels.plans}</button><button onClick={() => ask(labels.dashboards)}>{labels.dashboards}</button><button onClick={() => ask(labels.features)}>{labels.features}</button><button onClick={() => ask(labels.trial)}>{labels.trial}</button><button onClick={() => ask(labels.support)}>{labels.support}</button></div>
+      <div className="sales-chat-messages">{messages.map((message, index) => <p key={index} className={message.from}>{renderMessage(message.text, lang)}</p>)}<div ref={end}/></div>
+      <div className="sales-chat-shortcuts"><button onClick={() => ask(labels.plans)}>{labels.plans}</button><button onClick={() => ask(labels.library)}>{labels.library}</button><button onClick={() => ask(labels.members)}>{labels.members}</button><button onClick={() => ask(labels.features)}>{labels.features}</button><button onClick={() => ask(labels.trial)}>{labels.trial}</button><button onClick={() => ask(labels.support)}>{labels.support}</button></div>
       <a className="sales-chat-whatsapp" href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20sobre%20o%20Venda%2B." target="_blank" rel="noopener noreferrer">{labels.whatsapp}</a>
       <form onSubmit={submit}><input name="question" placeholder={labels.placeholder} autoComplete="off"/><button>{labels.send}</button></form>
     </section>}
