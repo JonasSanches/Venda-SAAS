@@ -689,10 +689,10 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       </section>
       <section className="product-showcase" aria-labelledby="product-showcase-title">
         <div className="showcase-heading">
-          <small>VEJA O VENDA+ EM AÇÃO</small>
-          <h2 id="product-showcase-title">Poder tecnológico sem limites.</h2>
-          <p>O limite é a nossa imaginação, alinhada às necessidades do seu negócio. Veja exemplos práticos de vendas do dia, desempenho semanal, estoque e um fluxo de entregas que pode ser configurado para sua operação.</p>
-          <div className="showcase-principles"><span><b>Facilitador da vida</b><small>menos tarefas repetidas e mais tempo para o que importa</small></span><span><b>Poder de consciência e comunicação</b><small>informações claras para toda a equipe trabalhar alinhada</small></span><span><b>Poder pessoal</b><small>autonomia para compreender, decidir e agir com segurança</small></span></div>
+          <small>GESTÃO COMERCIAL E FISCAL BRASILEIRA</small>
+          <h2 id="product-showcase-title">Vendas, atendimento, faturamento e nota fiscal para quem opera no Brasil.</h2>
+          <p>O Venda+ reúne atendimento, PDV, vendas, estoque, faturamento e emissão fiscal em uma única operação. A estrutura tributária é preparada para acompanhar as notas técnicas e as regras da Reforma Tributária, conforme o cronograma oficial de implantação.</p>
+          <div className="showcase-principles"><span><b>Vendas e atendimento integrados</b><small>do balcão ao pós-venda, com a equipe trabalhando na mesma informação</small></span><span><b>Faturamento sob controle</b><small>vendas, caixa, estoque e indicadores para decidir com dados reais</small></span><span><b>Fiscal brasileiro em evolução</b><small>NF-e, NFS-e e regras tributárias acompanhadas conforme notas técnicas oficiais</small></span></div>
         </div>
         {zoomedPreview && <button className="preview-backdrop" aria-label="Fechar visualização ampliada" onClick={() => setZoomedPreview(null)} />}
         <div className="showcase-grid operational-showcase-grid">
