@@ -35,6 +35,14 @@ type Summary = {
   cashOpen: boolean;
 };
 type BranchInfo = { id: string; name: string; state: string };
+type SystemTheme = "green" | "blue" | "lilac" | "gray" | "brown";
+const systemThemes: Array<{ id: SystemTheme; name: string; description: string }> = [
+  { id: "green", name: "Verde", description: "O visual padrão do Venda+." },
+  { id: "blue", name: "Azul", description: "Painel executivo escuro, como a referência." },
+  { id: "lilac", name: "Lilás claro", description: "Leve, acolhedor e contemporâneo." },
+  { id: "gray", name: "Cinza", description: "Neutro e focado na operação." },
+  { id: "brown", name: "Marrom", description: "Quente, sóbrio e elegante." },
+];
 type Session = {
   accessToken: string;
   user: { name: string; email: string; roles: string[] };
@@ -164,6 +172,7 @@ export default function Home() {
     cashOpen: false,
   });
   const [page, setPage] = useState("Visão geral");
+  const [theme, setTheme] = useState<SystemTheme>("green");
   const [error, setError] = useState("");
   const [passwordOpen, setPasswordOpen] = useState(false);
   const refresh = useCallback(async (s: Session) => {
@@ -183,6 +192,11 @@ export default function Home() {
     const saved = localStorage.getItem("varejo-session");
     if (saved) setSession(JSON.parse(saved));
   }, []);
+  useEffect(() => {
+    if (!session) return;
+    const savedTheme = localStorage.getItem(`vendamais-theme:${session.tenant.tenantId}`) as SystemTheme | null;
+    setTheme(systemThemes.some((item) => item.id === savedTheme) ? savedTheme! : "green");
+  }, [session?.tenant.tenantId]);
   const isPlatformAdmin =
     session?.user.roles.includes("PLATFORM_ADMIN") ?? false;
   useEffect(() => {
@@ -269,7 +283,7 @@ export default function Home() {
       setSession(next);
     };
   return (
-    <main>
+    <main data-theme={theme}>
       <aside>
         <div className="brand">
           <span>V</span> <BrandName /> <OmegaCredit />
@@ -371,6 +385,14 @@ export default function Home() {
           <Users token={session.accessToken} roles={session.user.roles} />
         ) : page === "Filial" ? (
           <Branch session={session} onSelect={selectBranch} />
+        ) : page === "Configurações" ? (
+          <ThemeSettings
+            theme={theme}
+            onChange={(next) => {
+              setTheme(next);
+              localStorage.setItem(`vendamais-theme:${session.tenant.tenantId}`, next);
+            }}
+          />
         ) : (
           <Overview summary={summary} onNavigate={setPage} page={page} />
         )}
@@ -383,6 +405,14 @@ export default function Home() {
       )}
     </main>
   );
+}
+function ThemeSettings({ theme, onChange }: { theme: SystemTheme; onChange: (theme: SystemTheme) => void }) {
+  return <section className="theme-settings">
+    <div className="theme-settings-heading"><small>PERSONALIZAÇÃO DO SISTEMA</small><h2>Escolha as cores da sua operação.</h2><p>A aparência é salva apenas para esta empresa e pode ser alterada quando quiser.</p></div>
+    <div className="theme-options">{systemThemes.map((option) => <button type="button" key={option.id} className={`theme-option ${theme === option.id ? "selected" : ""}`} onClick={() => onChange(option.id)} aria-pressed={theme === option.id}>
+      <i className={`theme-sample ${option.id}`}><span /><b /><em /></i><strong>{option.name}</strong><small>{option.description}</small>{theme === option.id && <mark>Selecionado</mark>}
+    </button>)}</div>
+  </section>;
 }
 function ChangePassword({
   token,
@@ -1881,6 +1911,7 @@ const pagesFor = (roles: string[], segment?: string) => {
         ...studio,
         "Usuários",
         "Filial",
+        "Configurações",
         "Fiscal",
       ]
     : roles.includes("STOCK")
