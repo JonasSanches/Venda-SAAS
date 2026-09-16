@@ -8,10 +8,10 @@ type Category="NEGOCIOS"|"TECNOLOGIA"|"ESPIRITUALIDADE"|"SAUDE";
 type Book={slug:string;category:Category;title:string;hook:string;pages:number;cover:string;available:Record<Format,boolean>};
 type Member={email:string};
 const categories:Array<{id:Category;title:string;description:string}>=[
-  {id:"NEGOCIOS",title:"Negócios, vendas & finanças",description:"Persuasão, escolhas financeiras e decisões para avançar."},
-  {id:"TECNOLOGIA",title:"Inteligência artificial & tecnologia",description:"Fundamentos e aplicações práticas para acompanhar o presente."},
+  {id:"ESPIRITUALIDADE",title:"Espiritualidade, simbolismo & autoconhecimento",description:"Tradições, símbolos e reflexões para novas perspectivas."},
   {id:"SAUDE",title:"Saúde & bem-estar",description:"Conteúdos sobre hábitos, alimentação e autocuidado."},
-  {id:"ESPIRITUALIDADE",title:"Espiritualidade, simbolismo & autoconhecimento",description:"Tradições, símbolos e reflexões para novas perspectivas."}
+  {id:"TECNOLOGIA",title:"Inteligência artificial & tecnologia",description:"Fundamentos e aplicações práticas para acompanhar o presente."},
+  {id:"NEGOCIOS",title:"Negócios, vendas & finanças",description:"Persuasão, escolhas financeiras e decisões para avançar."}
 ];
 const requestError=(body:unknown,fallback:string)=>body&&typeof body==="object"&&"message" in body?String((body as {message?:unknown}).message):fallback;
 
