@@ -7,11 +7,12 @@ type EditMode = "WHOLE" | "SECTIONS" | "COMBINED";
 type PrintArea = "WHOLE" | "BODY" | "WAIST" | "SIDES" | "CORD" | "INTERIOR";
 type ArtworkLayer = { id: string; name: string; image: string; x: number; y: number; scale: number; rotation?: number; printArea?: PrintArea };
 type SideDesign = { layers: ArtworkLayer[]; selectedId?: string };
-type Template = "BOARD_SHORTS_SLIT" | "BOARD_SHORTS_STRAIGHT" | "TSHIRT_REGULAR" | "TANK_TOP";
+type Template = "BOARD_SHORTS_SLIT" | "BOARD_SHORTS_SLIT_2" | "BOARD_SHORTS_STRAIGHT" | "TSHIRT_REGULAR" | "TANK_TOP";
 type DesignData = { front: SideDesign; back: SideDesign };
 
 const templates: Record<Template, { name: string; note: string }> = {
   BOARD_SHORTS_SLIT: { name: "Bermuda surf · cavada", note: "Tactel, lateral cavada com acabamento curvo, laço de duas alças e bolso traseiro direito." },
+  BOARD_SHORTS_SLIT_2: { name: "Bermuda surf · cavada 2", note: "Modelo curto, cava lateral alta, cós com quatro ilhós, cordão frontal e bolso traseiro aplicado." },
   BOARD_SHORTS_STRAIGHT: { name: "Bermuda surf · reta", note: "Tactel, barra reta, laço de duas alças e bolso traseiro direito." },
   TSHIRT_REGULAR: { name: "Camiseta regular", note: "Modelagem regular com mangas, visualização de frente e costas." },
   TANK_TOP: { name: "Camiseta regata", note: "Modelagem sem mangas, visualização de frente e costas." },
@@ -170,12 +171,10 @@ function useGarmentMasks(source: string | undefined) {
       if (!context) return;
       context.drawImage(image, 0, 0, width, height);
       const pixels = context.getImageData(0, 0, width, height);
-      const originalAlpha = new Uint8Array(width * height);
       const barrier = new Uint8Array(width * height);
       for (let index = 0; index < barrier.length; index++) {
         const offset = index * 4;
         const alpha = pixels.data[offset + 3];
-        originalAlpha[index] = alpha;
         barrier[index] = alpha > 16 && pixels.data[offset] < 205 && pixels.data[offset + 1] < 205 && pixels.data[offset + 2] < 205 ? 1 : 0;
       }
       // Fecha os pequenos espaços dos pespontos tracejados. A barreira é
@@ -211,7 +210,9 @@ function useGarmentMasks(source: string | undefined) {
         return filled;
       };
       const outside = floodOutside();
-      const silhouettePixels = Uint8Array.from(outside, (value, index) => originalAlpha[index] > 16 && !value ? 1 : 0);
+      // A região fechada pelos próprios traços define a silhueta. Isso também
+      // permite moldes com fundo transparente, mantendo a máscara fiel à linha.
+      const silhouettePixels = Uint8Array.from(outside, (value) => !value ? 1 : 0);
       // Mede a distância real da silhueta até o fundo. Ela serve apenas para
       // reconhecer faixas rasas de acabamento; a linha que encerra cada faixa
       // vem da imagem do molde e não de um valor fixo de altura/largura.
@@ -393,7 +394,8 @@ function useGarmentMasks(source: string | undefined) {
 function GarmentView({ id, template, side, design, editable, onUpdate }: { id: string; template: Template; side: Side; design: SideDesign; editable: boolean; onUpdate: (side: Side, id: string, values: Partial<Pick<ArtworkLayer, "x" | "y" | "scale" | "rotation">>) => void }) {
   const svgRef = useRef<SVGSVGElement>(null);
   const shorts = template.startsWith("BOARD_SHORTS");
-  const curved = template === "BOARD_SHORTS_SLIT";
+  const curved = template === "BOARD_SHORTS_SLIT" || template === "BOARD_SHORTS_SLIT_2";
+  const secondSlit = template === "BOARD_SHORTS_SLIT_2";
   const tank = template === "TANK_TOP";
   const clipId = `${id}-clip`;
   const silhouetteMaskId = `${id}-silhouette-mask`;
@@ -404,12 +406,16 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
   const cordMaskId = `${id}-cord-mask`;
   const interiorMaskId = `${id}-interior-mask`;
   const moldImage = shorts
-    ? !curved && side === "front"
-      ? "/molde-bermuda-reta-frente-transparente.png"
-      : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
+    ? secondSlit
+      ? `/molde-bermuda-cavada-2-${side === "front" ? "frente" : "costas"}.png`
+      : !curved && side === "front"
+        ? "/molde-bermuda-reta-frente-transparente.png"
+        : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
   const garmentMasks = useGarmentMasks(moldImage);
-  const moldBox = side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
+  const moldBox = secondSlit
+    ? { x: 30, y: 80, width: 440, height: 440 }
+    : side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
   const shape = shorts
     ? side === "front"
       ? curved

@@ -5,7 +5,7 @@ import { ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsNumber, IsObject, IsOption
 export class CreateProductDto {
   @ApiProperty() @IsString() @Length(1, 64) sku!: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() @Length(4, 64) @Matches(/^[0-9A-Za-z._-]+$/, { message: "Código de barras inválido" }) barcode?: string;
-  @ApiProperty({ required: false }) @IsOptional() @IsIn(["BOARD_SHORTS_SLIT", "BOARD_SHORTS_STRAIGHT", "TSHIRT_REGULAR", "TANK_TOP"]) designTemplate?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsIn(["BOARD_SHORTS_SLIT", "BOARD_SHORTS_SLIT_2", "BOARD_SHORTS_STRAIGHT", "TSHIRT_REGULAR", "TANK_TOP"]) designTemplate?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsObject() designData?: Record<string, unknown>;
   @ApiProperty() @IsString() @Length(2, 160) name!: string;
   @ApiProperty() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) price!: number;
