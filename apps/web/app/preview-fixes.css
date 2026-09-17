@@ -1,17 +1,12 @@
-/* Keeps preview controls outside the simulated screen instead of hiding its header. */
+/* Keeps preview controls visible while reserving space for the simulated header. */
 .public-home .preview-zoomed .preview-close {
   position: absolute;
-  top: -18px;
-  right: -18px;
+  top: 10px;
+  right: 10px;
 }
 
-@media (max-width: 620px) {
-  .public-home .preview-zoomed .preview-close {
-    top: 10px;
-    right: 10px;
-  }
-
-  .public-home .preview-zoomed .preview-top span {
-    padding-right: 52px;
-  }
+.public-home .preview-zoomed .preview-top span {
+  box-sizing: border-box;
+  max-width: calc(100% - 52px);
+  padding-right: 52px;
 }
