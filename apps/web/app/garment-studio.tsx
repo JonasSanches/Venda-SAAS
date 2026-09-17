@@ -12,7 +12,7 @@ type DesignData = { front: SideDesign; back: SideDesign };
 
 const templates: Record<Template, { name: string; note: string }> = {
   BOARD_SHORTS_SLIT: { name: "Bermuda surf · cavada", note: "Tactel, lateral cavada com acabamento curvo, laço de duas alças e bolso traseiro direito." },
-  BOARD_SHORTS_SLIT_2: { name: "Bermuda surf · cavada 2", note: "Modelo curto, cava lateral alta, cós com quatro ilhós, cordão frontal e bolso traseiro aplicado." },
+  BOARD_SHORTS_SLIT_2: { name: "Bermuda surf · cavada 2", note: "Modelagem alongada, barra curva e cavada, quatro ilhós, cordão frontal amarrado e bolso traseiro direito." },
   BOARD_SHORTS_STRAIGHT: { name: "Bermuda surf · reta", note: "Tactel, barra reta, laço de duas alças e bolso traseiro direito." },
   TSHIRT_REGULAR: { name: "Camiseta regular", note: "Modelagem regular com mangas, visualização de frente e costas." },
   TANK_TOP: { name: "Camiseta regata", note: "Modelagem sem mangas, visualização de frente e costas." },
@@ -407,7 +407,7 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
   const interiorMaskId = `${id}-interior-mask`;
   const moldImage = shorts
     ? secondSlit
-      ? `/molde-bermuda-cavada-2-${side === "front" ? "frente" : "costas"}.png`
+      ? `/molde-bermuda-cavada-2-${side === "front" ? "frente" : "costas"}.svg`
       : !curved && side === "front"
         ? "/molde-bermuda-reta-frente-transparente.png"
         : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`

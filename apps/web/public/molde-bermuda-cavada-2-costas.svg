@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+  <g fill="#fff" stroke="#111827" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M155 105 Q500 135 845 105 L885 790 Q878 842 820 866 Q685 920 558 925 L500 780 L442 925 Q315 920 180 866 Q122 842 115 790 Z" stroke-width="6"/>
+    <path d="M155 105 Q500 135 845 105 L852 190 Q500 238 148 190 Z" stroke-width="5"/>
+    <path d="M163 121 Q500 150 837 121" fill="none" stroke-width="2"/>
+    <path d="M151 174 Q500 222 849 174" fill="none" stroke-width="2"/>
+    <path d="M151 184 Q500 232 849 184" fill="none" stroke-width="2"/>
+    <path d="M155 190 L132 784 Q140 825 190 846 Q316 897 428 904" fill="none" stroke-width="2"/>
+    <path d="M845 190 L868 784 Q860 825 810 846 Q684 897 572 904" fill="none" stroke-width="2"/>
+    <path d="M143 196 L124 783 M857 196 L876 783" fill="none" stroke-width="2" stroke-dasharray="9 7"/>
+    <path d="M122 800 Q137 837 183 857 Q315 911 438 915" fill="none" stroke-width="2"/>
+    <path d="M878 800 Q863 837 817 857 Q685 911 562 915" fill="none" stroke-width="2"/>
+    <!-- Costura traseira reta, abrindo apenas no gancho. -->
+    <path d="M500 105 L500 675 L500 780" fill="none" stroke-width="5"/>
+    <path d="M512 108 L512 665" fill="none" stroke-width="2" stroke-dasharray="9 7"/>
+    <!-- Bolso traseiro direito conforme a foto: vertical, cantos inferiores cortados e ilhós baixos. -->
+    <path d="M610 302 L800 302 L800 548 L770 582 L640 582 L610 548 Z" fill="#fff" stroke-width="5"/>
+    <path d="M622 315 L788 315 L788 541 L763 568 L647 568 L622 541 Z" fill="none" stroke-width="2"/>
+    <path d="M618 330 L792 330" fill="none" stroke-width="2" stroke-dasharray="8 6"/>
+    <circle cx="656" cy="530" r="10" fill="#fff" stroke-width="5"/>
+    <circle cx="752" cy="530" r="10" fill="#fff" stroke-width="5"/>
+  </g>
+</svg>
