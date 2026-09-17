@@ -488,6 +488,11 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
       preserveAspectRatio="xMidYMid meet"
       style={{ mixBlendMode: "multiply" }}
     />}
+    {secondSlit && side === "back" && <image
+      href="/molde-bermuda-cavada-2-etiqueta.svg"
+      {...moldBox}
+      preserveAspectRatio="xMidYMid meet"
+    />}
     {!shorts && !tank && <><path d="M220 105 Q250 145 280 105" fill="none" stroke="#6b7280" strokeWidth="3"/>{side === "back" && <path d="M205 120 Q250 150 295 120" fill="none" stroke="#9ca3af" strokeWidth="2"/>}</>}
     {tank && <>
       <path d={shape} fill="none" stroke="#172033" strokeWidth="4"/>

@@ -1,23 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
-  <g fill="#fff" stroke="#111827" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M155 105 Q500 135 845 105 L885 790 Q878 842 820 866 Q685 920 558 925 L500 780 L442 925 Q315 920 180 866 Q122 842 115 790 Z" stroke-width="6"/>
-    <path d="M155 105 Q500 135 845 105 L852 190 Q500 238 148 190 Z" stroke-width="5"/>
-    <path d="M163 121 Q500 150 837 121" fill="none" stroke-width="2"/>
-    <path d="M151 174 Q500 222 849 174" fill="none" stroke-width="2"/>
-    <path d="M151 184 Q500 232 849 184" fill="none" stroke-width="2"/>
-    <path d="M155 190 L132 784 Q140 825 190 846 Q316 897 428 904" fill="none" stroke-width="2"/>
-    <path d="M845 190 L868 784 Q860 825 810 846 Q684 897 572 904" fill="none" stroke-width="2"/>
-    <path d="M143 196 L124 783 M857 196 L876 783" fill="none" stroke-width="2" stroke-dasharray="9 7"/>
-    <path d="M122 800 Q137 837 183 857 Q315 911 438 915" fill="none" stroke-width="2"/>
-    <path d="M878 800 Q863 837 817 857 Q685 911 562 915" fill="none" stroke-width="2"/>
-    <!-- Costura traseira reta, abrindo apenas no gancho. -->
-    <path d="M500 105 L500 675 L500 780" fill="none" stroke-width="5"/>
-    <path d="M512 108 L512 665" fill="none" stroke-width="2" stroke-dasharray="9 7"/>
-    <!-- Bolso traseiro direito conforme a foto: vertical, cantos inferiores cortados e ilhós baixos. -->
-    <path d="M610 302 L800 302 L800 548 L770 582 L640 582 L610 548 Z" fill="#fff" stroke-width="5"/>
-    <path d="M622 315 L788 315 L788 541 L763 568 L647 568 L622 541 Z" fill="none" stroke-width="2"/>
-    <path d="M618 330 L792 330" fill="none" stroke-width="2" stroke-dasharray="8 6"/>
-    <circle cx="656" cy="530" r="10" fill="#fff" stroke-width="5"/>
-    <circle cx="752" cy="530" r="10" fill="#fff" stroke-width="5"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="627" height="595" viewBox="0 0 627 595">
+  <defs>
+    <linearGradient id="fold"><stop stop-color="#fff"/><stop offset=".48" stop-color="#dedede"/><stop offset=".65" stop-color="#f9f9f9"/><stop offset="1" stop-color="#fff"/></linearGradient>
+    <linearGradient id="crease"><stop stop-color="#fff"/><stop offset=".55" stop-color="#e5e5e5"/><stop offset="1" stop-color="#fff"/></linearGradient>
+  </defs>
+  <path d="M103 46 Q177 63 252 60 L313 63 Q430 66 532 39 L550 104 Q575 196 585 287 Q595 373 617 456 Q602 491 546 513 Q461 545 350 563 L304 462 Q294 502 282 554 Q245 573 185 551 Q72 527 29 495 Q13 482 8 462 L30 361 Q45 294 55 218 Q67 158 85 108 Z" fill="white" stroke="#333" stroke-width="1.8"/>
+  <g fill="none" stroke="#565656" stroke-width=".8">
+    <path d="M101 51 Q180 68 252 66 L313 69 Q435 71 534 45"/>
+    <path d="M89 92 Q196 116 311 104 Q425 111 546 87"/>
+    <path d="M87 99 Q195 122 310 111 Q429 117 548 94"/>
+    <path d="M9 466 Q23 505 186 545 Q247 565 279 548 M349 556 Q463 540 544 507 Q596 487 613 453"/>
+    <path d="M11 472 Q28 509 186 550 Q248 570 281 553 M351 561 Q466 546 547 512 Q599 491 616 460"/>
+    <path d="M312 64 C301 134 325 235 318 329"/>
+    <path d="M316 64 C306 137 329 236 322 329"/>
+    <path d="M319 65 C310 137 332 236 325 320" stroke-dasharray="2 2"/>
   </g>
+  <path d="M308 108 L315 109" stroke="#222" stroke-width="2.2"/>
+  <path d="M307 116 C303 210 328 272 313 341 C316 369 322 387 325 413 C295 443 273 470 262 493 C251 518 248 537 271 552 L282 550 C264 530 278 502 293 485 L310 461 L331 423 C341 399 318 365 326 337 C340 251 319 185 323 115 Z" fill="url(#fold)"/>
+  <path d="M312 112 C305 176 321 258 318 327 M315 112 C308 178 324 258 321 326" fill="none" stroke="#777" stroke-width=".7"/>
+  <path d="M319 113 C312 179 327 258 324 324" fill="none" stroke="#888" stroke-width=".6" stroke-dasharray="1.5 1.8"/>
+  <path d="M322 351 Q319 387 330 417 Q299 447 284 474" fill="none" stroke="#d6d6d6" stroke-width="1.4"/>
+  <path d="M79 337 Q151 312 229 310 L193 324 Q109 330 60 366 Z M385 421 Q439 414 493 384 Q454 427 395 442 Z M182 463 Q214 414 220 355 Q233 411 193 491 Z" fill="url(#crease)"/>
+  <path d="M378 181 L514 170 L524 250 L505 277 L406 286 L385 265 Z" fill="white" stroke="#555" stroke-width="1"/>
+  <path d="M385 185 L508 177 L517 247 L500 270 L409 279 L392 259 Z" fill="none" stroke="#666" stroke-width=".7"/>
+  <path d="M433 185 Q443 228 462 254 Q474 267 487 248 Q461 269 448 201 Z" fill="url(#crease)"/>
+  <g fill="#e8e8e8" stroke="#222" stroke-width="1.8"><circle cx="416" cy="254" r="4.3"/><circle cx="493" cy="246" r="4.3"/></g>
+  <g fill="none" stroke="#888" stroke-width=".6"><circle cx="416" cy="254" r="2.3"/><circle cx="493" cy="246" r="2.3"/></g>
 </svg>
