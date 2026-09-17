@@ -1,12 +1,19 @@
 /* Keeps preview controls visible while reserving space for the simulated header. */
 .public-home .preview-zoomed .preview-close {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 15px;
+  right: 20px;
 }
 
 .public-home .preview-zoomed .preview-top span {
   box-sizing: border-box;
   max-width: calc(100% - 52px);
   padding-right: 52px;
+}
+
+@media (max-width: 620px) {
+  .public-home .preview-zoomed .preview-close {
+    top: 8px;
+    right: 14px;
+  }
 }
