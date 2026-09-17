@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./styles.css";
 import "./functional.css";
+import "./preview-fixes.css";
 import "./dashboard.css";
 import { TenantBranding } from "./tenant-branding";
 import { LanguageProvider } from "./language-provider";
