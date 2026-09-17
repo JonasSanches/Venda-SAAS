@@ -155,7 +155,7 @@ function optimizeArtwork(file: File): Promise<string> {
 
 type GarmentMasks = { silhouette: string; body: string; waist: string; sides: string; cord: string; interior: string; whole: string };
 
-function useGarmentMasks(source: string | undefined) {
+function useGarmentMasks(source: string | undefined, hasDarkFinishes = true) {
   const [masks, setMasks] = useState<GarmentMasks>();
   useEffect(() => {
     if (!source) return setMasks(undefined);
@@ -283,7 +283,7 @@ function useGarmentMasks(source: string | undefined) {
         return gapX <= lineGap * 3 && gapY <= lineGap * 3;
       };
       const darkPanels = new Set<MoldRegion>();
-      if (largestRegion) {
+      if (largestRegion && hasDarkFinishes) {
         // Os acabamentos sem estampa são faixas rasas que encostam no contorno
         // externo e são fechadas pelo próprio traço. A expansão ocorre somente
         // nas barras inferiores conectadas, nunca no cós ou no corpo central.
@@ -387,7 +387,7 @@ function useGarmentMasks(source: string | undefined) {
     };
     image.src = source;
     return () => { active = false; };
-  }, [source]);
+  }, [source, hasDarkFinishes]);
   return masks;
 }
 
@@ -412,7 +412,7 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
         ? "/molde-bermuda-reta-frente-transparente.png"
         : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
-  const garmentMasks = useGarmentMasks(moldImage);
+  const garmentMasks = useGarmentMasks(moldImage, !secondSlit);
   const moldBox = secondSlit
     ? { x: 30, y: 80, width: 440, height: 440 }
     : side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };

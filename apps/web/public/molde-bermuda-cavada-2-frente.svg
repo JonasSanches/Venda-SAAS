@@ -1,35 +1,37 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
-  <g fill="#fff" stroke="#111827" stroke-linecap="round" stroke-linejoin="round">
-    <!-- Silhueta copiada da peça fotografada: pernas longas, laterais quase retas e barras cavadas. -->
-    <path d="M155 105 Q500 135 845 105 L885 790 Q878 842 820 866 Q685 920 558 925 L500 780 L442 925 Q315 920 180 866 Q122 842 115 790 Z" stroke-width="6"/>
-    <!-- Cós largo e curvo. -->
-    <path d="M155 105 Q500 135 845 105 L852 190 Q500 238 148 190 Z" stroke-width="5"/>
-    <path d="M163 121 Q500 150 837 121" fill="none" stroke-width="2" stroke-dasharray="10 8"/>
-    <path d="M151 174 Q500 222 849 174" fill="none" stroke-width="2"/>
-    <path d="M151 184 Q500 232 849 184" fill="none" stroke-width="2"/>
-    <!-- Pespontos laterais e barras, acompanhando o contorno real. -->
-    <path d="M155 190 L132 784 Q140 825 190 846 Q316 897 428 904" fill="none" stroke-width="2"/>
-    <path d="M845 190 L868 784 Q860 825 810 846 Q684 897 572 904" fill="none" stroke-width="2"/>
-    <path d="M143 196 L124 783 M857 196 L876 783" fill="none" stroke-width="2" stroke-dasharray="9 7"/>
-    <path d="M122 800 Q137 837 183 857 Q315 911 438 915" fill="none" stroke-width="2"/>
-    <path d="M878 800 Q863 837 817 857 Q685 911 562 915" fill="none" stroke-width="2"/>
-    <!-- Carcela frontal assimétrica e gancho profundo. -->
-    <path d="M500 213 L500 570 Q500 650 456 712 L500 780" fill="none" stroke-width="5"/>
-    <path d="M514 213 L514 548 Q514 621 470 704 L514 760" fill="none" stroke-width="2" stroke-dasharray="9 7"/>
-    <path d="M500 430 L540 430 L540 498 Q540 523 514 539" fill="none" stroke-width="3"/>
-    <!-- Painel central dos quatro ilhós. -->
-    <path d="M448 178 L552 178 L552 254 L448 254 Z" fill="#fff" stroke-width="3"/>
-    <path d="M460 184 L460 248 M540 184 L540 248" fill="none" stroke-width="2" stroke-dasharray="7 6"/>
-    <g fill="#fff" stroke-width="5">
-      <circle cx="478" cy="202" r="11"/><circle cx="522" cy="202" r="11"/>
-      <circle cx="478" cy="232" r="11"/><circle cx="522" cy="232" r="11"/>
-    </g>
-    <!-- Cordão amarrado em laço funcional, com duas alças e duas pontas. -->
-    <path d="M500 220 C475 190 416 183 389 210 C374 225 389 247 417 246 C449 245 476 230 500 220 Z" fill="#fff" stroke-width="6"/>
-    <path d="M500 220 C525 190 584 183 611 210 C626 225 611 247 583 246 C551 245 524 230 500 220 Z" fill="#fff" stroke-width="6"/>
-    <rect x="488" y="207" width="24" height="27" rx="7" fill="#fff" stroke-width="5"/>
-    <path d="M494 232 C475 274 464 335 463 430" fill="none" stroke-width="10"/>
-    <path d="M506 232 C525 274 536 335 537 430" fill="none" stroke-width="10"/>
-    <path d="M463 430 L462 452 M537 430 L538 452" fill="none" stroke-width="6"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="616" height="602" viewBox="0 0 616 602">
+  <defs><linearGradient id="fold"><stop stop-color="#fff"/><stop offset=".5" stop-color="#ededed"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
+  <!-- Proporções da referência frontal; molde 1 independente. -->
+  <path d="M86 60 Q180 80 295 77 Q422 81 507 67 L522 122 Q548 239 566 341 L584 460 L594 478 Q579 517 473 541 Q411 555 334 570 L300 478 L278 567 Q170 553 91 532 Q24 515 8 478 L17 459 Q29 332 49 234 L73 115 Z" fill="white" stroke="#424242" stroke-width="1.7" stroke-linejoin="round"/>
+  <g fill="none" stroke="#666" stroke-width=".85" stroke-linecap="round">
+    <path d="M87 65 Q184 86 296 83 Q420 86 508 72"/>
+    <path d="M83 70 Q185 113 292 118 Q409 122 510 77 M80 76 Q188 119 292 124 Q408 128 512 83"/>
+    <path d="M74 111 Q180 160 291 168 Q416 176 520 117 M72 117 Q181 167 291 174 Q417 182 522 124"/>
+    <path d="M80 80 Q53 208 35 340 L22 458 L17 476 Q36 508 97 525 Q182 549 275 560"/>
+    <path d="M513 90 Q546 237 559 341 L578 462 L585 476 Q561 510 471 534 Q407 550 336 563"/>
+    <path d="M82 84 Q53 217 35 343 L23 458 M518 94 Q550 239 564 342 L582 458" stroke-dasharray="2 2"/>
+    <path d="M12 481 Q31 514 94 530 Q179 553 276 565 M590 482 Q565 515 473 539 Q409 555 335 568"/>
+  </g>
+  <path d="M194 177 C173 222 202 261 168 303 C193 273 186 226 207 182 Z M423 190 C431 267 492 276 543 330 C484 290 417 278 423 190 Z M252 294 C237 342 203 361 162 392 C223 365 252 348 261 304 Z M305 336 C307 366 273 384 269 397 C284 414 291 440 296 462 L290 463 C284 443 277 421 259 398 C263 378 298 364 296 336 Z" fill="url(#fold)"/>
+  <g fill="none" stroke="#555" stroke-width="1">
+    <path d="M298 174 L299 275 Q303 316 300 342 C300 363 279 377 266 391 Q262 397 271 406 Q287 422 300 478"/>
+    <path d="M303 175 L304 274 Q308 317 305 343 C305 365 285 380 272 393 Q269 397 276 403 Q293 421 305 473 L338 567"/>
+    <path d="M295 179 L295 260 Q300 276 315 272 Q338 269 336 244 L330 177"/>
+    <path d="M299 183 L300 257 Q303 270 316 266 Q332 263 331 244 L326 182" stroke-dasharray="2 2" stroke-width=".65"/>
+    <path d="M269 408 Q284 435 292 477 L272 562"/>
+    <path d="M266 409 Q279 437 287 477 L268 560" stroke-dasharray="2 2" stroke-width=".65"/>
+    <path d="M235 108 L224 159 M241 111 L230 162 M291 117 L288 169 M296 119 L294 170 M322 118 L328 171 M356 111 L367 164 M362 110 L373 161"/>
+  </g>
+  <path d="M296 241 L304 241 M327 240 L334 240 M297 266 L305 266" fill="none" stroke="#333" stroke-width="2"/>
+  <g fill="#fff" stroke="#333" stroke-width="2">
+    <ellipse cx="278" cy="132" rx="4" ry="5"/><ellipse cx="305" cy="132" rx="4" ry="5"/>
+    <ellipse cx="274" cy="157" rx="4" ry="5"/><ellipse cx="308" cy="157" rx="4" ry="5"/>
+  </g>
+  <!-- Cordão amarrado com alças vazadas e pontas longas. -->
+  <g fill="none" stroke="#999" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <path id="cord" d="M279 132 L307 156 M305 132 L275 157 M292 147 C276 127 244 119 238 136 C231 157 274 165 292 147 C308 128 339 121 346 138 C351 155 313 167 292 147 M285 153 C265 187 257 235 251 280 C245 324 237 352 233 386 M301 154 C320 195 326 238 334 284 C340 327 347 359 349 392" />
+    <use href="#cord" stroke="#fafafa" stroke-width="4.4"/>
+    <path d="M288 144 Q293 141 298 147 L297 154 Q291 158 287 152 Z" fill="#fff" stroke="#888" stroke-width="1"/>
+    <path d="M233 386 L231 402 M349 392 L350 408" stroke="#aaa" stroke-width="3"/>
+    <path d="M233 386 L231 402 M349 392 L350 408" stroke="#eee" stroke-width="1.6"/>
   </g>
 </svg>
