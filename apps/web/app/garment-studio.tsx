@@ -155,7 +155,7 @@ function optimizeArtwork(file: File): Promise<string> {
 
 type GarmentMasks = { silhouette: string; body: string; waist: string; sides: string; cord: string; interior: string; whole: string };
 
-function useGarmentMasks(source: string | undefined, hasDarkFinishes = true) {
+function useGarmentMasks(source: string | undefined, hasDarkFinishes = true, photoCutout = false) {
   const [masks, setMasks] = useState<GarmentMasks>();
   useEffect(() => {
     if (!source) return setMasks(undefined);
@@ -175,7 +175,8 @@ function useGarmentMasks(source: string | undefined, hasDarkFinishes = true) {
       for (let index = 0; index < barrier.length; index++) {
         const offset = index * 4;
         const alpha = pixels.data[offset + 3];
-        barrier[index] = alpha > 16 && pixels.data[offset] < 205 && pixels.data[offset + 1] < 205 && pixels.data[offset + 2] < 205 ? 1 : 0;
+        const seamThreshold = photoCutout ? 110 : 205;
+        barrier[index] = alpha > 16 && pixels.data[offset] < seamThreshold && pixels.data[offset + 1] < seamThreshold && pixels.data[offset + 2] < seamThreshold ? 1 : 0;
       }
       // Fecha os pequenos espaços dos pespontos tracejados. A barreira é
       // extraída do próprio desenho, portanto acompanha qualquer curva ou
@@ -212,7 +213,11 @@ function useGarmentMasks(source: string | undefined, hasDarkFinishes = true) {
       const outside = floodOutside();
       // A região fechada pelos próprios traços define a silhueta. Isso também
       // permite moldes com fundo transparente, mantendo a máscara fiel à linha.
-      const silhouettePixels = Uint8Array.from(outside, (value) => !value ? 1 : 0);
+      // Photo cutouts already contain their exact silhouette. Do not flood-fill
+      // through faint stitching or mistake a natural fabric shadow for an edge.
+      const silhouettePixels = Uint8Array.from(outside, (value, index) => photoCutout
+        ? (pixels.data[index * 4 + 3] >= 128 ? 1 : 0)
+        : (!value ? 1 : 0));
       // Mede a distância real da silhueta até o fundo. Ela serve apenas para
       // reconhecer faixas rasas de acabamento; a linha que encerra cada faixa
       // vem da imagem do molde e não de um valor fixo de altura/largura.
@@ -387,7 +392,7 @@ function useGarmentMasks(source: string | undefined, hasDarkFinishes = true) {
     };
     image.src = source;
     return () => { active = false; };
-  }, [source, hasDarkFinishes]);
+  }, [source, hasDarkFinishes, photoCutout]);
   return masks;
 }
 
@@ -407,12 +412,12 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
   const interiorMaskId = `${id}-interior-mask`;
   const moldImage = shorts
     ? secondSlit
-      ? `/molde-bermuda-cavada-2-${side === "front" ? "frente" : "costas"}.svg`
+      ? `/molde-bermuda-cavada-2-foto-${side === "front" ? "frente" : "costas"}.png`
       : !curved && side === "front"
         ? "/molde-bermuda-reta-frente-transparente.png"
         : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
-  const garmentMasks = useGarmentMasks(moldImage, !secondSlit);
+  const garmentMasks = useGarmentMasks(moldImage, !secondSlit, secondSlit);
   const moldBox = secondSlit
     ? { x: 30, y: 80, width: 440, height: 440 }
     : side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
@@ -488,11 +493,12 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
       preserveAspectRatio="xMidYMid meet"
       style={{ mixBlendMode: "multiply" }}
     />}
-    {secondSlit && side === "back" && <image
-      href="/molde-bermuda-cavada-2-etiqueta.svg"
-      {...moldBox}
-      preserveAspectRatio="xMidYMid meet"
-    />}
+    {secondSlit && side === "back" && <svg {...moldBox} viewBox="0 0 1311 1200" preserveAspectRatio="xMidYMid meet">
+      <defs><clipPath id={`${id}-fixed-label`}>
+        <path d="M772 255 L1075 232 L1090 346 Q1092 350 1086 352 L784 378 Q777 378 778 372 Z"/>
+      </clipPath></defs>
+      <image href={moldImage} width="1311" height="1200" clipPath={`url(#${id}-fixed-label)`}/>
+    </svg>}
     {!shorts && !tank && <><path d="M220 105 Q250 145 280 105" fill="none" stroke="#6b7280" strokeWidth="3"/>{side === "back" && <path d="M205 120 Q250 150 295 120" fill="none" stroke="#9ca3af" strokeWidth="2"/>}</>}
     {tank && <>
       <path d={shape} fill="none" stroke="#172033" strokeWidth="4"/>
