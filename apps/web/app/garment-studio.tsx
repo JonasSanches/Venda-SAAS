@@ -155,7 +155,7 @@ function optimizeArtwork(file: File): Promise<string> {
 
 type GarmentMasks = { silhouette: string; body: string; waist: string; sides: string; cord: string; interior: string; whole: string };
 
-function useGarmentMasks(source: string | undefined, hasDarkFinishes = true, photoCutout = false) {
+function useGarmentMasks(source: string | undefined, hasDarkFinishes = true, photoCutout = false, frontWaistInterior = false) {
   const [masks, setMasks] = useState<GarmentMasks>();
   useEffect(() => {
     if (!source) return setMasks(undefined);
@@ -311,6 +311,20 @@ function useGarmentMasks(source: string | undefined, hasDarkFinishes = true, pho
       }
       const interior = new Uint8Array(width * height);
       for (const region of darkPanels) for (const index of region.pixels) interior[index] = 1;
+      if (frontWaistInterior) {
+        // Only the visible INSIDE of the photographic front waistband is fixed
+        // black. The outer waistband, eyelet panels and back stay printable.
+        context.clearRect(0, 0, width, height);
+        context.save();
+        context.scale(width / 1287, height / 1222);
+        context.fillStyle = "#fff";
+        context.fill(new Path2D("M196 88 C430 145 838 153 1095 98 C946 161 797 210 638 215 C464 212 320 147 196 88 Z"));
+        context.restore();
+        const lining = context.getImageData(0, 0, width, height).data;
+        for (let index = 0; index < interior.length; index++) {
+          if (silhouettePixels[index] && lining[index * 4 + 3] >= 128) interior[index] = 1;
+        }
+      }
       // A dilatação só descobre as regiões. A arte volta até o traço original;
       // assim não surgem faixas brancas artificiais entre costuras.
       const whole = Uint8Array.from(silhouettePixels, (value, index) => value && !interior[index] ? 1 : 0);
@@ -369,7 +383,7 @@ function useGarmentMasks(source: string | undefined, hasDarkFinishes = true, pho
       const takeRegions = (selectedRegions: MoldRegion[]) => {
         const mask = new Uint8Array(width * height);
         for (const region of selectedRegions) for (const index of region.pixels) {
-          if (!claimed[index]) { mask[index] = 1; claimed[index] = 1; }
+          if (!claimed[index] && !interior[index]) { mask[index] = 1; claimed[index] = 1; }
         }
         return mask;
       };
@@ -392,7 +406,7 @@ function useGarmentMasks(source: string | undefined, hasDarkFinishes = true, pho
     };
     image.src = source;
     return () => { active = false; };
-  }, [source, hasDarkFinishes, photoCutout]);
+  }, [source, hasDarkFinishes, photoCutout, frontWaistInterior]);
   return masks;
 }
 
@@ -417,7 +431,7 @@ function GarmentView({ id, template, side, design, editable, onUpdate }: { id: s
         ? "/molde-bermuda-reta-frente-transparente.png"
         : `/molde-bermuda-${curved ? "cavada" : "reta"}-${side === "front" ? "frente" : "costas"}.png`
     : undefined;
-  const garmentMasks = useGarmentMasks(moldImage, !secondSlit, secondSlit);
+  const garmentMasks = useGarmentMasks(moldImage, !secondSlit, secondSlit, secondSlit && side === "front");
   const moldBox = secondSlit
     ? { x: 30, y: 80, width: 440, height: 440 }
     : side === "front" ? { x: 61, y: 55, width: 378, height: 472 } : { x: 30, y: 80, width: 440, height: 440 };
