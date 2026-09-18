@@ -14,28 +14,30 @@ const categories:Array<{id:Category;title:string;description:string}>=[
   {id:"NEGOCIOS",title:"Negócios, vendas & finanças",description:"Persuasão, escolhas financeiras e decisões para avançar."}
 ];
 
-function PreviewReader({pages,title}:{pages:string[];title:string}){
-  const[page,setPage]=useState(0),[zoom,setZoom]=useState(1),canvas=useRef<HTMLDivElement>(null);
-  const currentPage=pages[page]??pages[0];
-  function changePage(next:number){setPage(next);setZoom(1);requestAnimationFrame(()=>canvas.current?.scrollTo({top:0,left:0,behavior:"smooth"}))}
-  function changeZoom(next:number){setZoom(Math.min(2.5,Math.max(1,Number(next.toFixed(2)))))}
-  return <div className="book-preview-reader">
-    <header className="book-preview-reader-toolbar">
-      <div><small>PRÉVIA PROTEGIDA</small><b>Página {page+1} de {pages.length}</b></div>
-      <div className="book-preview-reader-actions">
-        <button type="button" onClick={()=>changePage(page-1)} disabled={page===0} aria-label="Página anterior">←</button>
-        <button type="button" onClick={()=>changeZoom(zoom-.25)} disabled={zoom<=1} aria-label="Diminuir zoom">−</button>
-        <output aria-label="Nível de zoom">{Math.round(zoom*100)}%</output>
-        <button type="button" onClick={()=>changeZoom(zoom+.25)} disabled={zoom>=2.5} aria-label="Aumentar zoom">+</button>
-        <button type="button" className="book-preview-reader-reset" onClick={()=>{setZoom(1);canvas.current?.scrollTo({top:0,left:0,behavior:"smooth"})}}>Redefinir</button>
-        <button type="button" onClick={()=>changePage(page+1)} disabled={page===pages.length-1} aria-label="Próxima página">→</button>
-      </div>
-    </header>
-    <div className="book-preview-reader-canvas" ref={canvas} tabIndex={0} aria-label={`Página ${page+1} de ${pages.length}: ${title}. Use os controles de zoom e as barras de rolagem para ler o conteúdo.`}>
-      {currentPage&&<img src={currentPage} alt={`Página de prévia ${page+1} de ${title}`} style={{width:`${zoom*100}%`}}/>}
+function DraggablePreview({src,title}:{src:string;title:string}){
+  const canvas=useRef<HTMLDivElement>(null),drag=useRef<{id:number;x:number;y:number;left:number;top:number}|null>(null);
+  const[dragging,setDragging]=useState(false);
+  function start(event:React.PointerEvent<HTMLDivElement>){
+    if(event.pointerType!=="touch"&&event.button!==0)return;
+    const target=canvas.current;if(!target)return;
+    drag.current={id:event.pointerId,x:event.clientX,y:event.clientY,left:target.scrollLeft,top:target.scrollTop};
+    target.setPointerCapture(event.pointerId);setDragging(true);event.preventDefault();
+  }
+  function move(event:React.PointerEvent<HTMLDivElement>){
+    const active=drag.current,target=canvas.current;if(!active||active.id!==event.pointerId||!target)return;
+    target.scrollLeft=active.left-(event.clientX-active.x);target.scrollTop=active.top-(event.clientY-active.y);event.preventDefault();
+  }
+  function end(event:React.PointerEvent<HTMLDivElement>){
+    if(drag.current?.id!==event.pointerId)return;
+    if(canvas.current?.hasPointerCapture(event.pointerId))canvas.current.releasePointerCapture(event.pointerId);
+    drag.current=null;setDragging(false);
+  }
+  return <figure className="digital-pan-preview">
+    <div ref={canvas} className={dragging?"digital-pan-preview-canvas is-dragging":"digital-pan-preview-canvas"} tabIndex={0} aria-label={`Página de apresentação de ${title}. Clique, segure e arraste para ler.`} onPointerDown={start} onPointerMove={move} onPointerUp={end} onPointerCancel={end} onContextMenu={event=>event.preventDefault()}>
+      <img src={src} alt={`Página selecionada de ${title}`}/>
     </div>
-    <footer className="book-preview-reader-note">Use + e − para ampliar. Role a página para ler todo o conteúdo.</footer>
-  </div>
+    <figcaption>PRÉVIA · Clique, segure e arraste para ler a página</figcaption>
+  </figure>
 }
 
 export default function Biblioteca(){
@@ -57,7 +59,7 @@ export default function Biblioteca(){
     {error&&<div className="error digital-error">{error}</div>}
     <section className="digital-heading"><small>ESCOLHA SEU TEMA</small><h2>Encontre sua próxima leitura por assunto.</h2><p>Clique em “Ver páginas” para ampliar uma prévia. A demonstração é protegida e não substitui o livro completo.</p></section>
     <div className="digital-shelves">{shelves.map(shelf=><section className="digital-shelf" key={shelf.id} aria-labelledby={`shelf-${shelf.id}`}><header className="digital-shelf-heading"><small>COLEÇÃO</small><h2 id={`shelf-${shelf.id}`}>{shelf.title}</h2><p>{shelf.description}</p></header><div className="digital-grid">{shelf.books.map(book=><article key={book.slug}><button className="digital-cover" onClick={()=>setPreview(book)}><img src={book.cover} alt={`Capa de ${book.title}`}/><span>Ver páginas</span></button><div><h3>{book.title}</h3><span style={{color:"#8a6c2e",fontSize:10,fontWeight:800,letterSpacing:".04em",textTransform:"uppercase"}}>Págs.: {book.pages}</span><p>{book.hook}</p><button disabled={!book.available.PDF} onClick={()=>setSelection({book,format:"PDF"})}><span>PDF</span><b>{book.available.PDF?money(book.prices.PDF):"Em preparação"}</b></button><button disabled={!book.available.KINDLE} className="kindle" onClick={()=>setSelection({book,format:"KINDLE"})}><span>Kindle · EPUB</span><b>{book.available.KINDLE?money(book.prices.KINDLE):"Em preparação"}</b></button></div></article>)}</div></section>)}</div>
-    {preview&&<div className="digital-modal digital-preview-modal" role="dialog" aria-modal="true" aria-label={`Prévia de ${preview.title}`}><button className="digital-dismiss" onClick={()=>setPreview(undefined)}>×</button><div className="digital-preview-reader-wrap"><PreviewReader key={preview.slug} pages={preview.previewPages.length?preview.previewPages:[preview.preview]} title={preview.title}/></div><section><small>UMA LEITURA PARA DESPERTAR CURIOSIDADE</small><h2>{preview.title}</h2><p>{preview.hook}</p><button disabled={!preview.available.PDF} onClick={()=>{setSelection({book:preview,format:"PDF"});setPreview(undefined)}}>{preview.available.PDF?`Quero em PDF · ${money(preview.prices.PDF)}`:"PDF em preparação"}</button><button disabled={!preview.available.KINDLE} className="kindle" onClick={()=>{setSelection({book:preview,format:"KINDLE"});setPreview(undefined)}}>{preview.available.KINDLE?`Quero para Kindle · ${money(preview.prices.KINDLE)}`:"Kindle em preparação"}</button></section></div>}
-    {selection&&<div className="checkout-modal checkout-preview-modal" role="dialog" aria-modal="true" aria-label={`Escolha de formato: ${selection.book.title}`}><button className="digital-dismiss" onClick={()=>setSelection(undefined)}>×</button><div className="checkout-preview-reader-wrap"><PreviewReader key={`${selection.book.slug}-checkout`} pages={selection.book.previewPages.length?selection.book.previewPages:[selection.book.preview]} title={selection.book.title}/></div><section><small>FOLHEIE ANTES DE COMPRAR</small><h2>{selection.book.title}</h2><div className="format-choice"><button disabled={!selection.book.available.PDF} className={selection.format==="PDF"?"active":""} onClick={()=>setSelection({...selection,format:"PDF"})}>PDF<b>{money(selection.book.prices.PDF)}</b></button><button disabled={!selection.book.available.KINDLE} className={selection.format==="KINDLE"?"active":""} onClick={()=>setSelection({...selection,format:"KINDLE"})}>Kindle · EPUB<b>{money(selection.book.prices.KINDLE)}</b></button></div><p>{selection.format==="PDF"?"Arquivo PDF para leitura em celular, computador ou tablet.":"EPUB de layout preservado, preparado para enviar ao aplicativo ou dispositivo Kindle."}</p><form onSubmit={checkout}><label>E-mail para identificar a compra<input type="email" name="email" required placeholder="voce@email.com"/></label><button disabled={loading}>{loading?"Abrindo Mercado Pago...":"Pagar com Mercado Pago"}</button></form><small>O download é liberado somente após a confirmação do pagamento.</small></section></div>}
+    {preview&&<div className="digital-modal" role="dialog" aria-modal="true" aria-label={`Prévia de ${preview.title}`}><button className="digital-dismiss" onClick={()=>setPreview(undefined)}>×</button><div><img src={preview.cover} alt=""/><DraggablePreview src={preview.preview} title={preview.title}/></div><section><small>UMA LEITURA PARA DESPERTAR CURIOSIDADE</small><h2>{preview.title}</h2><p>{preview.hook}</p><button disabled={!preview.available.PDF} onClick={()=>{setSelection({book:preview,format:"PDF"});setPreview(undefined)}}>{preview.available.PDF?`Quero em PDF · ${money(preview.prices.PDF)}`:"PDF em preparação"}</button><button disabled={!preview.available.KINDLE} className="kindle" onClick={()=>{setSelection({book:preview,format:"KINDLE"});setPreview(undefined)}}>{preview.available.KINDLE?`Quero para Kindle · ${money(preview.prices.KINDLE)}`:"Kindle em preparação"}</button></section></div>}
+    {selection&&<div className="checkout-modal" role="dialog" aria-modal="true"><button className="digital-dismiss" onClick={()=>setSelection(undefined)}>×</button><img src={selection.book.cover} alt=""/><section><small>FOLHEIE ANTES DE COMPRAR</small><h2>{selection.book.title}</h2><div className="preview-gallery" aria-label="Três páginas de prévia">{selection.book.previewPages.map((page,index)=><figure key={page}><img src={page} alt={`Prévia ${index+1} de ${selection.book.title}`}/><figcaption>Página selecionada</figcaption></figure>)}</div><div className="format-choice"><button disabled={!selection.book.available.PDF} className={selection.format==="PDF"?"active":""} onClick={()=>setSelection({...selection,format:"PDF"})}>PDF<b>{money(selection.book.prices.PDF)}</b></button><button disabled={!selection.book.available.KINDLE} className={selection.format==="KINDLE"?"active":""} onClick={()=>setSelection({...selection,format:"KINDLE"})}>Kindle · EPUB<b>{money(selection.book.prices.KINDLE)}</b></button></div><p>{selection.format==="PDF"?"Arquivo PDF para leitura em celular, computador ou tablet.":"EPUB de layout preservado, preparado para enviar ao aplicativo ou dispositivo Kindle."}</p><form onSubmit={checkout}><label>E-mail para identificar a compra<input type="email" name="email" required placeholder="voce@email.com"/></label><button disabled={loading}>{loading?"Abrindo Mercado Pago...":"Pagar com Mercado Pago"}</button></form><small>O download é liberado somente após a confirmação do pagamento.</small></section></div>}
   </main>;
 }
