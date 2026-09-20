@@ -669,11 +669,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <a href="/teste">Conhecer o módulo de Detention Recovery <span>→</span></a>
           <em>Fluxo operacional. Sem promessa de recuperação ou resultado financeiro.</em>
         </div>
-        <div className="transportation-flow" aria-label="Fluxo de detention recovery">
-          <div className="transportation-flow-top"><span>LOAD #US-48291</span><b>Broker: Atlantic Freight</b><i>RATE CONFIRMATION</i></div>
-          <div className="transportation-flow-route"><span><i></i> ARRIVAL<br/><small>08:12 AM</small></span><b>DETENTION<br/><small>2h 18m billable</small></b><span><i></i> DEPARTURE<br/><small>12:30 PM</small></span></div>
-          <div className="transportation-flow-claim"><div><small>DETENTION CLAIM</small><b>$172.50</b></div><strong>SUBMITTED</strong><span>Draft <i>→</i> Submitted <i>→</i> Paid</span></div>
-        </div>
+        <figure className="transportation-system-shot"><img src="/erp-system-preview.jpg" alt="Painel real do sistema Venda+"/></figure>
       </section>
       <section className="product-showcase" aria-labelledby="product-showcase-title">
         <div className="showcase-heading">
