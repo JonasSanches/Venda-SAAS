@@ -5,6 +5,10 @@ import { useEffect, useState } from "react";
 type Locale = "pt-BR" | "en";
 
 const english: Record<string, string> = {
+  "Não deixe detention se perder entre o dock e o pagamento.": "Stop letting detention get lost between the dock and payment.",
+  "Para carriers, fleets e owner-operators nos Estados Unidos: registre o load e o broker, guarde os termos da rate confirmation, marque arrival e departure e acompanhe cada claim até o status pago.": "For U.S. carriers, fleets and owner-operators: record the load and broker, keep rate-confirmation terms, mark arrival and departure, and track every claim through paid status.",
+  "Conhecer o módulo de Detention Recovery": "Explore the Detention Recovery module",
+  "Fluxo operacional. Sem promessa de recuperação ou resultado financeiro.": "Operational workflow. No promise of recovery or financial results.",
   "Transportation Detention Recovery": "Transportation Detention Recovery",
   "Recupere detention com evidências da carga.": "Recover detention with load evidence.",
   "Cadastre o load, broker e termos da rate confirmation. Registre chegada e saída, calcule o valor e acompanhe o claim até o pagamento.": "Register the load, broker and rate-confirmation terms. Record arrival and departure, calculate the amount and track the claim through payment.",

@@ -661,6 +661,20 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <li><b>Homologação</b><span>Acompanhamento da configuração fiscal</span></li>
         </ul>
       </section>
+      <section className="transportation-callout" aria-labelledby="transportation-callout-title">
+        <div className="transportation-callout-copy">
+          <small>TRANSPORTATION DETENTION RECOVERY · USA FREIGHT OPERATIONS</small>
+          <h2 id="transportation-callout-title">Não deixe detention se perder entre o dock e o pagamento.</h2>
+          <p>Para carriers, fleets e owner-operators nos Estados Unidos: registre o load e o broker, guarde os termos da rate confirmation, marque arrival e departure e acompanhe cada claim até o status pago.</p>
+          <a href="/teste">Conhecer o módulo de Detention Recovery <span>→</span></a>
+          <em>Fluxo operacional. Sem promessa de recuperação ou resultado financeiro.</em>
+        </div>
+        <div className="transportation-flow" aria-label="Fluxo de detention recovery">
+          <div className="transportation-flow-top"><span>LOAD #US-48291</span><b>Broker: Atlantic Freight</b><i>RATE CONFIRMATION</i></div>
+          <div className="transportation-flow-route"><span><i></i> ARRIVAL<br/><small>08:12 AM</small></span><b>DETENTION<br/><small>2h 18m billable</small></b><span><i></i> DEPARTURE<br/><small>12:30 PM</small></span></div>
+          <div className="transportation-flow-claim"><div><small>DETENTION CLAIM</small><b>$172.50</b></div><strong>SUBMITTED</strong><span>Draft <i>→</i> Submitted <i>→</i> Paid</span></div>
+        </div>
+      </section>
       <section className="product-showcase" aria-labelledby="product-showcase-title">
         <div className="showcase-heading">
           <small>UMA SOLUÇÃO PARA ERP COMERCIAL, DE TRANSPORTE E TRIBUTÁRIO</small>
