@@ -18,6 +18,7 @@ import { BillingModule } from "./modules/billing/billing.module";
 import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { DigitalProductsModule } from "./modules/digital-products/digital-products.module";
 import { LibraryMembershipsModule } from "./modules/library-memberships/library-memberships.module";
+import { TransportationModule } from "./modules/transportation/transportation.module";
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { LibraryMembershipsModule } from "./modules/library-memberships/library-
     BillingModule,
     AnalyticsModule,
     DigitalProductsModule,
-    LibraryMembershipsModule
+    LibraryMembershipsModule,
+    TransportationModule
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }]

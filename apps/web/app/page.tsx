@@ -5,7 +5,8 @@ import { ErpSurvey } from "./erp-survey";
 import { BrandName } from "./brand-name";
 import { Pricing } from "./pricing";
 import { GarmentStudio } from "./garment-studio";
-const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
+import { TransportationRecovery } from "./transportation-recovery";
+import { request } from "./api-client";
 type Product = {
   id: string;
   sku: string;
@@ -74,36 +75,6 @@ type Session = {
     branches?: BranchInfo[];
   };
 };
-async function request<T>(
-  path: string,
-  token?: string,
-  init?: RequestInit,
-): Promise<T> {
-  let branchId = "";
-  if (typeof window !== "undefined")
-    try {
-      branchId =
-        JSON.parse(localStorage.getItem("varejo-session") ?? "{}").tenant
-          ?.branch?.id ?? "";
-    } catch {}
-  const response = await fetch(`${API}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(branchId ? { "X-Branch-Id": branchId } : {}),
-      ...init?.headers,
-    },
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok)
-    throw new Error(
-      Array.isArray(body.message)
-        ? body.message.join(", ")
-        : (body.message ?? "Operação não concluída"),
-    );
-  return body;
-}
 
 function BarcodeScanner({ onRead, onClose }: { onRead: (code: string) => void; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -187,6 +158,7 @@ function MenuIcon({ name }: { name: string }) {
   if (name === "Estoque") return <svg {...common}><path d="m12 3 8 4.2v9.6L12 21l-8-4.2V7.2L12 3Z"/><path d="m4.5 7.5 7.5 4 7.5-4M12 11.5V21"/></svg>;
   if (name === "Produtos") return <svg {...common}><path d="M4 4h7l9 9-7 7-9-9V4Z"/><circle cx="8" cy="8" r="1.3"/></svg>;
   if (name === "Estúdio de moldes") return <svg {...common}><circle cx="6" cy="7" r="3"/><circle cx="6" cy="17" r="3"/><path d="m8.5 8.5 11 7.5M8.5 15.5 20 8"/></svg>;
+  if (name === "Transportation Detention Recovery") return <svg {...common}><path d="M3 7h18v11H3z"/><path d="M7 7V4h10v3M7 12h10M8 15h3M14 15h2"/><circle cx="6" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>;
   if (name === "Usuários") return <svg {...common}><circle cx="9" cy="8" r="3"/><path d="M3.5 20c.4-4 2.2-6 5.5-6s5.1 2 5.5 6M16 5.5a3 3 0 0 1 0 5.8M16.5 14c2.5.4 3.8 2.3 4 5"/></svg>;
   if (name === "Filial") return <svg {...common}><path d="M4 21V6l8-3 8 3v15M8 9h2M14 9h2M8 13h2M14 13h2M10 21v-4h4v4"/></svg>;
   if (name === "Configurações") return <svg {...common}><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1A8 8 0 0 0 15 6l-.3-2.6h-4L10.4 6A8 8 0 0 0 9 7.1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1A8 8 0 0 0 10.4 18l.3 2.6h4L15 18a8 8 0 0 0 1.5-1.1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z"/></svg>;
@@ -412,6 +384,8 @@ export default function Home() {
             await request("/products", session.accessToken, { method: "POST", body: JSON.stringify(input) });
             await updated();
           }} />
+        ) : page === "Transportation Detention Recovery" ? (
+          <TransportationRecovery token={session.accessToken} />
         ) : page === "Usuários" ? (
           <Users token={session.accessToken} roles={session.user.roles} />
         ) : page === "Filial" ? (
@@ -1991,6 +1965,7 @@ const pagesFor = (roles: string[], segment?: string) => {
         "Filial",
         "Configurações",
         "Fiscal",
+        "Transportation Detention Recovery",
       ]
     : roles.includes("STOCK")
       ? ["Visão geral", "Estoque", "Produtos"]

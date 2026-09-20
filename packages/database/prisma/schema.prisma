@@ -73,6 +73,29 @@ enum PartyType {
   SUPPLIER
 }
 
+// Recovery types beyond DETENTION are intentionally modeled now, while their
+// operational screens can be added without changing the data model later.
+enum TransportationLoadStatus {
+  DRAFT
+  ARRIVED
+  DEPARTED
+  CLOSED
+}
+
+enum TransportationRecoveryType {
+  DETENTION
+  LAYOVER
+  TONU
+  LUMPER
+}
+
+enum TransportationClaimStatus {
+  DRAFT
+  SUBMITTED
+  PAID
+  DENIED
+}
+
 model Tenant {
   id              String           @id @default(uuid()) @db.Uuid
   name            String
@@ -99,8 +122,69 @@ model Tenant {
   parties         Party[]
   fiscalSettings  FiscalSettings?
   billingPayments BillingPayment[]
+  transportationLoads TransportationLoad[]
+  transportationClaims TransportationRecoveryClaim[]
 
   @@map("tenants")
+}
+
+model TransportationLoad {
+  id                      String                    @id @default(uuid()) @db.Uuid
+  tenantId                String                    @map("tenant_id") @db.Uuid
+  loadNumber              String                    @map("load_number")
+  brokerName              String                    @map("broker_name")
+  brokerEmail             String?                   @map("broker_email")
+  brokerPhone             String?                   @map("broker_phone")
+  origin                  String?
+  destination             String?
+  rateConfirmationNumber  String?                   @map("rate_confirmation_number")
+  rateConfirmationTerms   String?                   @map("rate_confirmation_terms") @db.Text
+  rateAmount              Decimal?                  @map("rate_amount") @db.Decimal(14, 2)
+  detentionFreeMinutes    Int                       @default(120) @map("detention_free_minutes")
+  detentionRatePerHour    Decimal                   @default(0) @map("detention_rate_per_hour") @db.Decimal(14, 2)
+  detentionMinimumMinutes Int                       @default(0) @map("detention_minimum_minutes")
+  arrivalAt               DateTime?                 @map("arrival_at")
+  departureAt             DateTime?                 @map("departure_at")
+  status                  TransportationLoadStatus  @default(DRAFT)
+  notes                   String?                   @db.Text
+  createdAt               DateTime                  @default(now()) @map("created_at")
+  updatedAt               DateTime                  @updatedAt @map("updated_at")
+  tenant                  Tenant                    @relation(fields: [tenantId], references: [id])
+  claims                  TransportationRecoveryClaim[]
+
+  @@unique([tenantId, loadNumber])
+  @@index([tenantId, status, createdAt])
+  @@map("transportation_loads")
+}
+
+model TransportationRecoveryClaim {
+  id                String                     @id @default(uuid()) @db.Uuid
+  tenantId          String                     @map("tenant_id") @db.Uuid
+  loadId            String                     @map("load_id") @db.Uuid
+  claimNumber       String                     @map("claim_number")
+  type              TransportationRecoveryType @default(DETENTION)
+  status            TransportationClaimStatus  @default(DRAFT)
+  elapsedMinutes    Int                        @default(0) @map("elapsed_minutes")
+  billableMinutes   Int                        @default(0) @map("billable_minutes")
+  ratePerHour       Decimal                    @default(0) @map("rate_per_hour") @db.Decimal(14, 2)
+  calculatedAmount  Decimal                    @default(0) @map("calculated_amount") @db.Decimal(14, 2)
+  requestedAmount   Decimal                    @default(0) @map("requested_amount") @db.Decimal(14, 2)
+  currency          String                     @default("USD") @db.VarChar(3)
+  termsSnapshot     Json?                      @map("terms_snapshot")
+  denialReason      String?                    @map("denial_reason") @db.Text
+  paymentReference  String?                    @map("payment_reference")
+  submittedAt       DateTime?                  @map("submitted_at")
+  paidAt            DateTime?                  @map("paid_at")
+  deniedAt          DateTime?                  @map("denied_at")
+  createdAt         DateTime                   @default(now()) @map("created_at")
+  updatedAt         DateTime                   @updatedAt @map("updated_at")
+  tenant            Tenant                     @relation(fields: [tenantId], references: [id])
+  load              TransportationLoad         @relation(fields: [loadId], references: [id], onDelete: Cascade)
+
+  @@unique([loadId, type])
+  @@unique([tenantId, claimNumber])
+  @@index([tenantId, status, createdAt])
+  @@map("transportation_recovery_claims")
 }
 
 model BillingPayment {
