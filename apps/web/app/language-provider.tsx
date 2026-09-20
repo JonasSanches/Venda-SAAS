@@ -143,7 +143,7 @@ const english: Record<string, string> = {
   "no celular e computador": "on mobile and desktop",
   "VEJA O VENDA+ EM AÇÃO": "SEE VENDA+ IN ACTION",
   "GESTÃO COMERCIAL E FISCAL BRASILEIRA": "BRAZILIAN COMMERCIAL AND TAX MANAGEMENT",
-  "ERP COMERCIAL E FISCAL BRASILEIRO": "BRAZILIAN COMMERCIAL AND TAX ERP",
+  "ERP COMERCIAL E FISCAL BRASILEIRO": "A SOLUTION FOR COMMERCIAL, TRANSPORTATION AND TAX ERP DELIVERY",
   "Poder tecnológico sem limites.": "Limitless technological power.",
   "Vendas, atendimento, faturamento e nota fiscal para quem opera no Brasil.": "Sales, customer service, billing and invoicing for businesses operating in Brazil.",
   "Um ERP de vendas, atendimento, faturamento e nota fiscal para quem opera no Brasil.": "An ERP for sales, customer service, billing and invoicing for businesses operating in Brazil.",
