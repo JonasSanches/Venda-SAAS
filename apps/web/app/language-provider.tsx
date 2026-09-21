@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 type Locale = "pt-BR" | "en";
 
 const english: Record<string, string> = {
-  "Capa + 2 páginas e meia · use a barra vertical para continuar a leitura. O zoom do navegador fica disponível somente se quiser ampliar a letra.": "Cover + two and a half pages · use the vertical scrollbar to continue reading. Browser zoom is available only if you want larger text.",
   "Capa": "Cover",
   "Página": "Page",
   "Não deixe detention se perder entre o dock e o pagamento.": "Stop letting detention get lost between the dock and payment.",

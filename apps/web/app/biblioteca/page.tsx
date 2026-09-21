@@ -20,7 +20,6 @@ function VerticalBookPreview({book}:{book:Book}){
       <div className="book-preview-page book-preview-cover"><img src={book.cover} alt={`Capa de ${book.title}`}/><span>Capa</span></div>
       {book.previewPages.slice(0,3).map((page,index)=><div className={index===2?"book-preview-page book-preview-half":"book-preview-page"} key={page}><img src={page} alt={`Página ${index+1} de ${book.title}`}/><span>Página {index+1}</span></div>)}
     </div>
-    <figcaption>Capa + 2 páginas e meia · use a barra vertical para continuar a leitura. O zoom do navegador fica disponível somente se quiser ampliar a letra.</figcaption>
   </figure>
 }
 
