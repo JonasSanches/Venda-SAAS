@@ -21,6 +21,8 @@ const copy = {
     placeholder: "Digite sua dúvida...",
     send: "Enviar",
     open: "Abrir atendimento",
+    floating: "Chat 24h",
+    whatsappText: "Olá, preciso de ajuda sobre o Venda+.",
   },
   en: {
     welcome: "Hi! I'm the Venda+ assistant. I use official website information to answer clearly. Ask me about the system, plans, free trial, payments, digital library, books, member area, security or support.",
@@ -37,6 +39,8 @@ const copy = {
     placeholder: "Type your question...",
     send: "Send",
     open: "Open chat",
+    floating: "24/7 Chat",
+    whatsappText: "Hi, I need help with Venda+.",
   },
 };
 
@@ -179,7 +183,7 @@ export function ChatAssistant() {
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    setMessages((current) => current.length ? current : [{ from: "bot", text: copy[lang].welcome }]);
+    setMessages([{ from: "bot", text: copy[lang].welcome }]);
   }, [lang]);
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: "smooth" });
@@ -202,9 +206,9 @@ export function ChatAssistant() {
       <header><div><strong>{labels.title}</strong><small>{labels.status}</small></div><button onClick={() => setOpen(false)} aria-label="Fechar / Close">×</button></header>
       <div className="sales-chat-messages">{messages.map((message, index) => <p key={index} className={message.from}>{renderMessage(message.text, lang)}</p>)}<div ref={end}/></div>
       <div className="sales-chat-shortcuts"><button onClick={() => ask(labels.plans)}>{labels.plans}</button><button onClick={() => ask(labels.library)}>{labels.library}</button><button onClick={() => ask(labels.members)}>{labels.members}</button><button onClick={() => ask(labels.features)}>{labels.features}</button><button onClick={() => ask(labels.trial)}>{labels.trial}</button><button onClick={() => ask(labels.support)}>{labels.support}</button></div>
-      <a className="sales-chat-whatsapp" href="https://wa.me/5511978436640?text=Ol%C3%A1%2C%20preciso%20de%20ajuda%20sobre%20o%20Venda%2B." target="_blank" rel="noopener noreferrer">{labels.whatsapp}</a>
+      <a className="sales-chat-whatsapp" href={`https://wa.me/5511978436640?text=${encodeURIComponent(labels.whatsappText)}`} target="_blank" rel="noopener noreferrer">{labels.whatsapp}</a>
       <form onSubmit={submit}><input name="question" placeholder={labels.placeholder} autoComplete="off"/><button>{labels.send}</button></form>
     </section>}
-    <button className="sales-chat-toggle" onClick={() => setOpen((value) => !value)} aria-label={labels.open}><span>{open ? "×" : "💬"}</span><b>{open ? "" : "Chat 24h"}</b></button>
+    <button className="sales-chat-toggle" onClick={() => setOpen((value) => !value)} aria-label={labels.open}><span>{open ? "×" : "💬"}</span><b>{open ? "" : labels.floating}</b></button>
   </div>;
 }
