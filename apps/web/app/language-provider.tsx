@@ -5,6 +5,12 @@ import { useEffect, useState } from "react";
 type Locale = "pt-BR" | "en";
 
 const english: Record<string, string> = {
+  "PRIVACIDADE E TRANSPARÊNCIA": "PRIVACY AND TRANSPARENCY",
+  "Dados de acesso": "Access data",
+  "Para proteger e melhorar o Venda+, registramos informações técnicas de acesso às páginas públicas: endereço IP, data e hora, página acessada, origem, tipo de dispositivo, navegador, sistema, idioma, fuso horário e localização aproximada disponibilizada pela infraestrutura.": "To protect and improve Venda+, we record technical information about access to public pages: IP address, date and time, page visited, referrer, device type, browser, operating system, language, time zone and approximate location provided by the infrastructure.",
+  "Essas informações ficam disponíveis somente à administração, não são vendidas e são usadas para segurança, medição de audiência e melhoria do serviço. O histórico técnico de visitas é mantido por até 365 dias.": "This information is available only to administration, is not sold, and is used for security, audience measurement and service improvement. Technical visit history is retained for up to 365 days.",
+  "As respostas voluntárias do questionário ficam armazenadas para atendimento e compreensão das necessidades informadas. Para solicitar informações, correção ou exclusão, fale pelo WhatsApp": "Voluntary questionnaire responses are stored for support and to understand the needs shared. To request information, correction or deletion, contact us by WhatsApp",
+  "Voltar à tela inicial": "Back to home",
   "Capa": "Cover",
   "Página": "Page",
   "Não deixe detention se perder entre o dock e o pagamento.": "Stop letting detention get lost between the dock and payment.",
