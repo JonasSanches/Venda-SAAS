@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 type Locale = "pt-BR" | "en";
 
 const english: Record<string, string> = {
+  "Capa + 3 primeiras páginas · use a barra horizontal para continuar a leitura. O zoom do navegador fica disponível somente se quiser ampliar a letra.": "Cover + first 3 pages · use the horizontal scrollbar to continue reading. Browser zoom is available only if you want larger text.",
+  "Capa": "Cover",
+  "Página": "Page",
   "Não deixe detention se perder entre o dock e o pagamento.": "Stop letting detention get lost between the dock and payment.",
   "Para carriers, fleets e owner-operators nos Estados Unidos: registre o load e o broker, guarde os termos da rate confirmation, marque arrival e departure e acompanhe cada claim até o status pago.": "For U.S. carriers, fleets and owner-operators: record the load and broker, keep rate-confirmation terms, mark arrival and departure, and track every claim through paid status.",
   "Conhecer o módulo de Detention Recovery": "Explore the Detention Recovery module",
