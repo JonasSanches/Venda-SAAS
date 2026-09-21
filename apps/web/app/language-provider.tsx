@@ -601,7 +601,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const saved = localStorage.getItem("vendamais-language") as Locale | null;
     const detected = navigator.language.toLowerCase().startsWith("pt") ? "pt-BR" : "en";
-    setLocale(saved === "pt-BR" || saved === "en" ? saved : detected);
+    const initial = saved === "pt-BR" || saved === "en" ? saved : detected;
+    localStorage.setItem("vendamais-language", initial);
+    setLocale(initial);
   }, []);
   useEffect(() => {
     const syncSession = () => setHasSession(Boolean(localStorage.getItem("varejo-session")));

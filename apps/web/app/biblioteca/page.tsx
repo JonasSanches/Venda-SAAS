@@ -7,6 +7,7 @@ type Category="NEGOCIOS"|"TECNOLOGIA"|"ESPIRITUALIDADE"|"SAUDE";
 type Book={slug:string;category:Category;title:string;hook:string;pages:number;cover:string;preview:string;previewPages:string[];prices:Record<Format,number>;currency?:"BRL"|"USD";language?:"pt-BR"|"en";translationOf?:string;available:Record<Format,boolean>};
 type Selection={book:Book;format:Format};
 const money=(amount:number,currency:"BRL"|"USD"="BRL")=>new Intl.NumberFormat(currency==="USD"?"en-US":"pt-BR",{style:"currency",currency}).format(amount);
+const initialLibraryLocale=()=>typeof window==="undefined"?"pt-BR" as const:(localStorage.getItem("vendamais-language")==="en"||(!localStorage.getItem("vendamais-language")&&navigator.language.toLowerCase().startsWith("en"))?"en" as const:"pt-BR" as const);
 const categories:Array<{id:Category;title:string;description:string}>=[
   {id:"ESPIRITUALIDADE",title:"Espiritualidade, simbolismo & autoconhecimento",description:"Tradições, símbolos e reflexões para novas perspectivas."},
   {id:"SAUDE",title:"Saúde & bem-estar",description:"Conteúdos sobre hábitos, alimentação e autocuidado."},
@@ -24,10 +25,10 @@ function VerticalBookPreview({book}:{book:Book}){
 }
 
 export default function Biblioteca(){
-  const[books,setBooks]=useState<Book[]>([]),[locale,setLocale]=useState<"pt-BR"|"en">("pt-BR"),[selection,setSelection]=useState<Selection>(),[preview,setPreview]=useState<Book>(),[error,setError]=useState(""),[loading,setLoading]=useState(false),[purchase,setPurchase]=useState<{status:string;title:string;format:Format;downloadUrl?:string}>();
+  const[books,setBooks]=useState<Book[]>([]),[locale,setLocale]=useState<"pt-BR"|"en">(initialLibraryLocale),[selection,setSelection]=useState<Selection>(),[preview,setPreview]=useState<Book>(),[error,setError]=useState(""),[loading,setLoading]=useState(false),[purchase,setPurchase]=useState<{status:string;title:string;format:Format;downloadUrl?:string}>();
   const localizedBooks=books.filter(book=>book.language!=="en").map(book=>locale==="en"?books.find(candidate=>candidate.language==="en"&&candidate.translationOf===book.slug)??book:book);
   const shelves=categories.map(category=>({...category,books:localizedBooks.filter(book=>book.category===category.id)})).filter(category=>category.books.length);
-  useEffect(()=>{const sync=()=>setLocale(localStorage.getItem("vendamais-language")==="en"?"en":"pt-BR");sync();window.addEventListener("vendamais-language-change",sync);return()=>window.removeEventListener("vendamais-language-change",sync)},[]);
+  useEffect(()=>{const sync=()=>setLocale(initialLibraryLocale());sync();window.addEventListener("vendamais-language-change",sync);return()=>window.removeEventListener("vendamais-language-change",sync)},[]);
   useEffect(()=>{fetch(`${API}/digital-products`).then(async response=>{const body=await response.json();if(!response.ok)throw Error(body.message);return body}).then(body=>{setBooks(body);queueMicrotask(()=>window.dispatchEvent(new Event("vendamais-translate-content")))}).catch(()=>setError("Não foi possível carregar a biblioteca."))},[]);
   useEffect(()=>{if(!books.length)return;const params=new URLSearchParams(location.search),slug=params.get("livro"),requested=params.get("formato")?.toUpperCase();if(!slug||!requested||!(["PDF","KINDLE"] as string[]).includes(requested))return;const book=books.find(item=>item.slug===slug);if(book)setSelection({book,format:requested as Format})},[books]);
   useEffect(()=>{const params=new URLSearchParams(location.search),id=params.get("compra"),token=params.get("token");if(!id||!token)return;let timer:number;const check=()=>fetch(`${API}/digital-products/purchases/${id}?token=${encodeURIComponent(token)}`).then(response=>response.json()).then(body=>{setPurchase(body);if(body.status!=="APPROVED")timer=window.setTimeout(check,3000)}).catch(()=>setError("Não foi possível consultar sua compra."));check();return()=>clearTimeout(timer)},[]);
