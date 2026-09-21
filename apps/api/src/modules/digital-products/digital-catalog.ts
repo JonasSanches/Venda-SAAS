@@ -1,7 +1,7 @@
 export type DigitalFormat = "PDF" | "KINDLE";
 export type DigitalCategory = "NEGOCIOS" | "TECNOLOGIA" | "ESPIRITUALIDADE" | "SAUDE";
 export type DigitalCurrency = "BRL" | "USD";
-export type DigitalProduct = { slug:string; category:DigitalCategory; title:string; hook:string; pages:number; pdfFile:string; kindleFile:string; prices?:Partial<Record<DigitalFormat,number>>; currency?:DigitalCurrency; language?:"pt-BR"|"en" };
+export type DigitalProduct = { slug:string; category:DigitalCategory; title:string; hook:string; pages:number; pdfFile:string; kindleFile:string; prices?:Partial<Record<DigitalFormat,number>>; currency?:DigitalCurrency; language?:"pt-BR"|"en"; translationOf?:string };
 
 const STANDARD_PRICES:Record<DigitalFormat,number>={PDF:11.99,KINDLE:39.99};
 export const digitalPrices=(product:DigitalProduct):Record<DigitalFormat,number>=>({...STANDARD_PRICES,...product.prices});
@@ -10,7 +10,7 @@ export const digitalCurrency=(product:DigitalProduct):DigitalCurrency=>product.c
 export const DIGITAL_PRODUCTS:DigitalProduct[]=[
   {slug:"as-armas-da-persuasao",category:"NEGOCIOS",title:"As Armas da Persuasão",hook:"Princípios psicológicos para reconhecer como decisões, negociações e escolhas são influenciadas no dia a dia.",pages:225,prices:{PDF:7.90,KINDLE:19.90},pdfFile:"as-armas-da-persuasao.pdf",kindleFile:"as-armas-da-persuasao.epub"},
   {slug:"codigos-de-energia-volume-1",category:"ESPIRITUALIDADE",title:"Vibracional — Códigos de Energia, Volume 1",hook:"Símbolos, frequências e relações energéticas apresentados em uma jornada visual.",pages:17,prices:{PDF:7.90,KINDLE:19.90},pdfFile:"codigos-de-energia-volume-1.pdf",kindleFile:"codigos-de-energia-volume-1.epub"},
-  {slug:"vibrational-energy-codes-volume-1-en",category:"ESPIRITUALIDADE",title:"Vibrational Energy Codes — Volume 1",hook:"A visual journey through symbols, intention and reflective energy practices.",pages:17,prices:{PDF:5,KINDLE:9.90},currency:"USD",language:"en",pdfFile:"vibrational-energy-codes-volume-1-en.pdf",kindleFile:"vibrational-energy-codes-volume-1-en.epub"},
+  {slug:"vibrational-energy-codes-volume-1-en",category:"ESPIRITUALIDADE",title:"Vibrational Energy Codes — Volume 1",hook:"A visual journey through symbols, intention and reflective energy practices.",pages:17,prices:{PDF:5,KINDLE:9.90},currency:"USD",language:"en",translationOf:"codigos-de-energia-volume-1",pdfFile:"vibrational-energy-codes-volume-1-en.pdf",kindleFile:"vibrational-energy-codes-volume-1-en.epub"},
   {slug:"livro-da-sabedoria-volume-1",category:"ESPIRITUALIDADE",title:"Livro da Sabedoria — Volume 1",hook:"Uma leitura sobre conhecimento, bem e mal e os símbolos que atravessam essa dualidade.",pages:122,prices:{PDF:11.90,KINDLE:19.90},pdfFile:"livro-da-sabedoria-volume-1.pdf",kindleFile:"livro-da-sabedoria-volume-1.epub"},
   {slug:"os-manuscritos-escondidos-volume-2",category:"ESPIRITUALIDADE",title:"Os Manuscritos Escondidos — Volume 2",hook:"Conhecimentos, símbolos e manuscritos reunidos em uma obra extensa e ilustrada.",pages:209,prices:{PDF:11.90,KINDLE:19.90},pdfFile:"os-manuscritos-escondidos-volume-2.pdf",kindleFile:"os-manuscritos-escondidos-volume-2.epub"},
   {slug:"livro-da-sabedoria-volume-3-parte-1",category:"ESPIRITUALIDADE",title:"Livro da Sabedoria, Volume 3 — A Nova Era, Parte 1",hook:"Reflexões sobre consciência, desejo, transformação e os caminhos de uma nova era.",pages:288,prices:{PDF:7.90,KINDLE:19.90},pdfFile:"livro-da-sabedoria-volume-3-parte-1.pdf",kindleFile:"livro-da-sabedoria-volume-3-parte-1.epub"},

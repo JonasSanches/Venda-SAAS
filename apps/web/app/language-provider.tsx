@@ -174,10 +174,13 @@ const english: Record<string, string> = {
   "Kindle em preparação": "Kindle coming soon",
   "FOLHEIE ANTES DE COMPRAR": "BROWSE BEFORE YOU BUY",
   "Página selecionada": "Selected page",
+  "Prévia · Página": "Preview · Page",
   "Arquivo PDF para leitura em celular, computador ou tablet.": "PDF file for reading on a phone, computer or tablet.",
   "EPUB de layout preservado, preparado para enviar ao aplicativo ou dispositivo Kindle.": "Layout-preserved EPUB ready to send to a Kindle app or device.",
   "E-mail para identificar a compra": "Email to identify your purchase",
   "Pagar com Mercado Pago": "Pay with Mercado Pago",
+  "Abrindo Stripe...": "Opening Stripe...",
+  "Pagar com Stripe": "Pay with Stripe",
   "O download é liberado somente após a confirmação do pagamento.": "The download is released only after payment confirmation.",
   "VENDA+ • CONTROLE MAIS • DECIDA MELHOR": "SELL MORE • CONTROL MORE • DECIDE BETTER",
   "Seu negócio vendendo rápido, com caixa e estoque sob controle.": "Fast sales with cash flow and inventory under control.",
@@ -617,8 +620,14 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     // Do not observe React-managed content. Mutating chat/dashboard nodes while
     // React reconciles them can invalidate its references and crash the page.
   }, [locale]);
+  useEffect(() => {
+    const translateNewContent = () => translateNode(document.body, locale, true);
+    window.addEventListener("vendamais-translate-content", translateNewContent);
+    return () => window.removeEventListener("vendamais-translate-content", translateNewContent);
+  }, [locale]);
   const choose = (next: Locale) => {
     localStorage.setItem("vendamais-language", next);
+    window.dispatchEvent(new CustomEvent("vendamais-language-change", { detail: next }));
     setLocale(next);
   };
   return <>{children}{hasSession&&<button className="mobile-logout" onClick={()=>{localStorage.removeItem("varejo-session");location.replace("/")}}>{locale === "en" ? "Sign out" : "Sair"}</button>}<div className="language-switcher" style={{ position: "fixed", top: 12, right: 12, bottom: "auto" }} role="group" aria-label="Idioma / Language"><button className={locale === "pt-BR" ? "active" : ""} onClick={() => choose("pt-BR")} aria-label="Português">PT</button><button className={locale === "en" ? "active" : ""} onClick={() => choose("en")} aria-label="English">EN</button></div></>;
