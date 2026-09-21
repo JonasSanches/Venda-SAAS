@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 type Session = {
@@ -33,7 +33,9 @@ export default function Admin() {
     [analyticsError,setAnalyticsError]=useState(""),
     [surveyError,setSurveyError]=useState(""),
     [analyticsDays,setAnalyticsDays]=useState(30),
-    [analyticsLoading,setAnalyticsLoading]=useState(false);
+    [analyticsLoading,setAnalyticsLoading]=useState(false),
+    [notificationPermission,setNotificationPermission]=useState<NotificationPermission|"unsupported">("default");
+  const knownTrialIds=useRef<Set<string>|null>(null);
   async function call(path: string, body?: object) {
     if (!session) throw Error("Sessão expirada");
     const r = await fetch(API + path, {
@@ -96,6 +98,38 @@ export default function Admin() {
   useEffect(() => {
     if (session) {void load();void loadBooks();void call("/analytics/exclude-current-ip",{}).catch(()=>undefined).finally(()=>loadAnalytics(30,1))}
   }, [session]);
+  useEffect(()=>{
+    if(!session)return;
+    if(!("Notification" in window)){setNotificationPermission("unsupported");return}
+    setNotificationPermission(Notification.permission);
+    let active=true;
+    const check=async()=>{
+      try{
+        const trials=await call("/platform/trials") as any[];
+        if(!active)return;
+        const previous=knownTrialIds.current;
+        const current=new Set(trials.map(item=>item.tenantId));
+        if(previous){
+          const newTrials=trials.filter(item=>!previous.has(item.tenantId));
+          if(Notification.permission==="granted")newTrials.forEach(item=>{const en=document.documentElement.lang==="en";new Notification(en?"New Venda+ registration":"Novo cadastro no Venda+",{body:`${item.name} · ${item.user?.email??(en?"no email":"sem e-mail")}`,tag:`trial-${item.tenantId}`})});
+        }
+        knownTrialIds.current=current;
+        setItems(trials);
+      }catch{ /* a tela principal já apresenta erros de sessão e carregamento */ }
+    };
+    void check();
+    const timer=window.setInterval(()=>void check(),30_000);
+    return()=>{active=false;window.clearInterval(timer)};
+  },[session]);
+  async function enableMacNotifications(){
+    if(!("Notification" in window)){setNotificationPermission("unsupported");setError("Este navegador não oferece notificações.");return}
+    const permission=await Notification.requestPermission();
+    setNotificationPermission(permission);
+    if(permission==="granted"){
+      const en=document.documentElement.lang==="en";new Notification(en?"Notifications enabled":"Notificações ativadas",{body:en?"You will be notified on this Mac when there is a new registration.":"Você será avisado aqui no Mac quando houver um novo cadastro."});
+      setMessage("Notificações do Mac ativadas para novos cadastros.");setError("");
+    }else setError("Permissão de notificações não foi concedida. Ative-a nas configurações do navegador.");
+  }
   async function extend(id: string) {
     const value = prompt(
       "Ajuste os dias do teste. Use um número positivo para acrescentar ou negativo para retirar (ex.: 7 ou -3).",
@@ -245,6 +279,7 @@ export default function Admin() {
             <small>{session.user.email}</small>
           </div>
           <button onClick={() => setShowUser((v) => !v)}>Novo usuário</button>
+          <button className="secondary" onClick={()=>void enableMacNotifications()}>{notificationPermission==="granted"?"Notificações ativadas":"Ativar notificações no Mac"}</button>
           <button className="secondary" onClick={()=>document.getElementById("visitas")?.scrollIntoView({behavior:"smooth"})}>Visitas</button>
           <button className="secondary" onClick={goHome}>
             Tela inicial

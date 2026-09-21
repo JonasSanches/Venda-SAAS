@@ -7,6 +7,13 @@ type Locale = "pt-BR" | "en";
 const english: Record<string, string> = {
   "PRIVACIDADE E TRANSPARÊNCIA": "PRIVACY AND TRANSPARENCY",
   "Dados de acesso": "Access data",
+  "Ativar notificações no Mac": "Enable Mac notifications",
+  "Notificações ativadas": "Notifications enabled",
+  "Notificações do Mac ativadas para novos cadastros.": "Mac notifications enabled for new registrations.",
+  "Você será avisado aqui no Mac quando houver um novo cadastro.": "You will be notified on this Mac when there is a new registration.",
+  "Permissão de notificações não foi concedida. Ative-a nas configurações do navegador.": "Notification permission was not granted. Enable it in your browser settings.",
+  "Este navegador não oferece notificações.": "This browser does not support notifications.",
+  "Novo cadastro no Venda+": "New Venda+ registration",
   "Para proteger e melhorar o Venda+, registramos informações técnicas de acesso às páginas públicas: endereço IP, data e hora, página acessada, origem, tipo de dispositivo, navegador, sistema, idioma, fuso horário e localização aproximada disponibilizada pela infraestrutura.": "To protect and improve Venda+, we record technical information about access to public pages: IP address, date and time, page visited, referrer, device type, browser, operating system, language, time zone and approximate location provided by the infrastructure.",
   "Essas informações ficam disponíveis somente à administração, não são vendidas e são usadas para segurança, medição de audiência e melhoria do serviço. O histórico técnico de visitas é mantido por até 365 dias.": "This information is available only to administration, is not sold, and is used for security, audience measurement and service improvement. Technical visit history is retained for up to 365 days.",
   "As respostas voluntárias do questionário ficam armazenadas para atendimento e compreensão das necessidades informadas. Para solicitar informações, correção ou exclusão, fale pelo WhatsApp": "Voluntary questionnaire responses are stored for support and to understand the needs shared. To request information, correction or deletion, contact us by WhatsApp",
