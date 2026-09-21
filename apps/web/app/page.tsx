@@ -774,7 +774,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <span>Ambiente seguro e monitorado</span>
           <a href="/privacidade">Privacidade e dados de acesso</a>
         </div>
-        <small className="footer-legal">© {new Date().getFullYear()} Venda+. Todos os direitos reservados. <a href="https://www.omega-ia.com" target="_blank" rel="noopener noreferrer">Omega Software House — CNPJ 66.223.973/0001-06</a></small>
+        <small className="footer-legal">CNPJ 66.223.973/0001-06</small>
       </footer>
     </div>
   );
