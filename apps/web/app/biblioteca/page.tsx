@@ -10,7 +10,7 @@ const money=(amount:number)=>new Intl.NumberFormat("pt-BR",{style:"currency",cur
 const categories:Array<{id:Category;title:string;description:string}>=[
   {id:"ESPIRITUALIDADE",title:"Espiritualidade, simbolismo & autoconhecimento",description:"Tradições, símbolos e reflexões para novas perspectivas."},
   {id:"SAUDE",title:"Saúde & bem-estar",description:"Conteúdos sobre hábitos, alimentação e autocuidado."},
-  {id:"TECNOLOGIA",title:"Inteligência artificial & tecnologia",description:"Fundamentos e aplicações práticas para acompanhar o presente."},
+  {id:"TECNOLOGIA",title:"Tecnologia & inovação",description:"Fundamentos e aplicações práticas para acompanhar o presente."},
   {id:"NEGOCIOS",title:"Negócios, vendas & finanças",description:"Persuasão, escolhas financeiras e decisões para avançar."}
 ];
 
