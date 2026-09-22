@@ -509,7 +509,7 @@ export default function Admin() {
                 Segmento
                 <select name="segment" defaultValue={detail.segment}>
                   <option value="RESTAURANT">Restaurante</option>
-                  <option value="BAR">Bar</option>
+                  <option value="PIZZERIA">Pizzaria</option>
                   <option value="WINERY">Adega</option>
                   <option value="RETAIL">Loja</option>
                   <option value="APPAREL_CUSTOMIZATION">Confecção e personalizados</option>
@@ -633,7 +633,7 @@ export default function Admin() {
 const date = (value?: string) =>
   value ? new Date(value).toLocaleString("pt-BR") : "—";
 const segmentName = (value?: string) =>
-  ({ RESTAURANT: "Restaurante", BAR: "Bar", WINERY: "Adega", RETAIL: "Loja", APPAREL_CUSTOMIZATION: "Confecção e personalizados" })[
+  ({ RESTAURANT: "Restaurante", PIZZERIA: "Pizzaria", WINERY: "Adega", RETAIL: "Loja", APPAREL_CUSTOMIZATION: "Confecção e personalizados" })[
     value ?? ""
   ] ??
   value ??

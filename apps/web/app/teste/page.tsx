@@ -73,7 +73,7 @@ export default function Trial() {
             Segmento
             <select name="segment">
               <option value="RESTAURANT">Restaurante</option>
-              <option value="BAR">Bar</option>
+              <option value="PIZZERIA">Pizzaria</option>
               <option value="WINERY">Adega</option>
               <option value="RETAIL">Loja/varejo</option>
               <option value="APPAREL_CUSTOMIZATION">Confecção e personalizados</option>
