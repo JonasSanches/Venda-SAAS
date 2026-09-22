@@ -6,6 +6,7 @@ import { BrandName } from "./brand-name";
 import { Pricing } from "./pricing";
 import { GarmentStudio } from "./garment-studio";
 import { TransportationRecovery } from "./transportation-recovery";
+import { Pizzeria } from "./pizzeria";
 import { request } from "./api-client";
 type Product = {
   id: string;
@@ -386,6 +387,8 @@ export default function Home() {
           }} />
         ) : page === "Transportation Detention Recovery" ? (
           <TransportationRecovery token={session.accessToken} />
+        ) : page === "Pizzaria" ? (
+          <Pizzeria token={session.accessToken} />
         ) : page === "Usuários" ? (
           <Users token={session.accessToken} roles={session.user.roles} />
         ) : page === "Filial" ? (
@@ -1976,6 +1979,7 @@ const pagesFor = (roles: string[], segment?: string) => {
         "Configurações",
         "Fiscal",
         "Transportation Detention Recovery",
+        "Pizzaria",
       ]
     : roles.includes("STOCK")
       ? ["Visão geral", "Estoque", "Produtos"]

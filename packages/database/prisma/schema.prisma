@@ -31,6 +31,22 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum ProductKind {
+  STANDARD
+  PIZZA
+}
+
+enum PizzaPricingRule {
+  HIGHEST_PRICE
+  AVERAGE
+  PROPORTIONAL
+}
+
+enum PizzaModifierKind {
+  ADDITION
+  REMOVAL
+}
+
 enum StockMovementType {
   PURCHASE
   SALE
@@ -124,6 +140,19 @@ model Tenant {
   billingPayments BillingPayment[]
   transportationLoads TransportationLoad[]
   transportationClaims TransportationRecoveryClaim[]
+  modules         TenantModule[]
+  pizzaSettings   PizzaSettings?
+  pizzaSizes      PizzaSize[]
+  pizzaFlavors    PizzaFlavor[]
+  pizzaDoughs     PizzaDough[]
+  pizzaCrusts     PizzaCrust[]
+  pizzaModifiers  PizzaModifier[]
+  pizzas          PizzaProduct[]
+  pizzaProductSizes PizzaProductSize[]
+  pizzaProductFlavors PizzaProductFlavor[]
+  pizzaDoughSizes PizzaDoughSize[]
+  pizzaCrustSizes PizzaCrustSize[]
+  pizzaProductModifiers PizzaProductModifier[]
 
   @@map("tenants")
 }
@@ -333,16 +362,209 @@ model Product {
   pisCst         String?         @map("pis_cst")
   cofinsCst      String?         @map("cofins_cst")
   active         Boolean         @default(true)
+  kind           ProductKind     @default(STANDARD)
   createdAt      DateTime        @default(now()) @map("created_at")
   updatedAt      DateTime        @updatedAt @map("updated_at")
   tenant         Tenant          @relation(fields: [tenantId], references: [id])
   stockMovements StockMovement[]
   orderItems     OrderItem[]
+  pizza          PizzaProduct?
 
   @@unique([tenantId, sku])
   @@unique([tenantId, barcode])
   @@index([tenantId, name])
   @@map("products")
+}
+
+// Feature flags are deliberately tenant-scoped. Existing businesses keep their
+// current experience until an administrator enables a module for that tenant.
+model TenantModule {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  module      String   @db.VarChar(80)
+  enabled     Boolean  @default(false)
+  settings    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, module])
+  @@index([tenantId, enabled])
+  @@map("tenant_modules")
+}
+
+model PizzaSettings {
+  tenantId     String           @id @map("tenant_id") @db.Uuid
+  pricingRule  PizzaPricingRule @default(HIGHEST_PRICE) @map("pricing_rule")
+  tenant       Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("pizza_settings")
+}
+
+model PizzaSize {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  name        String   @db.VarChar(80)
+  maxFlavors  Int      @default(1) @map("max_flavors")
+  serves      Int?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pizzas      PizzaProductSize[]
+  doughs      PizzaDoughSize[]
+  crusts      PizzaCrustSize[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, active])
+  @@map("pizza_sizes")
+}
+
+model PizzaFlavor {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  name        String   @db.VarChar(120)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pizzas      PizzaProductFlavor[]
+
+  @@unique([tenantId, name])
+  @@index([tenantId, active])
+  @@map("pizza_flavors")
+}
+
+model PizzaDough {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  name        String   @db.VarChar(80)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sizes       PizzaDoughSize[]
+
+  @@unique([tenantId, name])
+  @@map("pizza_doughs")
+}
+
+model PizzaCrust {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  name        String   @db.VarChar(80)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  sizes       PizzaCrustSize[]
+
+  @@unique([tenantId, name])
+  @@map("pizza_crusts")
+}
+
+model PizzaModifier {
+  id          String            @id @default(uuid()) @db.Uuid
+  tenantId    String            @map("tenant_id") @db.Uuid
+  name        String            @db.VarChar(120)
+  kind        PizzaModifierKind
+  price       Decimal           @default(0) @db.Decimal(14, 2)
+  active      Boolean           @default(true)
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  pizzas      PizzaProductModifier[]
+
+  @@unique([tenantId, name, kind])
+  @@index([tenantId, kind, active])
+  @@map("pizza_modifiers")
+}
+
+model PizzaProduct {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  productId   String   @unique @map("product_id") @db.Uuid
+  active      Boolean  @default(true)
+  availableFrom String? @map("available_from") @db.VarChar(5)
+  availableTo   String? @map("available_to") @db.VarChar(5)
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sizes       PizzaProductSize[]
+  flavors     PizzaProductFlavor[]
+  modifiers   PizzaProductModifier[]
+
+  @@unique([tenantId, productId])
+  @@index([tenantId, active])
+  @@map("pizza_products")
+}
+
+model PizzaProductSize {
+  tenantId       String @map("tenant_id") @db.Uuid
+  pizzaProductId String @map("pizza_product_id") @db.Uuid
+  sizeId         String @map("size_id") @db.Uuid
+  price          Decimal @db.Decimal(14, 2)
+  pizza          PizzaProduct @relation(fields: [pizzaProductId], references: [id], onDelete: Cascade)
+  size           PizzaSize    @relation(fields: [sizeId], references: [id])
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([pizzaProductId, sizeId])
+  @@index([tenantId])
+  @@map("pizza_product_sizes")
+}
+
+model PizzaProductFlavor {
+  tenantId       String @map("tenant_id") @db.Uuid
+  pizzaProductId String @map("pizza_product_id") @db.Uuid
+  flavorId       String @map("flavor_id") @db.Uuid
+  price          Decimal @db.Decimal(14, 2)
+  pizza          PizzaProduct @relation(fields: [pizzaProductId], references: [id], onDelete: Cascade)
+  flavor         PizzaFlavor  @relation(fields: [flavorId], references: [id])
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([pizzaProductId, flavorId])
+  @@index([tenantId])
+  @@map("pizza_product_flavors")
+}
+
+model PizzaDoughSize {
+  tenantId      String @map("tenant_id") @db.Uuid
+  doughId       String @map("dough_id") @db.Uuid
+  sizeId        String @map("size_id") @db.Uuid
+  price         Decimal @default(0) @db.Decimal(14, 2)
+  dough         PizzaDough @relation(fields: [doughId], references: [id], onDelete: Cascade)
+  size          PizzaSize  @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+  tenant        Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([doughId, sizeId])
+  @@index([tenantId])
+  @@map("pizza_dough_sizes")
+}
+
+model PizzaCrustSize {
+  tenantId      String @map("tenant_id") @db.Uuid
+  crustId       String @map("crust_id") @db.Uuid
+  sizeId        String @map("size_id") @db.Uuid
+  price         Decimal @default(0) @db.Decimal(14, 2)
+  crust         PizzaCrust @relation(fields: [crustId], references: [id], onDelete: Cascade)
+  size          PizzaSize  @relation(fields: [sizeId], references: [id], onDelete: Cascade)
+  tenant        Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([crustId, sizeId])
+  @@index([tenantId])
+  @@map("pizza_crust_sizes")
+}
+
+model PizzaProductModifier {
+  tenantId       String @map("tenant_id") @db.Uuid
+  pizzaProductId String @map("pizza_product_id") @db.Uuid
+  modifierId     String @map("modifier_id") @db.Uuid
+  pizza          PizzaProduct  @relation(fields: [pizzaProductId], references: [id], onDelete: Cascade)
+  modifier       PizzaModifier @relation(fields: [modifierId], references: [id])
+  tenant         Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@id([pizzaProductId, modifierId])
+  @@index([tenantId])
+  @@map("pizza_product_modifiers")
 }
 
 model Warehouse {

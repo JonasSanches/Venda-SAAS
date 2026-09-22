@@ -19,6 +19,7 @@ import { AnalyticsModule } from "./modules/analytics/analytics.module";
 import { DigitalProductsModule } from "./modules/digital-products/digital-products.module";
 import { LibraryMembershipsModule } from "./modules/library-memberships/library-memberships.module";
 import { TransportationModule } from "./modules/transportation/transportation.module";
+import { PizzeriaModule } from "./modules/pizzeria/pizzeria.module";
 
 @Module({
   imports: [
@@ -38,7 +39,8 @@ import { TransportationModule } from "./modules/transportation/transportation.mo
     AnalyticsModule,
     DigitalProductsModule,
     LibraryMembershipsModule,
-    TransportationModule
+    TransportationModule,
+    PizzeriaModule
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }]
