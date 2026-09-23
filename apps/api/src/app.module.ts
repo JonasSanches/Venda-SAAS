@@ -20,6 +20,7 @@ import { DigitalProductsModule } from "./modules/digital-products/digital-produc
 import { LibraryMembershipsModule } from "./modules/library-memberships/library-memberships.module";
 import { TransportationModule } from "./modules/transportation/transportation.module";
 import { PizzeriaModule } from "./modules/pizzeria/pizzeria.module";
+import { ScannerModule } from "./modules/scanner/scanner.module";
 
 @Module({
   imports: [
@@ -40,7 +41,8 @@ import { PizzeriaModule } from "./modules/pizzeria/pizzeria.module";
     DigitalProductsModule,
     LibraryMembershipsModule,
     TransportationModule,
-    PizzeriaModule
+    PizzeriaModule,
+    ScannerModule
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }]

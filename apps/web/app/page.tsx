@@ -77,6 +77,7 @@ type Session = {
     branches?: BranchInfo[];
   };
 };
+const dateTime = (value?:string) => value ? new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short"}).format(new Date(value)) : "—";
 
 function BarcodeScanner({ onRead, onClose }: { onRead: (code: string) => void; onClose: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -130,6 +131,13 @@ function BarcodeScanner({ onRead, onClose }: { onRead: (code: string) => void; o
       </div>
     </div>
   );
+}
+function MobileScannerPair({token,onRead,onClose}:{token:string;onRead:(code:string)=>void;onClose:()=>void}){
+  const canvasRef=useRef<HTMLCanvasElement>(null);const [pair,setPair]=useState<{id:string;token:string;expiresAt:string}|null>(null),[error,setError]=useState(""),cursor=useRef(0);
+  useEffect(()=>{let active=true;request<{id:string;token:string;expiresAt:string}>("/scanner/sessions",token,{method:"POST",body:"{}"}).then(value=>{if(active)setPair(value)}).catch(cause=>setError((cause as Error).message));return()=>{active=false}},[token]);
+  useEffect(()=>{if(!pair||!canvasRef.current)return;const url=`${location.origin}/leitor?pair=${encodeURIComponent(pair.token)}`;void import("qrcode").then(QR=>QR.toCanvas(canvasRef.current!,url,{width:240,margin:1,color:{dark:"#102039",light:"#ffffff"}})).catch(()=>setError("Não foi possível gerar o QR Code."))},[pair]);
+  useEffect(()=>{if(!pair)return;let active=true;const poll=async()=>{try{const data=await request<{events:{code:string}[];cursor:number}>(`/scanner/sessions/${pair.id}/events?cursor=${cursor.current}`,token);cursor.current=data.cursor;data.events.forEach(event=>onRead(event.code))}catch(cause){if(active)setError((cause as Error).message)}};void poll();const timer=window.setInterval(()=>void poll(),900);return()=>{active=false;window.clearInterval(timer)}},[pair,token,onRead]);
+  return <div className="scanner-backdrop" role="dialog" aria-modal="true" aria-label="Conectar celular como leitor"><div className="scanner-modal mobile-pair-modal"><div className="scanner-heading"><div><small>CELULAR COMO LEITOR</small><h2>Leia o QR Code com o celular</h2></div><button type="button" className="secondary" onClick={onClose}>Fechar</button></div>{pair?<><canvas ref={canvasRef} className="mobile-pair-qr"/><p>Abra a câmera do celular, escaneie este QR Code e use a câmera do celular como pistola. Cada leitura será enviada ao PDV deste computador.</p><small>Conexão temporária até {dateTime(pair.expiresAt)}.</small></>:<p>Gerando conexão segura…</p>}{error&&<div className="error">{error}</div>}</div></div>
 }
 function trialDays(expiresAt?: string) {
   if (!expiresAt) return null;
@@ -1252,6 +1260,7 @@ function Pdv({
   const [channel, setChannel] = useState<"PDV"|"DELIVERY">("PDV");
   const [message, setMessage] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [mobileScannerOpen, setMobileScannerOpen] = useState(false);
   const [barcode, setBarcode] = useState("");
   const load = useCallback(
     () =>
@@ -1312,8 +1321,10 @@ function Pdv({
           <label>Código de barras<input value={barcode} onChange={(e) => setBarcode(e.target.value)} autoComplete="off" inputMode="numeric" autoFocus placeholder="Use a pistola ou digite o código" /></label>
           <button type="submit">Adicionar</button>
           <button type="button" className="secondary" onClick={() => setScannerOpen(true)}>Usar câmera</button>
+          <button type="button" className="secondary" onClick={() => setMobileScannerOpen(true)}>Usar celular</button>
         </form>
         {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onRead={(code) => { setScannerOpen(false); addByBarcode(code); }} />}
+        {mobileScannerOpen&&<MobileScannerPair token={token} onClose={()=>setMobileScannerOpen(false)} onRead={addByBarcode}/>}
         <div className="product-cards">
           {stock.map((p) => (
             <button
