@@ -2,13 +2,17 @@ import { BadRequestException, ForbiddenException, Injectable, NotFoundException 
 import { withTenant } from "@varejo/database";
 import { tenantContext } from "../../common/tenant-context";
 import { calculateFlavorPrice } from "./pizza-pricing";
+import { PizzeriaDemoStore } from "./pizzeria-demo-store.service";
 
 const MODULE = "PIZZERIA";
 type Rule = "HIGHEST_PRICE"|"AVERAGE"|"PROPORTIONAL";
 
 @Injectable()
 export class PizzeriaService {
+  constructor(private readonly demo:PizzeriaDemoStore) {}
+  private get demoMode(){return process.env.DEMO_MODE!=="false"}
   async configuration(tenantId:string) {
+    if(this.demoMode)return this.demo.configuration(tenantId);
     return withTenant(tenantId, async tx => {
       const [module, settings, sizes, flavors, doughs, crusts, modifiers, pizzas] = await Promise.all([
         tx.tenantModule.findUnique({where:{tenantId_module:{tenantId,module:MODULE}}}),
@@ -26,6 +30,7 @@ export class PizzeriaService {
 
   async setModule(tenantId:string, enabled:boolean) {
     this.assertManager();
+    if(this.demoMode)return this.demo.setModule(tenantId,enabled);
     return withTenant(tenantId, async tx => {
       const module = await tx.tenantModule.upsert({where:{tenantId_module:{tenantId,module:MODULE}},update:{enabled},create:{tenantId,module:MODULE,enabled}});
       if(enabled) await tx.pizzaSettings.upsert({where:{tenantId},update:{},create:{tenantId}});
@@ -34,17 +39,17 @@ export class PizzeriaService {
   }
 
   async setPricingRule(tenantId:string, pricingRule:Rule) {
-    this.assertManager(); await this.requireEnabled(tenantId);
+    this.assertManager(); if(this.demoMode)return this.demo.setPricingRule(tenantId,pricingRule); await this.requireEnabled(tenantId);
     return withTenant(tenantId, tx=>tx.pizzaSettings.upsert({where:{tenantId},update:{pricingRule},create:{tenantId,pricingRule}}));
   }
-  async addSize(tenantId:string, input:{name:string;maxFlavors:number;serves?:number}) { this.assertManager(); await this.requireEnabled(tenantId); return withTenant(tenantId, async tx=>{const size=await tx.pizzaSize.create({data:{tenantId,name:input.name.trim(),maxFlavors:input.maxFlavors,serves:input.serves}});const[doughs,crusts]=await Promise.all([tx.pizzaDough.findMany({where:{tenantId,active:true}}),tx.pizzaCrust.findMany({where:{tenantId,active:true}})]);if(doughs.length)await tx.pizzaDoughSize.createMany({data:doughs.map((dough:any)=>({tenantId,doughId:dough.id,sizeId:size.id,price:0}))});if(crusts.length)await tx.pizzaCrustSize.createMany({data:crusts.map((crust:any)=>({tenantId,crustId:crust.id,sizeId:size.id,price:0}))});return size;}); }
-  async addFlavor(tenantId:string, name:string) { this.assertManager(); await this.requireEnabled(tenantId); return withTenant(tenantId, tx=>tx.pizzaFlavor.create({data:{tenantId,name:name.trim()}})); }
-  async addDough(tenantId:string, name:string) { this.assertManager(); await this.requireEnabled(tenantId); return withTenant(tenantId, async tx=>{const sizes=await tx.pizzaSize.findMany({where:{tenantId,active:true}});return tx.pizzaDough.create({data:{tenantId,name:name.trim(),sizes:{create:sizes.map((size:any)=>({tenantId,sizeId:size.id,price:0}))}}});}); }
-  async addCrust(tenantId:string, name:string) { this.assertManager(); await this.requireEnabled(tenantId); return withTenant(tenantId, async tx=>{const sizes=await tx.pizzaSize.findMany({where:{tenantId,active:true}});return tx.pizzaCrust.create({data:{tenantId,name:name.trim(),sizes:{create:sizes.map((size:any)=>({tenantId,sizeId:size.id,price:0}))}}});}); }
-  async addModifier(tenantId:string, input:{name:string;kind:"ADDITION"|"REMOVAL";price:number}) { this.assertManager(); await this.requireEnabled(tenantId); return withTenant(tenantId, tx=>tx.pizzaModifier.create({data:{tenantId,name:input.name.trim(),kind:input.kind,price:input.price}}).then((row:any)=>this.numberRow(row))); }
+  async addSize(tenantId:string, input:{name:string;maxFlavors:number;serves?:number}) { this.assertManager(); if(this.demoMode)return this.demo.addSize(tenantId,input); await this.requireEnabled(tenantId); return withTenant(tenantId, async tx=>{const size=await tx.pizzaSize.create({data:{tenantId,name:input.name.trim(),maxFlavors:input.maxFlavors,serves:input.serves}});const[doughs,crusts]=await Promise.all([tx.pizzaDough.findMany({where:{tenantId,active:true}}),tx.pizzaCrust.findMany({where:{tenantId,active:true}})]);if(doughs.length)await tx.pizzaDoughSize.createMany({data:doughs.map((dough:any)=>({tenantId,doughId:dough.id,sizeId:size.id,price:0}))});if(crusts.length)await tx.pizzaCrustSize.createMany({data:crusts.map((crust:any)=>({tenantId,crustId:crust.id,sizeId:size.id,price:0}))});return size;}); }
+  async addFlavor(tenantId:string, name:string) { this.assertManager(); if(this.demoMode)return this.demo.addNamed(tenantId,"flavors",name); await this.requireEnabled(tenantId); return withTenant(tenantId, tx=>tx.pizzaFlavor.create({data:{tenantId,name:name.trim()}})); }
+  async addDough(tenantId:string, name:string) { this.assertManager(); if(this.demoMode)return this.demo.addNamed(tenantId,"doughs",name); await this.requireEnabled(tenantId); return withTenant(tenantId, async tx=>{const sizes=await tx.pizzaSize.findMany({where:{tenantId,active:true}});return tx.pizzaDough.create({data:{tenantId,name:name.trim(),sizes:{create:sizes.map((size:any)=>({tenantId,sizeId:size.id,price:0}))}}});}); }
+  async addCrust(tenantId:string, name:string) { this.assertManager(); if(this.demoMode)return this.demo.addNamed(tenantId,"crusts",name); await this.requireEnabled(tenantId); return withTenant(tenantId, async tx=>{const sizes=await tx.pizzaSize.findMany({where:{tenantId,active:true}});return tx.pizzaCrust.create({data:{tenantId,name:name.trim(),sizes:{create:sizes.map((size:any)=>({tenantId,sizeId:size.id,price:0}))}}});}); }
+  async addModifier(tenantId:string, input:{name:string;kind:"ADDITION"|"REMOVAL";price:number}) { this.assertManager(); if(this.demoMode)return this.demo.addModifier(tenantId,input); await this.requireEnabled(tenantId); return withTenant(tenantId, tx=>tx.pizzaModifier.create({data:{tenantId,name:input.name.trim(),kind:input.kind,price:input.price}}).then((row:any)=>this.numberRow(row))); }
 
   async createPizza(tenantId:string, input:any) {
-    this.assertManager(); await this.requireEnabled(tenantId);
+    this.assertManager(); if(this.demoMode)return this.demo.createPizza(tenantId,input); await this.requireEnabled(tenantId);
     return withTenant(tenantId, async tx => {
       const [sizes, flavors, modifiers] = await Promise.all([
         tx.pizzaSize.findMany({where:{tenantId,id:{in:input.sizes.map((x:any)=>x.sizeId)},active:true}}),
@@ -63,7 +68,7 @@ export class PizzeriaService {
   // A quote is deliberately produced only on the server. The browser sends choices,
   // never a final price, so a later checkout can reuse this same rule safely.
   async quote(tenantId:string, input:any) {
-    await this.requireEnabled(tenantId);
+    if(this.demoMode)return this.demo.quote(tenantId,input); await this.requireEnabled(tenantId);
     return withTenant(tenantId, async tx => {
       const pizza = await tx.pizzaProduct.findFirst({where:{id:input.pizzaProductId,tenantId,active:true},include:{product:true,sizes:{include:{size:true}},flavors:{include:{flavor:true}},modifiers:{include:{modifier:true}}}});
       if(!pizza) throw new NotFoundException("Pizza not found.");
@@ -90,7 +95,7 @@ export class PizzeriaService {
   }
 
   async operations(tenantId:string) {
-    await this.requireEnabled(tenantId);
+    if(this.demoMode)return this.demo.operations(tenantId); await this.requireEnabled(tenantId);
     return withTenant(tenantId, async tx => {
       const orders=await tx.pizzaOrder.findMany({where:{tenantId,status:{notIn:["COMPLETED","CANCELLED"]}},include:{items:{include:{pizza:{include:{product:true}}}}},orderBy:{createdAt:"asc"},take:80});
       const today=new Date();today.setHours(0,0,0,0);
@@ -104,7 +109,7 @@ export class PizzeriaService {
   }
 
   async createOrder(tenantId:string, input:any) {
-    this.assertOperator(); await this.requireEnabled(tenantId);
+    this.assertOperator(); if(this.demoMode)return this.demo.createOrder(tenantId,input); await this.requireEnabled(tenantId);
     const quotes=await Promise.all(input.items.map((item:any)=>this.quote(tenantId,item)));
     return withTenant(tenantId, async tx => {
       const last=await tx.pizzaOrder.findFirst({where:{tenantId},orderBy:{number:"desc"},select:{number:true}});
@@ -115,12 +120,12 @@ export class PizzeriaService {
   }
 
   async setOrderStatus(tenantId:string,id:string,status:any) {
-    this.assertOperator(); await this.requireEnabled(tenantId);
+    this.assertOperator(); if(this.demoMode)return this.demo.setStatus(tenantId,id,status); await this.requireEnabled(tenantId);
     return withTenant(tenantId,async tx=>{const order=await tx.pizzaOrder.findFirst({where:{id,tenantId}});if(!order)throw new NotFoundException("Pizza order not found.");if(order.status==="COMPLETED"||order.status==="CANCELLED")throw new BadRequestException("Closed orders cannot be changed.");const updated=await tx.pizzaOrder.update({where:{id},data:{status},include:{items:{include:{pizza:{include:{product:true}}}}}});return this.serializeOrder(updated);});
   }
 
   async setOrderPayment(tenantId:string,id:string,paid:boolean) {
-    this.assertOperator(); await this.requireEnabled(tenantId);
+    this.assertOperator(); if(this.demoMode)return this.demo.setPayment(tenantId,id,paid); await this.requireEnabled(tenantId);
     return withTenant(tenantId,async tx=>{const order=await tx.pizzaOrder.findFirst({where:{id,tenantId}});if(!order)throw new NotFoundException("Pizza order not found.");const updated=await tx.pizzaOrder.update({where:{id},data:{paymentState:paid?"PAID":"PENDING"},include:{items:{include:{pizza:{include:{product:true}}}}}});return this.serializeOrder(updated);});
   }
 
