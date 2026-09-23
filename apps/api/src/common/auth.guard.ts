@@ -20,6 +20,7 @@ export class AuthGuard implements CanActivate {
     tenantContext.enterWith({ ...identity, branchId:typeof branchHeader==="string"?branchHeader:undefined, requestId: String(request.id) });
     await this.auth.assertActive(identity.tenantId,identity.userId);
     this.assertRoleAccess(identity.roles,request.method,request.url);
+    if(request.method!=="GET"&&identity.roles.includes("SUPPORT_READONLY"))throw new ForbiddenException("A visualização administrativa é somente leitura");
     if(request.method!=="GET")await this.trials.assertWritable(identity.tenantId);
     return true;
   }

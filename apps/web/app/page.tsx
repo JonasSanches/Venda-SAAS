@@ -193,9 +193,11 @@ export default function Home() {
       setError((e as Error).message);
     }
   }, []);
+  const [supportView, setSupportView] = useState(false);
   useEffect(() => {
-    const saved = localStorage.getItem("varejo-session");
-    if (saved) setSession(JSON.parse(saved));
+    const preview = sessionStorage.getItem("varejo-preview-session");
+    const saved = preview ?? localStorage.getItem("varejo-session");
+    if (saved) { setSupportView(Boolean(preview)); setSession(JSON.parse(saved)); }
   }, []);
   useEffect(() => {
     if (!session) return;
@@ -227,7 +229,7 @@ export default function Home() {
             tenant.branches?.find((item) => item.id === selectedBranch?.id) ??
             tenant.branch;
           const next = { ...current, tenant: { ...tenant, branch } };
-          localStorage.setItem("varejo-session", JSON.stringify(next));
+          (supportView ? sessionStorage : localStorage).setItem(supportView ? "varejo-preview-session" : "varejo-session", JSON.stringify(next));
           return next;
         });
       } catch (e) {
@@ -242,7 +244,7 @@ export default function Home() {
       window.clearInterval(timer);
       window.removeEventListener("focus", syncTrial);
     };
-  }, [session?.accessToken, isPlatformAdmin]);
+  }, [session?.accessToken, isPlatformAdmin, supportView]);
   if (!session)
     return (
       <Login
@@ -280,15 +282,16 @@ export default function Home() {
       let base = session;
       try {
         base = JSON.parse(
-          localStorage.getItem("varejo-session") ?? "",
+          (supportView ? sessionStorage : localStorage).getItem(supportView ? "varejo-preview-session" : "varejo-session") ?? "",
         ) as Session;
       } catch {}
       const next = { ...base, tenant: { ...base.tenant, branch } };
-      localStorage.setItem("varejo-session", JSON.stringify(next));
+      (supportView ? sessionStorage : localStorage).setItem(supportView ? "varejo-preview-session" : "varejo-session", JSON.stringify(next));
       setSession(next);
     };
   return (
     <main data-theme={theme}>
+      {supportView && <div style={{position:"fixed",top:0,left:0,right:0,zIndex:50,padding:"7px 16px",background:"#8a6818",color:"#fff",fontSize:12,fontWeight:800,textAlign:"center"}}>Visualização administrativa · somente leitura · sessão expira em 15 minutos</div>}
       <aside>
         <div className="brand">
           <span>V</span> <BrandName /> <OmegaCredit />
@@ -333,7 +336,7 @@ export default function Home() {
           </button>
           <button
             onClick={() => {
-              localStorage.removeItem("varejo-session");
+              if(supportView){sessionStorage.removeItem("varejo-preview-session");window.close();}else localStorage.removeItem("varejo-session");
               setSession(null);
             }}
           >

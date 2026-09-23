@@ -21,9 +21,10 @@ import {
   UpdateTenantDto,
 } from "./trial.dto";
 import { TrialService } from "./trial.service";
+import { AuthService } from "../auth/auth.service";
 @Controller("platform")
 export class PlatformController {
-  constructor(private s: TrialService) {}
+  constructor(private s: TrialService,private auth:AuthService) {}
   private admin(request: PlatformRequest) {
     if (
       request.identity?.tenantId !== "10000000-0000-4000-8000-000000000001" ||
@@ -55,6 +56,7 @@ export class PlatformController {
     this.admin(request);
     return this.s.auditLogs(id);
   }
+  @Post("trials/:id/preview") preview(@Req() request:PlatformRequest,@Param("id") id:string){this.admin(request);return this.auth.platformPreview(id,request.identity!.userId)}
   @Get("users") users(@Req() request: PlatformRequest) {
     this.admin(request);
     return this.s.listPlatformUsers();

@@ -145,6 +145,11 @@ export default function Admin() {
     }
     alert("Informe um número inteiro de -365 a 365, exceto zero.");
   }
+  async function openLiveView(tenantId:string){
+    const tab=window.open("about:blank","_blank");
+    if(!tab){setError("O navegador bloqueou a nova aba. Autorize pop-ups para abrir a visualização.");return;}
+    try{const preview=await call(`/platform/trials/${tenantId}/preview`,{});tab.sessionStorage.setItem("varejo-preview-session",JSON.stringify(preview));tab.location.replace("/");setMessage("Visualização administrativa aberta em outra aba.");}catch(cause){tab.close();setError((cause as Error).message);}
+  }
   async function createUser(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const target = e.currentTarget,
@@ -519,6 +524,7 @@ export default function Admin() {
             </form>
             <h3>Controle da conta</h3>
             <div className="account-controls">
+              <button className="secondary" onClick={() => openLiveView(detail.tenantId)}>Ver sistema ao vivo</button>
               <a className="payment-link" href={`/pagamento?cliente=${detail.tenantId}`} target="_blank" rel="noopener noreferrer">Gerar pagamento</a>
               <button onClick={() => changeClientStatus("ACTIVE")}>
                 Ativar conta

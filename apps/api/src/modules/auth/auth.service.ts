@@ -23,6 +23,13 @@ export class AuthService {
     const signature = createHmac("sha256", this.secret()).update(body).digest("base64url");
     const tenant=trial?await this.trials.get(user.tenantId):this.store.tenant();return { accessToken: `${body}.${signature}`, user: { id: user.id, name: user.name, email: user.email, roles: user.roles }, tenant };
   }
+  async platformPreview(tenantId:string, actorId:string) {
+    const tenant=await this.trials.get(tenantId);if(!tenant)throw new BadRequestException("Conta não encontrada");
+    const user=process.env.DEMO_MODE!=="false"?(await this.trials.getDetail(tenantId))?.users?.[0]:await prisma.user.findFirst({where:{tenantId,status:"ACTIVE"},orderBy:{createdAt:"asc"}});
+    if(!user)throw new BadRequestException("A empresa não possui um usuário ativo para visualização");
+    const payload:TokenPayload={tenantId,userId:user.id,roles:["ADMIN","SUPPORT_READONLY"],exp:Math.floor(Date.now()/1000)+15*60};const body=`${encode({alg:"HS256",typ:"JWT"})}.${encode(payload)}`,signature=createHmac("sha256",this.secret()).update(body).digest("base64url");
+    await this.trials.logSupportView(tenantId,actorId);return{accessToken:`${body}.${signature}`,user:{id:user.id,name:"Visualização administrativa",email:"support@vendamais-app.com",roles:payload.roles},tenant,supportView:true};
+  }
   verifyToken(token: string): TokenPayload {
     try {
       const [header, payload, signature] = token.split(".");
