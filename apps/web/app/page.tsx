@@ -7,6 +7,7 @@ import { Pricing } from "./pricing";
 import { GarmentStudio } from "./garment-studio";
 import { TransportationRecovery } from "./transportation-recovery";
 import { Pizzeria } from "./pizzeria";
+import { Customers } from "./customers";
 import { request } from "./api-client";
 type Product = {
   id: string;
@@ -380,6 +381,8 @@ export default function Home() {
             token={session.accessToken}
             onCreated={updated}
           />
+        ) : page === "Clientes" ? (
+          <Customers token={session.accessToken} />
         ) : page === "Estúdio de moldes" ? (
           <GarmentStudio onSave={async (input) => {
             await request("/products", session.accessToken, { method: "POST", body: JSON.stringify(input) });
@@ -1977,6 +1980,7 @@ const pagesFor = (roles: string[], segment?: string) => {
         "PDV",
         "Estoque",
         "Produtos",
+        "Clientes",
         ...studio,
         "Usuários",
         "Filial",

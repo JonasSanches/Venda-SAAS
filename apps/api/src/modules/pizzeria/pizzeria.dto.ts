@@ -33,6 +33,7 @@ export class PizzaOrderLineDto extends PizzaQuoteDto {
 }
 export class CreatePizzaOrderDto {
   @IsEnum(["COUNTER", "PICKUP", "DELIVERY", "TABLE"] as const) serviceType!: "COUNTER"|"PICKUP"|"DELIVERY"|"TABLE";
+  @IsOptional() @IsUUID() customerId?: string;
   @IsOptional() @IsString() @Length(2, 160) customerName?: string;
   @IsOptional() @IsString() @Length(8, 40) customerPhone?: string;
   @IsOptional() @IsString() @Length(4, 600) address?: string;

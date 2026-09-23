@@ -521,6 +521,7 @@ model PizzaOrder {
   status       PizzaProductionStatus @default(NEW)
   serviceType  String                @default("COUNTER") @map("service_type") @db.VarChar(30)
   paymentState String                @default("PENDING") @map("payment_state") @db.VarChar(20)
+  customerId   String?               @map("customer_id") @db.Uuid
   customerName String?               @map("customer_name") @db.VarChar(160)
   customerPhone String?              @map("customer_phone") @db.VarChar(40)
   address      String?               @db.Text
@@ -529,10 +530,12 @@ model PizzaOrder {
   createdAt    DateTime              @default(now()) @map("created_at")
   updatedAt    DateTime              @updatedAt @map("updated_at")
   tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  customer     Party?                @relation(fields: [customerId], references: [id], onDelete: SetNull)
   items        PizzaOrderItem[]
 
   @@unique([tenantId, number])
   @@index([tenantId, status, createdAt])
+  @@index([tenantId, customerId])
   @@map("pizza_orders")
 }
 
@@ -720,11 +723,15 @@ model Party {
   tenantId  String    @map("tenant_id") @db.Uuid
   type      PartyType
   name      String
-  document  String
+  document  String?
   email     String?
   phone     String?
+  address   String?   @db.Text
+  notes     String?   @db.Text
   createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  pizzaOrders PizzaOrder[]
 
   @@unique([tenantId, document])
   @@index([tenantId, type])

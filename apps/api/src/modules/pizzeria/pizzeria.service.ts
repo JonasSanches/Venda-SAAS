@@ -112,9 +112,11 @@ export class PizzeriaService {
     this.assertOperator(); if(this.demoMode)return this.demo.createOrder(tenantId,input); await this.requireEnabled(tenantId);
     const quotes=await Promise.all(input.items.map((item:any)=>this.quote(tenantId,item)));
     return withTenant(tenantId, async tx => {
+      const customer=input.customerId?await tx.party.findFirst({where:{id:input.customerId,tenantId,type:"CUSTOMER"}}):null;
+      if(input.customerId&&!customer)throw new BadRequestException("Cliente não encontrado nesta empresa.");
       const last=await tx.pizzaOrder.findFirst({where:{tenantId},orderBy:{number:"desc"},select:{number:true}});
       const total=quotes.reduce((sum,quote,index)=>sum+quote.total*input.items[index].quantity,0);
-      const order=await tx.pizzaOrder.create({data:{tenantId,number:(last?.number??0)+1,serviceType:input.serviceType,customerName:input.customerName?.trim()||null,customerPhone:input.customerPhone?.trim()||null,address:input.address?.trim()||null,notes:input.notes?.trim()||null,total,items:{create:input.items.map((item:any,index:number)=>({tenantId,pizzaProductId:quotes[index].pizzaProductId,quantity:item.quantity,unitPrice:quotes[index].total,total:quotes[index].total*item.quantity,selection:{sizeId:item.sizeId,flavors:item.flavors,doughId:item.doughId??null,crustId:item.crustId??null,modifierIds:item.modifierIds??[],pricingRule:quotes[index].pricingRule}}))}},include:{items:{include:{pizza:{include:{product:true}}}}}});
+      const order=await tx.pizzaOrder.create({data:{tenantId,number:(last?.number??0)+1,serviceType:input.serviceType,customerId:customer?.id??null,customerName:input.customerName?.trim()||customer?.name||null,customerPhone:input.customerPhone?.trim()||customer?.phone||null,address:input.address?.trim()||customer?.address||null,notes:input.notes?.trim()||null,total,items:{create:input.items.map((item:any,index:number)=>({tenantId,pizzaProductId:quotes[index].pizzaProductId,quantity:item.quantity,unitPrice:quotes[index].total,total:quotes[index].total*item.quantity,selection:{sizeId:item.sizeId,flavors:item.flavors,doughId:item.doughId??null,crustId:item.crustId??null,modifierIds:item.modifierIds??[],pricingRule:quotes[index].pricingRule}}))}},include:{items:{include:{pizza:{include:{product:true}}}}}});
       return this.serializeOrder(order);
     });
   }
