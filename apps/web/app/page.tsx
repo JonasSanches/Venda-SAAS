@@ -388,7 +388,7 @@ export default function Home() {
         ) : page === "Transportation Detention Recovery" ? (
           <TransportationRecovery token={session.accessToken} />
         ) : page === "Pizzaria" ? (
-          <Pizzeria token={session.accessToken} />
+          <Pizzeria token={session.accessToken} roles={session.user.roles} />
         ) : page === "Usuários" ? (
           <Users token={session.accessToken} roles={session.user.roles} />
         ) : page === "Filial" ? (

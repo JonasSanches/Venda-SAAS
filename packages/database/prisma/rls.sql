@@ -8,7 +8,8 @@ BEGIN
     'cash_sessions','cash_movements','parties','fiscal_settings',
     'tenant_modules','pizza_settings','pizza_sizes','pizza_flavors','pizza_doughs',
     'pizza_crusts','pizza_modifiers','pizza_products','pizza_product_sizes',
-    'pizza_product_flavors','pizza_dough_sizes','pizza_crust_sizes','pizza_product_modifiers'
+    'pizza_product_flavors','pizza_dough_sizes','pizza_crust_sizes','pizza_product_modifiers',
+    'pizza_orders','pizza_order_items'
   ] LOOP
     EXECUTE format('ALTER TABLE %I ENABLE ROW LEVEL SECURITY', table_name);
     EXECUTE format('ALTER TABLE %I FORCE ROW LEVEL SECURITY', table_name);

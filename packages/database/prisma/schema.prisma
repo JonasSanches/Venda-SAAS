@@ -47,6 +47,16 @@ enum PizzaModifierKind {
   REMOVAL
 }
 
+enum PizzaProductionStatus {
+  NEW
+  PREPARING
+  OVEN
+  READY
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
+}
+
 enum StockMovementType {
   PURCHASE
   SALE
@@ -153,6 +163,8 @@ model Tenant {
   pizzaDoughSizes PizzaDoughSize[]
   pizzaCrustSizes PizzaCrustSize[]
   pizzaProductModifiers PizzaProductModifier[]
+  pizzaOrders     PizzaOrder[]
+  pizzaOrderItems PizzaOrderItem[]
 
   @@map("tenants")
 }
@@ -492,10 +504,53 @@ model PizzaProduct {
   sizes       PizzaProductSize[]
   flavors     PizzaProductFlavor[]
   modifiers   PizzaProductModifier[]
+  orderItems  PizzaOrderItem[]
 
   @@unique([tenantId, productId])
   @@index([tenantId, active])
   @@map("pizza_products")
+}
+
+// Pizza orders are intentionally separate from the fiscal checkout. They retain
+// the exact choices sent to production, while a payment/fiscal flow can consume
+// the final ticket when the operation is ready to close it.
+model PizzaOrder {
+  id           String                @id @default(uuid()) @db.Uuid
+  tenantId     String                @map("tenant_id") @db.Uuid
+  number       Int
+  status       PizzaProductionStatus @default(NEW)
+  serviceType  String                @default("COUNTER") @map("service_type") @db.VarChar(30)
+  paymentState String                @default("PENDING") @map("payment_state") @db.VarChar(20)
+  customerName String?               @map("customer_name") @db.VarChar(160)
+  customerPhone String?              @map("customer_phone") @db.VarChar(40)
+  address      String?               @db.Text
+  notes        String?               @db.Text
+  total        Decimal               @default(0) @db.Decimal(14, 2)
+  createdAt    DateTime              @default(now()) @map("created_at")
+  updatedAt    DateTime              @updatedAt @map("updated_at")
+  tenant       Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items        PizzaOrderItem[]
+
+  @@unique([tenantId, number])
+  @@index([tenantId, status, createdAt])
+  @@map("pizza_orders")
+}
+
+model PizzaOrderItem {
+  id           String       @id @default(uuid()) @db.Uuid
+  tenantId     String       @map("tenant_id") @db.Uuid
+  pizzaOrderId String       @map("pizza_order_id") @db.Uuid
+  pizzaProductId String     @map("pizza_product_id") @db.Uuid
+  quantity     Int          @default(1)
+  unitPrice    Decimal      @map("unit_price") @db.Decimal(14, 2)
+  total        Decimal      @db.Decimal(14, 2)
+  selection    Json
+  order        PizzaOrder   @relation(fields: [pizzaOrderId], references: [id], onDelete: Cascade)
+  pizza        PizzaProduct @relation(fields: [pizzaProductId], references: [id])
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, pizzaOrderId])
+  @@map("pizza_order_items")
 }
 
 model PizzaProductSize {

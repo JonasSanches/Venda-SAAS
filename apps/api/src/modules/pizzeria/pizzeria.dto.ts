@@ -27,3 +27,17 @@ export class PizzaQuoteDto {
   @IsOptional() @IsUUID() crustId?: string;
   @IsOptional() @IsArray() @ArrayMaxSize(30) @IsUUID("4", {each:true}) modifierIds?: string[];
 }
+
+export class PizzaOrderLineDto extends PizzaQuoteDto {
+  @IsInt() @Min(1) @Max(30) quantity!: number;
+}
+export class CreatePizzaOrderDto {
+  @IsEnum(["COUNTER", "PICKUP", "DELIVERY", "TABLE"] as const) serviceType!: "COUNTER"|"PICKUP"|"DELIVERY"|"TABLE";
+  @IsOptional() @IsString() @Length(2, 160) customerName?: string;
+  @IsOptional() @IsString() @Length(8, 40) customerPhone?: string;
+  @IsOptional() @IsString() @Length(4, 600) address?: string;
+  @IsOptional() @IsString() @Length(2, 800) notes?: string;
+  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(30) @ValidateNested({each:true}) @Type(()=>PizzaOrderLineDto) items!: PizzaOrderLineDto[];
+}
+export class PizzaOrderStatusDto { @IsEnum(["NEW", "PREPARING", "OVEN", "READY", "OUT_FOR_DELIVERY", "COMPLETED", "CANCELLED"] as const) status!: "NEW"|"PREPARING"|"OVEN"|"READY"|"OUT_FOR_DELIVERY"|"COMPLETED"|"CANCELLED"; }
+export class PizzaOrderPaymentDto { @IsBoolean() paid!: boolean; }

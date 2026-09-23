@@ -89,9 +89,46 @@ export class PizzeriaService {
     });
   }
 
+  async operations(tenantId:string) {
+    await this.requireEnabled(tenantId);
+    return withTenant(tenantId, async tx => {
+      const orders=await tx.pizzaOrder.findMany({where:{tenantId,status:{notIn:["COMPLETED","CANCELLED"]}},include:{items:{include:{pizza:{include:{product:true}}}}},orderBy:{createdAt:"asc"},take:80});
+      const today=new Date();today.setHours(0,0,0,0);
+      const [todayOrders,paid]=await Promise.all([
+        tx.pizzaOrder.count({where:{tenantId,createdAt:{gte:today},status:{not:"CANCELLED"}}}),
+        tx.pizzaOrder.aggregate({where:{tenantId,createdAt:{gte:today},paymentState:"PAID",status:{not:"CANCELLED"}},_sum:{total:true}}),
+      ]);
+      const byStatus=orders.reduce<Record<string,number>>((all,order:any)=>({...all,[order.status]:(all[order.status]??0)+1}),{});
+      return { orders:orders.map((order:any)=>this.serializeOrder(order)), summary:{todayOrders,paidRevenue:Number(paid._sum.total??0),new:byStatus.NEW??0,preparing:(byStatus.PREPARING??0)+(byStatus.OVEN??0),ready:(byStatus.READY??0)+(byStatus.OUT_FOR_DELIVERY??0)} };
+    });
+  }
+
+  async createOrder(tenantId:string, input:any) {
+    this.assertOperator(); await this.requireEnabled(tenantId);
+    const quotes=await Promise.all(input.items.map((item:any)=>this.quote(tenantId,item)));
+    return withTenant(tenantId, async tx => {
+      const last=await tx.pizzaOrder.findFirst({where:{tenantId},orderBy:{number:"desc"},select:{number:true}});
+      const total=quotes.reduce((sum,quote,index)=>sum+quote.total*input.items[index].quantity,0);
+      const order=await tx.pizzaOrder.create({data:{tenantId,number:(last?.number??0)+1,serviceType:input.serviceType,customerName:input.customerName?.trim()||null,customerPhone:input.customerPhone?.trim()||null,address:input.address?.trim()||null,notes:input.notes?.trim()||null,total,items:{create:input.items.map((item:any,index:number)=>({tenantId,pizzaProductId:quotes[index].pizzaProductId,quantity:item.quantity,unitPrice:quotes[index].total,total:quotes[index].total*item.quantity,selection:{sizeId:item.sizeId,flavors:item.flavors,doughId:item.doughId??null,crustId:item.crustId??null,modifierIds:item.modifierIds??[],pricingRule:quotes[index].pricingRule}}))}},include:{items:{include:{pizza:{include:{product:true}}}}}});
+      return this.serializeOrder(order);
+    });
+  }
+
+  async setOrderStatus(tenantId:string,id:string,status:any) {
+    this.assertOperator(); await this.requireEnabled(tenantId);
+    return withTenant(tenantId,async tx=>{const order=await tx.pizzaOrder.findFirst({where:{id,tenantId}});if(!order)throw new NotFoundException("Pizza order not found.");if(order.status==="COMPLETED"||order.status==="CANCELLED")throw new BadRequestException("Closed orders cannot be changed.");const updated=await tx.pizzaOrder.update({where:{id},data:{status},include:{items:{include:{pizza:{include:{product:true}}}}}});return this.serializeOrder(updated);});
+  }
+
+  async setOrderPayment(tenantId:string,id:string,paid:boolean) {
+    this.assertOperator(); await this.requireEnabled(tenantId);
+    return withTenant(tenantId,async tx=>{const order=await tx.pizzaOrder.findFirst({where:{id,tenantId}});if(!order)throw new NotFoundException("Pizza order not found.");const updated=await tx.pizzaOrder.update({where:{id},data:{paymentState:paid?"PAID":"PENDING"},include:{items:{include:{pizza:{include:{product:true}}}}}});return this.serializeOrder(updated);});
+  }
+
   private async requireEnabled(tenantId:string) { const enabled=await withTenant(tenantId,tx=>tx.tenantModule.findFirst({where:{tenantId,module:MODULE,enabled:true},select:{id:true}})); if(!enabled) throw new ForbiddenException("Enable the Pizzeria module before using this feature."); }
   private assertManager(){ const roles=tenantContext.getStore()?.roles??[]; if(!roles.includes("ADMIN")&&!roles.includes("MANAGER")&&!roles.includes("PLATFORM_ADMIN")) throw new ForbiddenException("Only administrators and managers can configure the Pizzeria module."); }
+  private assertOperator(){ const roles=tenantContext.getStore()?.roles??[]; if(!roles.some(role=>["ADMIN","MANAGER","CASHIER","PLATFORM_ADMIN"].includes(role))) throw new ForbiddenException("Your role cannot operate pizza orders."); }
   private numberRow(row:any){ return {...row,price:row.price===undefined?undefined:Number(row.price)}; }
   private numberRows(rows:any[]){ return rows.map(row=>this.numberRow(row)); }
   private serializePizza(pizza:any){ return {id:pizza.id,productId:pizza.productId,name:pizza.product.name,sku:pizza.product.sku,active:pizza.active,availableFrom:pizza.availableFrom,availableTo:pizza.availableTo,sizes:pizza.sizes.map((item:any)=>({id:item.sizeId,name:item.size.name,maxFlavors:item.size.maxFlavors,price:Number(item.price)})),flavors:pizza.flavors.map((item:any)=>({id:item.flavorId,name:item.flavor.name,price:Number(item.price)})),modifiers:pizza.modifiers.map((item:any)=>this.numberRow(item.modifier))}; }
+  private serializeOrder(order:any){return{id:order.id,number:order.number,status:order.status,serviceType:order.serviceType,paymentState:order.paymentState,customerName:order.customerName,customerPhone:order.customerPhone,address:order.address,notes:order.notes,total:Number(order.total),createdAt:order.createdAt.toISOString(),items:order.items.map((item:any)=>({id:item.id,name:item.pizza.product.name,quantity:item.quantity,unitPrice:Number(item.unitPrice),total:Number(item.total),selection:item.selection}))};}
 }
