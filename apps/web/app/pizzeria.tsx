@@ -17,7 +17,7 @@ const money=(value:number)=>value.toLocaleString("pt-BR",{style:"currency",curre
 export function Pizzeria({token,roles}:{token:string;roles?:string[]}){
   const [data,setData]=useState<Configuration|null>(null),[operations,setOperations]=useState<Operations|null>(null),[tab,setTab]=useState<"operation"|"menu">("operation"),[message,setMessage]=useState(""),[error,setError]=useState("");
   const manager=Boolean(roles?.some(role=>["ADMIN","MANAGER","PLATFORM_ADMIN"].includes(role)));
-  const load=async()=>{try{const[configuration,operational]=await Promise.all([request<Configuration>("/pizzeria/configuration",token),request<Operations>("/pizzeria/operations",token)]);setData(configuration);setOperations(operational);setError("")}catch(cause){setError((cause as Error).message)}};
+  const load=async()=>{try{const configuration=await request<Configuration>("/pizzeria/configuration",token);setData(configuration);setOperations(configuration.enabled?await request<Operations>("/pizzeria/operations",token):null);setError("")}catch(cause){setError((cause as Error).message)}};
   useEffect(()=>{void load()},[token]);
   const send=async(path:string,body:unknown)=>{try{await request(path,token,{method:"POST",body:JSON.stringify(body)});setMessage("Cardápio atualizado.");await load()}catch(cause){setError((cause as Error).message)}};
   if(!data)return <p>Carregando operação da pizzaria…</p>;

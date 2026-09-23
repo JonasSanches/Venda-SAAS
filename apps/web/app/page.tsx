@@ -1965,7 +1965,10 @@ const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pagesFor = (roles: string[], segment?: string) => {
   const studio = segment === "APPAREL_CUSTOMIZATION" ? ["Estúdio de moldes"] : [];
-  const pizzeria = segment === "PIZZERIA" ? ["Pizzaria"] : [];
+  // The Pizzeria workspace is available to administrators and managers of any
+  // tenant. Pizzeria tenants are enabled automatically; other businesses can
+  // opt in without needing a platform-side segment change first.
+  const pizzeria = ["Pizzaria"];
   return (
   roles.includes("ADMIN") || roles.includes("MANAGER")
     ? [
