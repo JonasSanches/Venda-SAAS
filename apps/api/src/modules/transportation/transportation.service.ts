@@ -6,6 +6,7 @@ type LoadInput = {
   origin?:string; destination?:string; rateConfirmationNumber?:string; rateConfirmationTerms?:string;
   rateAmount?:number; detentionFreeMinutes:number; detentionRatePerHour:number;
   detentionMinimumMinutes:number; notes?:string;
+  vehicleCapacityTons?:number;
 };
 type ClaimStatus = "DRAFT"|"SUBMITTED"|"PAID"|"DENIED";
 
@@ -13,13 +14,14 @@ type ClaimStatus = "DRAFT"|"SUBMITTED"|"PAID"|"DENIED";
 export class TransportationService {
   async dashboard(tenantId:string) {
     return withTenant(tenantId, async tx => {
+      const tenant=await tx.tenant.findUnique({where:{id:tenantId},select:{segment:true}}),brazil=tenant?.segment==="TRANSPORTATION";
       const [loads, claims] = await Promise.all([
         tx.transportationLoad.findMany({ where:{tenantId}, include:{claims:{where:{type:"DETENTION"}, orderBy:{createdAt:"desc"}}}, orderBy:{createdAt:"desc"}, take:30 }),
         tx.transportationRecoveryClaim.findMany({where:{tenantId,type:"DETENTION"}}),
       ]);
       const paidAmount=claims.filter(c=>c.status==="PAID").reduce((total,c)=>total+Number(c.requestedAmount),0);
       return {
-        metrics:{openLoads:loads.filter(l=>l.status!=="DEPARTED"&&l.status!=="CLOSED").length,readyToClaim:loads.filter(l=>l.status==="DEPARTED"&&!l.claims.length).length,submitted:claims.filter(c=>c.status==="SUBMITTED").length,paidAmount},
+        market:brazil?"BR":"US",metrics:{openLoads:loads.filter(l=>l.status!=="DEPARTED"&&l.status!=="CLOSED").length,readyToClaim:loads.filter(l=>l.status==="DEPARTED"&&!l.claims.length).length,submitted:claims.filter(c=>c.status==="SUBMITTED").length,paidAmount},
         loads: loads.map(load=>this.serializeLoad(load)),
       };
     });
@@ -27,7 +29,7 @@ export class TransportationService {
 
   async createLoad(tenantId:string, input:LoadInput) {
     try {
-      return await withTenant(tenantId, async tx => this.serializeLoad(await tx.transportationLoad.create({data:{tenantId,...input}})));
+      return await withTenant(tenantId, async tx => {const tenant=await tx.tenant.findUnique({where:{id:tenantId},select:{segment:true}}),brazil=tenant?.segment==="TRANSPORTATION";if(brazil&&!input.vehicleCapacityTons)throw new BadRequestException("Informe a capacidade total do veículo em toneladas.");return this.serializeLoad(await tx.transportationLoad.create({data:{tenantId,...input,recoveryMode:brazil?"BR_ESTADIA":"US_DETENTION",detentionFreeMinutes:brazil?300:input.detentionFreeMinutes,detentionRatePerHour:brazil?2.5:input.detentionRatePerHour,detentionMinimumMinutes:brazil?0:input.detentionMinimumMinutes}}));});
     } catch (error:any) {
       if (error?.code==="P2002") throw new BadRequestException("Load number already exists for this company.");
       throw error;
@@ -64,14 +66,16 @@ export class TransportationService {
       const existing=await tx.transportationRecoveryClaim.findFirst({where:{loadId,type:"DETENTION"}});
       if(existing) throw new BadRequestException("A detention claim already exists for this load.");
       const elapsedMinutes=Math.max(0,Math.round((load.departureAt.getTime()-load.arrivalAt.getTime())/60000));
+      const brazil=load.recoveryMode==="BR_ESTADIA",qualifies=elapsedMinutes>load.detentionFreeMinutes;
+      if(brazil&&!qualifies)throw new BadRequestException("A estadia legal exige permanência superior a 5 horas a partir da chegada.");
       const rawBillable=Math.max(0,elapsedMinutes-load.detentionFreeMinutes);
-      const billableMinutes=rawBillable>0&&rawBillable<load.detentionMinimumMinutes?load.detentionMinimumMinutes:rawBillable;
-      const calculatedAmount=Number((Math.ceil(billableMinutes/60)*Number(load.detentionRatePerHour)).toFixed(2));
+      const billableMinutes=brazil?(qualifies?elapsedMinutes:0):(rawBillable>0&&rawBillable<load.detentionMinimumMinutes?load.detentionMinimumMinutes:rawBillable);
+      const calculatedAmount=brazil?(qualifies?Number((Math.ceil(elapsedMinutes/60)*Number(load.vehicleCapacityTons??0)*Number(load.detentionRatePerHour)).toFixed(2)):0):Number((Math.ceil(billableMinutes/60)*Number(load.detentionRatePerHour)).toFixed(2));
       const claim=await tx.transportationRecoveryClaim.create({data:{
-        tenantId,loadId,type:"DETENTION",claimNumber:`DET-${load.loadNumber}-${Date.now().toString().slice(-6)}`,
+        tenantId,loadId,type:"DETENTION",claimNumber:`${brazil?"EST":"DET"}-${load.loadNumber}-${Date.now().toString().slice(-6)}`,
         elapsedMinutes,billableMinutes,ratePerHour:load.detentionRatePerHour,calculatedAmount,
-        requestedAmount:input.requestedAmount??calculatedAmount,currency:(input.currency??"USD").toUpperCase().slice(0,3),
-        termsSnapshot:{rateConfirmationNumber:load.rateConfirmationNumber,rateConfirmationTerms:load.rateConfirmationTerms,freeMinutes:load.detentionFreeMinutes,minimumMinutes:load.detentionMinimumMinutes,ratePerHour:Number(load.detentionRatePerHour)},
+        requestedAmount:input.requestedAmount??calculatedAmount,currency:(input.currency??(brazil?"BRL":"USD")).toUpperCase().slice(0,3),
+        termsSnapshot:{rateConfirmationNumber:load.rateConfirmationNumber,rateConfirmationTerms:load.rateConfirmationTerms,freeMinutes:load.detentionFreeMinutes,minimumMinutes:load.detentionMinimumMinutes,ratePerHour:Number(load.detentionRatePerHour),recoveryMode:load.recoveryMode,vehicleCapacityTons:load.vehicleCapacityTons?Number(load.vehicleCapacityTons):null,legalBasis:brazil?"Lei 11.442/2007, art. 11; referência ANTT 2026":undefined},
       }});
       return this.serializeClaim(claim);
     });
@@ -91,5 +95,5 @@ export class TransportationService {
   }
 
   private serializeClaim(claim:any){return {...claim,ratePerHour:Number(claim.ratePerHour),calculatedAmount:Number(claim.calculatedAmount),requestedAmount:Number(claim.requestedAmount)};}
-  private serializeLoad(load:any){return {...load,rateAmount:load.rateAmount===null?null:Number(load.rateAmount),detentionRatePerHour:Number(load.detentionRatePerHour),claims:load.claims?.map((claim:any)=>this.serializeClaim(claim))??[]};}
+  private serializeLoad(load:any){return {...load,rateAmount:load.rateAmount===null?null:Number(load.rateAmount),detentionRatePerHour:Number(load.detentionRatePerHour),vehicleCapacityTons:load.vehicleCapacityTons===null?null:Number(load.vehicleCapacityTons),claims:load.claims?.map((claim:any)=>this.serializeClaim(claim))??[]};}
 }

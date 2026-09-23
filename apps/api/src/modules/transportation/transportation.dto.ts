@@ -13,6 +13,7 @@ export class CreateTransportationLoadDto {
   @IsInt() @Min(0) @Max(10080) detentionFreeMinutes!: number;
   @IsNumber() @Min(0) detentionRatePerHour!: number;
   @IsInt() @Min(0) @Max(10080) detentionMinimumMinutes!: number;
+  @IsOptional() @IsNumber() @Min(0.001) vehicleCapacityTons?: number;
   @IsOptional() @IsString() notes?: string;
 }
 

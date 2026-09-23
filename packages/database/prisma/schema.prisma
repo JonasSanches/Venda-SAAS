@@ -184,6 +184,8 @@ model TransportationLoad {
   detentionFreeMinutes    Int                       @default(120) @map("detention_free_minutes")
   detentionRatePerHour    Decimal                   @default(0) @map("detention_rate_per_hour") @db.Decimal(14, 2)
   detentionMinimumMinutes Int                       @default(0) @map("detention_minimum_minutes")
+  vehicleCapacityTons     Decimal?                  @map("vehicle_capacity_tons") @db.Decimal(12, 3)
+  recoveryMode            String                    @default("US_DETENTION") @map("recovery_mode") @db.VarChar(30)
   arrivalAt               DateTime?                 @map("arrival_at")
   departureAt             DateTime?                 @map("departure_at")
   status                  TransportationLoadStatus  @default(DRAFT)
