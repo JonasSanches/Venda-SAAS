@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import "./admin-client-modal.css";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 type Session = {
@@ -24,6 +25,7 @@ export default function Admin() {
     [q, setQ] = useState(""),
     [error, setError] = useState(""),
     [message, setMessage] = useState(""),
+    [detailMessage,setDetailMessage]=useState(""),
     [showUser, setShowUser] = useState(false),
     [detail, setDetail] = useState<any | null>(null),
     [audit, setAudit] = useState<any[]>([]),
@@ -177,6 +179,7 @@ export default function Admin() {
       ]);
       setDetail(data);
       setAudit(logs);
+      setDetailMessage("");
       setError("");
     } catch (err) {
       setError((err as Error).message);
@@ -203,6 +206,7 @@ export default function Admin() {
         segment: f.get("segment"),
       });
       await refreshDetail(detail.tenantId);
+      setDetailMessage(`Informações de ${String(f.get("name"))} salvas com sucesso.`);
       setMessage("Cadastro atualizado com sucesso.");
       setError("");
     } catch (err) {
@@ -435,6 +439,7 @@ export default function Admin() {
                 Fechar
               </button>
             </header>
+            {detailMessage&&<div className="client-save-confirmation" role="status">✓ {detailMessage}</div>}
             <div className="client-data">
               <div>
                 <small>CNPJ</small>
@@ -616,8 +621,9 @@ export default function Admin() {
                 </article>
               ))}
             </div>
-            <h3>Histórico administrativo</h3>
-            <div className="audit-list">
+            <details className="client-audit">
+              <summary>Histórico administrativo</summary>
+              <div className="audit-list">
               {audit.length === 0 ? (
                 <p>Nenhuma alteração administrativa registrada ainda.</p>
               ) : (
@@ -631,7 +637,8 @@ export default function Admin() {
                   </article>
                 ))
               )}
-            </div>
+              </div>
+            </details>
           </section>
         </div>
       )}
