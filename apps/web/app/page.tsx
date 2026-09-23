@@ -382,7 +382,7 @@ export default function Home() {
             onCreated={updated}
           />
         ) : page === "Clientes" ? (
-          <Customers token={session.accessToken} />
+          <Customers token={session.accessToken} roles={session.user.roles} />
         ) : page === "Estúdio de moldes" ? (
           <GarmentStudio onSave={async (input) => {
             await request("/products", session.accessToken, { method: "POST", body: JSON.stringify(input) });
