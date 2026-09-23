@@ -518,6 +518,7 @@ export default function Admin() {
                   <option value="WINERY">Adega</option>
                   <option value="RETAIL">Loja</option>
                   <option value="APPAREL_CUSTOMIZATION">Confecção e personalizados</option>
+                  <option value="TRANSPORTATION">Transportadora</option>
                 </select>
               </label>
               <button>Salvar alterações</button>
@@ -581,6 +582,7 @@ export default function Admin() {
                       >
                         <option value="ADMIN">Administrador</option>
                         <option value="MANAGER">Gerente</option>
+                        <option value="SELLER">Vendedor</option>
                         <option value="CASHIER">Caixa</option>
                         <option value="STOCK">Estoque</option>
                       </select>

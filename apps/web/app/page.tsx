@@ -1598,9 +1598,14 @@ function Users({ token, roles }: { token: string; roles: string[] }) {
       setError((err as Error).message);
     }
   }
+  async function changeRole(id:string, role:string) {
+    try { await request(`/auth/users/${id}/role`, token, { method:"PATCH", body:JSON.stringify({role}) }); setMessage("Acesso atualizado."); await load(); }
+    catch (err) { setError((err as Error).message); }
+  }
   const labels: Record<string, string> = {
     ADMIN: "Administrador",
     MANAGER: "Gerente",
+    SELLER: "Vendedor",
     CASHIER: "Caixa",
     STOCK: "Estoque",
   };
@@ -1638,6 +1643,7 @@ function Users({ token, roles }: { token: string; roles: string[] }) {
           <label>
             Perfil
             <select name="role">
+              <option value="SELLER">Vendedor</option>
               <option value="CASHIER">Caixa</option>
               <option value="STOCK">Estoque</option>
               {roles.includes("ADMIN") && (
@@ -1661,9 +1667,10 @@ function Users({ token, roles }: { token: string; roles: string[] }) {
           <div className="row users" key={u.id}>
             <strong>{u.name}</strong>
             <span>{u.access ?? u.email}</span>
-            <span>
-              {u.roles.map((role) => labels[role] ?? role).join(", ")}
-            </span>
+            {(!roles.includes("ADMIN")&&["ADMIN","MANAGER"].includes(u.roles[0]??""))?<span>{u.roles.map((role)=>labels[role]??role).join(", ")}</span>:<select aria-label={`Perfil de ${u.name}`} value={u.roles[0] ?? "SELLER"} onChange={(event)=>changeRole(u.id,event.target.value)}>
+              <option value="SELLER">Vendedor</option><option value="CASHIER">Caixa</option><option value="STOCK">Estoque</option>
+              {roles.includes("ADMIN")&&<><option value="MANAGER">Gerente</option><option value="ADMIN">Administrador</option></>}
+            </select>}
           </div>
         ))}
       </div>
@@ -1971,29 +1978,12 @@ const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pagesFor = (roles: string[], segment?: string) => {
   const studio = segment === "APPAREL_CUSTOMIZATION" ? ["Estúdio de moldes"] : [];
-  // The Pizzeria workspace is available to administrators and managers of any
-  // tenant. Pizzeria tenants are enabled automatically; other businesses can
-  // opt in without needing a platform-side segment change first.
-  const pizzeria = ["Pizzaria"];
-  return (
-  roles.includes("ADMIN") || roles.includes("MANAGER")
-    ? [
-        "Visão geral",
-        "Caixa",
-        "PDV",
-        "Estoque",
-        "Produtos",
-        "Clientes",
-        ...studio,
-        "Usuários",
-        "Filial",
-        "Configurações",
-        "Fiscal",
-        "Transportation Detention Recovery",
-        ...pizzeria,
-      ]
-    : roles.includes("STOCK")
-      ? ["Visão geral", "Estoque", "Produtos"]
-      : ["Visão geral", "Caixa", "PDV"]
-  );
+  const pizzeria = segment === "PIZZERIA" ? ["Pizzaria"] : [];
+  const transportation = segment === "TRANSPORTATION" ? ["Transportation Detention Recovery"] : [];
+  const operations = [...studio, ...pizzeria, ...transportation];
+  if (roles.includes("ADMIN")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", ...operations, "Usuários", "Filial", "Configurações", "Fiscal"];
+  if (roles.includes("MANAGER")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", ...operations, "Usuários"];
+  if (roles.includes("SELLER")) return ["Visão geral", "PDV", "Produtos", "Clientes", ...(segment === "PIZZERIA" ? ["Pizzaria"] : [])];
+  if (roles.includes("STOCK")) return ["Visão geral", "Estoque", "Produtos"];
+  return ["Visão geral", "Caixa", "PDV"];
 };

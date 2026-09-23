@@ -32,6 +32,7 @@ export class AuthGuard implements CanActivate {
     if(path==="/api/auth/me"||path==="/api/platform/trial"||path==="/api/sales/summary")return;
     if(roles.includes("CASHIER")&&((read&&(path.startsWith("/api/products")||path.startsWith("/api/inventory")))||path.startsWith("/api/sales")||path.startsWith("/api/cash")))return;
     if(roles.includes("STOCK")&&(path.startsWith("/api/products")||path.startsWith("/api/inventory")))return;
+    if(roles.includes("SELLER")&&((read&&path.startsWith("/api/products"))||path.startsWith("/api/sales")||path.startsWith("/api/commercial/parties")||path.startsWith("/api/pizzeria")))return;
     throw new ForbiddenException("Seu perfil não possui acesso a esta operação");
   }
 }
