@@ -82,7 +82,7 @@ type Session = {
 };
 const dateTime = (value?:string) => value ? new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short"}).format(new Date(value)) : "—";
 
-function BarcodeScanner({ onRead, onClose }: { onRead: (code: string) => void; onClose: () => void }) {
+function BarcodeScanner({ onRead, onClose, onUseMobile }: { onRead: (code: string) => void; onClose: () => void; onUseMobile?: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const onReadRef = useRef(onRead);
   const [error, setError] = useState("");
@@ -130,7 +130,7 @@ function BarcodeScanner({ onRead, onClose }: { onRead: (code: string) => void; o
         <div className="scanner-heading"><div><small>LEITOR PELA CÂMERA</small><h2>Aponte para o código de barras</h2></div><button type="button" className="secondary" onClick={onClose}>Fechar</button></div>
         <div className="scanner-viewport"><video ref={videoRef} playsInline muted /><i aria-hidden="true" /></div>
         <p>Mantenha o código inteiro dentro do quadro e evite reflexos. A leitura acontece automaticamente.</p>
-        {error && <div className="error">{error}</div>}
+        {error && <><div className="error">{error}</div>{onUseMobile&&<button type="button" className="scanner-mobile-option" onClick={onUseMobile}>Usar celular com QR Code</button>}</>}
       </div>
     </div>
   );
@@ -1365,7 +1365,7 @@ function Pdv({
           <button type="button" className="secondary" onClick={() => setScannerOpen(true)}>Usar câmera</button>
           <button type="button" className="secondary" onClick={() => setMobileScannerOpen(true)}>Usar celular</button>
         </form>
-        {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onRead={(code) => { setScannerOpen(false); addByBarcode(code); }} />}
+        {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onUseMobile={() => { setScannerOpen(false); setMobileScannerOpen(true); }} onRead={(code) => { setScannerOpen(false); addByBarcode(code); }} />}
         {mobileScannerOpen&&<MobileScannerPair token={token} onClose={()=>setMobileScannerOpen(false)} onRead={addByBarcode}/>}
         <div className="product-cards">
           {stock.map((p) => (
