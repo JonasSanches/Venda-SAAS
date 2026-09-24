@@ -131,6 +131,8 @@ model Tenant {
   city            String?
   segment         String?
   phone           String?
+  pixKey          String?          @map("pix_key")
+  pixKeyType      String?          @map("pix_key_type")
   logoDataUrl     String?          @map("logo_data_url")
   trialStartsAt   DateTime?        @map("trial_starts_at")
   trialExpiresAt  DateTime?        @map("trial_expires_at")
@@ -607,6 +609,11 @@ enum QrCheckoutOrderStatus {
   CANCELLED
 }
 
+enum QrCheckoutPayoutStatus {
+  PENDING
+  PAID
+}
+
 model QrCheckoutLink {
   id              String   @id @default(uuid()) @db.Uuid
   tenantId        String   @map("tenant_id") @db.Uuid
@@ -652,6 +659,9 @@ model QrCheckoutOrder {
   platformCommissionRate Decimal          @default(0.12) @map("platform_commission_rate") @db.Decimal(5,4)
   platformCommissionAmount Decimal        @default(0) @map("platform_commission_amount") @db.Decimal(14,2)
   merchantAmount    Decimal               @default(0) @map("merchant_amount") @db.Decimal(14,2)
+  payoutStatus      QrCheckoutPayoutStatus @default(PENDING) @map("payout_status")
+  paidOutAt         DateTime?             @map("paid_out_at")
+  payoutReference   String?               @map("payout_reference")
   status            QrCheckoutOrderStatus @default(PENDING)
   createdAt         DateTime              @default(now()) @map("created_at")
   paidAt            DateTime?             @map("paid_at")

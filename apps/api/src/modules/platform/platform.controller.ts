@@ -42,6 +42,9 @@ export class PlatformController {
     this.admin(request);
     return this.s.list();
   }
+  @Get("qr-payouts") payouts(@Req() request:PlatformRequest){this.admin(request);return this.s.qrPayoutQueue()}
+  @Post("qr-payouts/:id/paid") payoutPaid(@Req() request:PlatformRequest,@Param("id")id:string,@Body()body:{reference?:string}){this.admin(request);return this.s.markQrPayoutPaid(id,body.reference)}
+  @Post("trials/:id/pix-key") pixKey(@Req() request:PlatformRequest,@Param("id")id:string,@Body()body:{pixKey:string;pixKeyType?:string}){this.admin(request);return this.s.setTenantPixKey(id,body.pixKey,body.pixKeyType)}
   @Get("trials/:id") detail(
     @Req() request: PlatformRequest,
     @Param("id") id: string,

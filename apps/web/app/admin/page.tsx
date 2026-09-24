@@ -2,6 +2,7 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
+const money = (value: number) => Number(value ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 type Session = {
   accessToken: string;
   user: { name: string; email: string; roles: string[] };
@@ -29,6 +30,7 @@ export default function Admin() {
     [audit, setAudit] = useState<any[]>([]),
     [analytics,setAnalytics]=useState<AnalyticsReport|null>(null),
     [surveys,setSurveys]=useState<SurveyResponse[]>([]),
+    [payouts,setPayouts]=useState<any[]>([]),
     [analyticsError,setAnalyticsError]=useState(""),
     [surveyError,setSurveyError]=useState(""),
     [analyticsDays,setAnalyticsDays]=useState(30),
@@ -61,12 +63,14 @@ export default function Admin() {
   }
   async function load() {
     try {
-      const [trials, platformUsers] = await Promise.all([
+      const [trials, platformUsers, qrPayouts] = await Promise.all([
         call("/platform/trials"),
         call("/platform/users"),
+        call("/platform/qr-payouts"),
       ]);
       setItems(trials);
       setUsers(platformUsers);
+      setPayouts(qrPayouts);
       setError("");
       try{setSurveys(await call("/analytics/surveys"));setSurveyError("")}catch(e){setSurveyError((e as Error).message)}
     } catch (e) {
@@ -126,6 +130,10 @@ export default function Admin() {
       const en=document.documentElement.lang==="en";new Notification(en?"Notifications enabled":"Notificações ativadas",{body:en?"You will be notified on this Mac when there is a new registration.":"Você será avisado aqui no Mac quando houver um novo cadastro."});
       setMessage("Notificações do Mac ativadas para novos cadastros.");setError("");
     }else setError("Permissão de notificações não foi concedida. Ative-a nas configurações do navegador.");
+  }
+  async function markPayoutPaid(id:string){
+    const reference=prompt("Referência do Pix (opcional):")??undefined;
+    try{await call(`/platform/qr-payouts/${id}/paid`,{reference});setMessage("Repasse marcado como pago.");await load()}catch(cause){setError((cause as Error).message)}
   }
   async function extend(id: string) {
     const value = prompt(
@@ -207,6 +215,10 @@ export default function Admin() {
     } catch (err) {
       setError((err as Error).message);
     }
+  }
+  async function savePixKey(e:FormEvent<HTMLFormElement>){
+    e.preventDefault();const f=new FormData(e.currentTarget);
+    try{await call(`/platform/trials/${detail.tenantId}/pix-key`,{pixKey:f.get("pixKey"),pixKeyType:f.get("pixKeyType")});await refreshDetail(detail.tenantId);setDetailMessage(`Chave Pix de ${detail.name} salva com sucesso.`);setError("")}catch(cause){setError((cause as Error).message)}
   }
   async function changeClientStatus(status: string) {
     if (!confirm(`Confirma a alteração da conta para ${status}?`)) return;
@@ -320,6 +332,10 @@ export default function Admin() {
           </div>
         </form>
       )}
+      <section className="survey-admin" id="repasses-pix">
+        <div className="survey-admin-title"><div><small>FINANCEIRO · VENDA POR QR CODE</small><h2>Repasses Pix pendentes</h2><p>{payouts.length} venda(s) aguardando seu Pix. A comissão de 12% já foi separada.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar</button></div>
+        <div className="analytics-table-card"><div className="analytics-table"><table><thead><tr><th>Cliente</th><th>Chave Pix</th><th>Venda</th><th>Comissão</th><th>Enviar</th><th></th></tr></thead><tbody>{payouts.map(payout=><tr key={payout.id}><td><strong>{payout.company}</strong><small>{payout.phone||"—"} · compra: {payout.buyerName}</small></td><td>{payout.pixKey?<><code>{payout.pixKey}</code><small>{payout.pixKeyType||"Tipo não informado"}</small></>:<strong className="error-text">Chave não cadastrada</strong>}</td><td>{money(payout.total)}</td><td>{money(payout.commission)}</td><td><strong>{money(payout.amount)}</strong></td><td><button disabled={!payout.pixKey} onClick={()=>void markPayoutPaid(payout.id)}>Marcar pago</button></td></tr>)}</tbody></table>{!payouts.length&&<p className="analytics-empty">Nenhum repasse Pix pendente.</p>}</div></div>
+      </section>
       <section className="analytics-admin" id="visitas">
         {analyticsError&&<div className="error">Não foi possível carregar as visitas: {analyticsError}</div>}
         <div className="analytics-title"><div><small>INTELIGÊNCIA DE ACESSO</small><h2>Painel de visitantes</h2><p>Visitas à página pública, teste gratuito e pagamento · horário de Brasília.</p></div><div><select value={analyticsDays} onChange={e=>{const days=Number(e.target.value);setAnalyticsDays(days);void loadAnalytics(days,1)}}><option value={7}>Últimos 7 dias</option><option value={30}>Últimos 30 dias</option><option value={90}>Últimos 90 dias</option><option value={365}>Último ano</option></select><button className="secondary" disabled={analyticsLoading} onClick={()=>void loadAnalytics(analyticsDays,analytics?.pagination.page??1)}>{analyticsLoading?"Atualizando...":"Atualizar"}</button></div></div>
@@ -520,6 +536,7 @@ export default function Admin() {
               </label>
               <button>Salvar alterações</button>
             </form>
+            {detail.segment === "QR_SALES" && <><h3>Repasse Pix</h3><form className="client-edit-form" onSubmit={savePixKey}><label>Tipo da chave Pix<select name="pixKeyType" defaultValue={detail.pixKeyType||"CPF/CNPJ"}><option>CPF/CNPJ</option><option>E-mail</option><option>Telefone</option><option>Chave aleatória</option></select></label><label>Chave Pix do cliente<input name="pixKey" defaultValue={detail.pixKey||""} placeholder="Informe a chave para os repasses" required/></label><button>Salvar chave Pix</button></form></>}
             <h3>Controle da conta</h3>
             <div className="account-controls">
               <button className="secondary" onClick={() => openLiveView(detail.tenantId)}>Ver sistema ao vivo</button>
