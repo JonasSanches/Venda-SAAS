@@ -53,6 +53,14 @@ export class QrCheckoutService {
   }
 
   async create(tenantId: string, input: any) {
+    if (!input.forceNew) {
+      const existing = await withTenant(tenantId, (tx) => tx.qrCheckoutLink.findMany({ where: { tenantId, active: true }, include: { offers: { orderBy: { createdAt: "asc" } } } }));
+      const same = existing.find((link) => link.deliveryEnabled === input.deliveryEnabled && link.addressRequired === (input.deliveryEnabled && input.addressRequired) && link.offers.length === input.offers.length && link.offers.every((offer, index) => {
+        const next = input.offers[index];
+        return offer.productId === (next.productId ?? null) && offer.title === next.title.trim() && Number(offer.price) === Number(next.price);
+      }));
+      if (same) return { ...same, reused: true, url: `${this.base()}/comprar/${same.token}` };
+    }
     const value = await withTenant(tenantId, (tx) => tx.qrCheckoutLink.create({
       data: {
         tenantId, name: input.name.trim(), token: randomBytes(24).toString("base64url"),

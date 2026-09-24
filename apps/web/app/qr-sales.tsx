@@ -52,12 +52,12 @@ export function QrSales({ token }: { token: string }) {
       const result = await request<any>("/qr-checkout/links", token, {
         method: "POST",
         body: JSON.stringify({
-          name: form.get("name"), deliveryEnabled: form.get("deliveryEnabled") === "on", addressRequired: form.get("addressRequired") === "on",
+          name: form.get("name"), deliveryEnabled: form.get("deliveryEnabled") === "on", addressRequired: form.get("addressRequired") === "on", forceNew: form.get("forceNew") === "on",
           offers: [{ productId: product?.id, title: product?.name ?? form.get("title"), description: form.get("description"), price: product?.price ?? Number(form.get("price")) }],
         }),
       });
       setSelected(result);
-      setMessage("QR de venda criado. Você já pode imprimir ou compartilhar.");
+      setMessage(result.reused ? "Este QR já existe e continua válido para esse produto. Use o mesmo QR impresso." : "QR de venda criado. Você já pode imprimir ou compartilhar.");
       event.currentTarget.reset();
       await load();
     } catch (err) {
@@ -76,7 +76,7 @@ export function QrSales({ token }: { token: string }) {
       <article><small>Pedidos pendentes</small><strong>{dashboard.pendingOrders}</strong><span>aguardando pagamento</span></article>
     </section>}
     {message && <div className="success">{message}</div>}{error && <div className="error">{error}</div>}
-    <form className="email-form" onSubmit={create}><h3>Novo QR de venda</h3><input name="name" placeholder="Nome do QR (ex.: Balcão da loja)" required/><label>Produto cadastrado (recomendado para mostrar a foto)<select name="productId" defaultValue=""><option value="">Produto ou serviço avulso</option>{products.filter((product) => product.active).map((product) => <option value={product.id} key={product.id}>{product.name} · {brl(product.price)}{product.imageDataUrl ? " · com foto" : ""}</option>)}</select></label><input name="title" placeholder="Produto ou serviço avulso"/><input name="price" type="number" min="0.01" step="0.01" placeholder="Preço do item avulso"/><input name="description" placeholder="Descrição (opcional)"/><label><input name="deliveryEnabled" type="checkbox"/> Oferecer entrega</label><label><input name="addressRequired" type="checkbox"/> Exigir endereço</label><button>Criar QR Code</button></form>
+    <form className="email-form" onSubmit={create}><h3>Novo QR de venda</h3><input name="name" placeholder="Nome do QR (ex.: Balcão da loja)" required/><label>Produto cadastrado (recomendado para mostrar a foto)<select name="productId" defaultValue=""><option value="">Produto ou serviço avulso</option>{products.filter((product) => product.active).map((product) => <option value={product.id} key={product.id}>{product.name} · {brl(product.price)}{product.imageDataUrl ? " · com foto" : ""}</option>)}</select></label><input name="title" placeholder="Produto ou serviço avulso"/><input name="price" type="number" min="0.01" step="0.01" placeholder="Preço do item avulso"/><input name="description" placeholder="Descrição (opcional)"/><label><input name="deliveryEnabled" type="checkbox"/> Oferecer entrega</label><label><input name="addressRequired" type="checkbox"/> Exigir endereço</label><label><input name="forceNew" type="checkbox"/> Gerar outro QR mesmo para este produto</label><button>Criar ou reutilizar QR Code</button></form>
     {selected && <section className="qr-created"><canvas ref={canvas}/><div><h3>{selected.name}</h3><p>Imprima este QR Code e deixe-o no local de venda.</p><a href={selected.url} target="_blank" rel="noreferrer">Abrir página de compra</a></div></section>}
     <section className="email-list"><h3>Pedidos recentes</h3>{dashboard?.recent.length ? dashboard.recent.map((order) => <article className="qr-order" key={order.id}><div><strong>{order.buyerName}</strong><span>{new Date(order.createdAt).toLocaleString("pt-BR")} · {order.status === "APPROVED" ? "Pago" : order.status === "REJECTED" ? "Recusado" : "Pendente"}</span></div><div><strong>{brl(order.total)}</strong><span>Comissão: {brl(order.platformCommissionAmount)} · Líquido: {brl(order.merchantAmount)}</span></div></article>) : <p className="empty-state">Nenhum pedido por QR Code ainda.</p>}</section>
     <section className="email-list"><h3>QR Codes criados</h3>{links.map((link) => <article className="qr-link" key={link.id}><div><strong>{link.name}</strong><span>{link.offers.length} oferta(s) · {link._count?.orders ?? 0} pedido(s)</span></div><button className="secondary" onClick={() => setSelected({ ...link, url: `${location.origin}/comprar/${link.token}` })}>Ver QR</button></article>)}</section>
