@@ -165,6 +165,13 @@ model Tenant {
   pizzaProductModifiers PizzaProductModifier[]
   pizzaOrders     PizzaOrder[]
   pizzaOrderItems PizzaOrderItem[]
+  emailContacts EmailContact[]
+  emailLists EmailList[]
+  emailCampaigns EmailCampaign[]
+  emailRecipients EmailCampaignRecipient[]
+  emailTemplates EmailTemplate[]
+  emailSettings EmailMarketingSettings?
+  emailEvents EmailProviderEvent[]
 
   @@map("tenants")
 }
@@ -405,6 +412,188 @@ model TenantModule {
   @@unique([tenantId, module])
   @@index([tenantId, enabled])
   @@map("tenant_modules")
+}
+
+enum EmailContactStatus {
+  ACTIVE
+  UNSUBSCRIBED
+  BOUNCED
+  BLOCKED
+}
+
+enum EmailCampaignStatus {
+  DRAFT
+  SCHEDULED
+  PROCESSING
+  PAUSED
+  SENT
+  CANCELED
+  FAILED
+}
+
+enum EmailRecipientStatus {
+  QUEUED
+  SENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+  UNSUBSCRIBED
+}
+
+model EmailContact {
+  id          String             @id @default(uuid()) @db.Uuid
+  tenantId    String             @map("tenant_id") @db.Uuid
+  firstName   String?            @map("first_name") @db.VarChar(120)
+  lastName    String?            @map("last_name") @db.VarChar(120)
+  email       String             @db.VarChar(320)
+  phone       String?            @db.VarChar(40)
+  company     String?            @db.VarChar(160)
+  tags        String[]           @default([])
+  source      String?            @db.VarChar(120)
+  notes       String?            @db.Text
+  status      EmailContactStatus @default(ACTIVE)
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+  tenant      Tenant             @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  lists       EmailListMember[]
+  recipients  EmailCampaignRecipient[]
+
+  @@unique([tenantId,email])
+  @@index([tenantId,status,createdAt])
+  @@index([tenantId,company])
+  @@map("email_contacts")
+}
+
+model EmailList {
+  id          String            @id @default(uuid()) @db.Uuid
+  tenantId    String            @map("tenant_id") @db.Uuid
+  name        String            @db.VarChar(160)
+  description String?           @db.Text
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  tenant      Tenant            @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  members     EmailListMember[]
+  campaigns   EmailCampaign[]
+
+  @@unique([tenantId,name])
+  @@index([tenantId,createdAt])
+  @@map("email_lists")
+}
+
+model EmailListMember {
+  emailListId    String       @map("email_list_id") @db.Uuid
+  emailContactId String       @map("email_contact_id") @db.Uuid
+  createdAt      DateTime     @default(now()) @map("created_at")
+  list           EmailList    @relation(fields:[emailListId],references:[id],onDelete:Cascade)
+  contact        EmailContact @relation(fields:[emailContactId],references:[id],onDelete:Cascade)
+
+  @@id([emailListId,emailContactId])
+  @@index([emailContactId])
+  @@map("email_list_members")
+}
+
+model EmailTemplate {
+  id          String   @id @default(uuid()) @db.Uuid
+  tenantId    String   @map("tenant_id") @db.Uuid
+  name        String   @db.VarChar(160)
+  subject     String?  @db.VarChar(250)
+  html        String   @db.Text
+  text        String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  tenant      Tenant   @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+
+  @@unique([tenantId,name])
+  @@index([tenantId,updatedAt])
+  @@map("email_templates")
+}
+
+model EmailCampaign {
+  id            String              @id @default(uuid()) @db.Uuid
+  tenantId      String              @map("tenant_id") @db.Uuid
+  listId        String?             @map("list_id") @db.Uuid
+  name          String              @db.VarChar(180)
+  subject       String              @db.VarChar(250)
+  fromName      String              @map("from_name") @db.VarChar(160)
+  fromEmail     String              @map("from_email") @db.VarChar(320)
+  replyTo       String?             @map("reply_to") @db.VarChar(320)
+  html          String              @db.Text
+  text          String?             @db.Text
+  segment       Json?
+  scheduledAt   DateTime?           @map("scheduled_at")
+  status        EmailCampaignStatus @default(DRAFT)
+  startedAt     DateTime?           @map("started_at")
+  completedAt   DateTime?           @map("completed_at")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  tenant        Tenant              @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  list          EmailList?          @relation(fields:[listId],references:[id],onDelete:SetNull)
+  recipients    EmailCampaignRecipient[]
+
+  @@index([tenantId,status,scheduledAt])
+  @@map("email_campaigns")
+}
+
+model EmailCampaignRecipient {
+  id                String               @id @default(uuid()) @db.Uuid
+  tenantId          String               @map("tenant_id") @db.Uuid
+  campaignId        String               @map("campaign_id") @db.Uuid
+  contactId         String               @map("contact_id") @db.Uuid
+  email             String               @db.VarChar(320)
+  providerMessageId String?              @map("provider_message_id") @db.VarChar(250)
+  status            EmailRecipientStatus @default(QUEUED)
+  attempts          Int                  @default(0)
+  availableAt       DateTime             @default(now()) @map("available_at")
+  sentAt            DateTime?            @map("sent_at")
+  deliveredAt       DateTime?            @map("delivered_at")
+  openedAt          DateTime?            @map("opened_at")
+  clickedAt         DateTime?            @map("clicked_at")
+  bouncedAt         DateTime?            @map("bounced_at")
+  failedAt          DateTime?            @map("failed_at")
+  unsubscribedAt    DateTime?            @map("unsubscribed_at")
+  errorMessage      String?              @map("error_message") @db.Text
+  createdAt         DateTime             @default(now()) @map("created_at")
+  updatedAt         DateTime             @updatedAt @map("updated_at")
+  tenant            Tenant               @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  campaign          EmailCampaign        @relation(fields:[campaignId],references:[id],onDelete:Cascade)
+  contact           EmailContact         @relation(fields:[contactId],references:[id],onDelete:Cascade)
+
+  @@unique([campaignId,contactId])
+  @@index([tenantId,status,availableAt])
+  @@index([providerMessageId])
+  @@map("email_campaign_recipients")
+}
+
+model EmailProviderEvent {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  recipientId     String?  @map("recipient_id") @db.Uuid
+  providerEventId String?  @map("provider_event_id") @db.VarChar(250)
+  providerMessageId String? @map("provider_message_id") @db.VarChar(250)
+  eventType       String   @map("event_type") @db.VarChar(80)
+  payload         Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+  tenant          Tenant   @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+
+  @@unique([tenantId,providerEventId])
+  @@index([tenantId,createdAt])
+  @@map("email_provider_events")
+}
+
+model EmailMarketingSettings {
+  tenantId       String   @id @map("tenant_id") @db.Uuid
+  fromName       String?  @map("from_name") @db.VarChar(160)
+  fromEmail      String?  @map("from_email") @db.VarChar(320)
+  replyTo        String?  @map("reply_to") @db.VarChar(320)
+  ratePerMinute  Int      @default(60) @map("rate_per_minute")
+  timezone       String   @default("America/Sao_Paulo") @db.VarChar(80)
+  updatedAt      DateTime @updatedAt @map("updated_at")
+  tenant         Tenant   @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+
+  @@map("email_marketing_settings")
 }
 
 model PizzaSettings {

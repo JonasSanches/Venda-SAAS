@@ -8,6 +8,7 @@ import { GarmentStudio } from "./garment-studio";
 import { TransportationRecovery } from "./transportation-recovery";
 import { Pizzeria } from "./pizzeria";
 import { Customers } from "./customers";
+import { EmailMarketing } from "./email-marketing";
 import { request } from "./api-client";
 type Product = {
   id: string;
@@ -394,6 +395,8 @@ export default function Home() {
           />
         ) : page === "Clientes" ? (
           <Customers token={session.accessToken} roles={session.user.roles} />
+        ) : page === "E-mail Marketing" ? (
+          <EmailMarketing token={session.accessToken} />
         ) : page === "Estúdio de moldes" ? (
           <GarmentStudio onSave={async (input) => {
             await request("/products", session.accessToken, { method: "POST", body: JSON.stringify(input) });
@@ -1992,8 +1995,8 @@ const pagesFor = (roles: string[], segment?: string) => {
   const pizzeria = segment === "PIZZERIA" ? ["Pizzaria"] : [];
   const transportation = segment === "TRANSPORTATION" ? ["Transportation Detention Recovery"] : [];
   const operations = [...studio, ...pizzeria, ...transportation];
-  if (roles.includes("ADMIN")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", ...operations, "Usuários", "Filial", "Configurações", "Fiscal"];
-  if (roles.includes("MANAGER")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", ...operations, "Usuários"];
+  if (roles.includes("ADMIN")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "E-mail Marketing", ...operations, "Usuários", "Filial", "Configurações", "Fiscal"];
+  if (roles.includes("MANAGER")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "E-mail Marketing", ...operations, "Usuários"];
   if (roles.includes("SELLER")) return ["Visão geral", "PDV", "Produtos", "Clientes", ...(segment === "PIZZERIA" ? ["Pizzaria"] : [])];
   if (roles.includes("STOCK")) return ["Visão geral", "Estoque", "Produtos"];
   return ["Visão geral", "Caixa", "PDV"];
