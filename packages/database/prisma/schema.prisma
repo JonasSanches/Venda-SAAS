@@ -172,6 +172,8 @@ model Tenant {
   emailTemplates EmailTemplate[]
   emailSettings EmailMarketingSettings?
   emailEvents EmailProviderEvent[]
+  qrCheckoutLinks QrCheckoutLink[]
+  qrCheckoutOrders QrCheckoutOrder[]
 
   @@map("tenants")
 }
@@ -390,6 +392,7 @@ model Product {
   stockMovements StockMovement[]
   orderItems     OrderItem[]
   pizza          PizzaProduct?
+  qrCheckoutOffers QrCheckoutOffer[]
 
   @@unique([tenantId, sku])
   @@unique([tenantId, barcode])
@@ -594,6 +597,79 @@ model EmailMarketingSettings {
   tenant         Tenant   @relation(fields:[tenantId],references:[id],onDelete:Cascade)
 
   @@map("email_marketing_settings")
+}
+
+enum QrCheckoutOrderStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model QrCheckoutLink {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @map("tenant_id") @db.Uuid
+  name            String   @db.VarChar(160)
+  token           String   @unique @db.VarChar(80)
+  deliveryEnabled Boolean  @default(false) @map("delivery_enabled")
+  addressRequired Boolean  @default(false) @map("address_required")
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  tenant          Tenant   @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  offers          QrCheckoutOffer[]
+  orders          QrCheckoutOrder[]
+  @@index([tenantId,active])
+  @@map("qr_checkout_links")
+}
+model QrCheckoutOffer {
+  id          String         @id @default(uuid()) @db.Uuid
+  linkId      String         @map("link_id") @db.Uuid
+  productId   String?        @map("product_id") @db.Uuid
+  title       String         @db.VarChar(180)
+  description String?        @db.Text
+  price       Decimal        @db.Decimal(14,2)
+  active      Boolean        @default(true)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  link        QrCheckoutLink @relation(fields:[linkId],references:[id],onDelete:Cascade)
+  product     Product?       @relation(fields:[productId],references:[id],onDelete:SetNull)
+  items       QrCheckoutOrderItem[]
+  @@index([linkId,active])
+  @@map("qr_checkout_offers")
+}
+model QrCheckoutOrder {
+  id                String                @id @default(uuid()) @db.Uuid
+  tenantId          String                @map("tenant_id") @db.Uuid
+  linkId            String                @map("link_id") @db.Uuid
+  externalReference String                @unique @map("external_reference")
+  providerPaymentId String?               @map("provider_payment_id")
+  buyerName         String                @map("buyer_name") @db.VarChar(160)
+  buyerEmail        String?               @map("buyer_email") @db.VarChar(320)
+  buyerPhone        String?               @map("buyer_phone") @db.VarChar(40)
+  deliveryAddress   String?               @map("delivery_address") @db.Text
+  total             Decimal               @db.Decimal(14,2)
+  status            QrCheckoutOrderStatus @default(PENDING)
+  createdAt         DateTime              @default(now()) @map("created_at")
+  paidAt            DateTime?             @map("paid_at")
+  tenant            Tenant                @relation(fields:[tenantId],references:[id],onDelete:Cascade)
+  link              QrCheckoutLink        @relation(fields:[linkId],references:[id],onDelete:Restrict)
+  items             QrCheckoutOrderItem[]
+  @@index([tenantId,status,createdAt])
+  @@map("qr_checkout_orders")
+}
+model QrCheckoutOrderItem {
+  id        String          @id @default(uuid()) @db.Uuid
+  orderId   String          @map("order_id") @db.Uuid
+  offerId   String          @map("offer_id") @db.Uuid
+  productId String?         @map("product_id") @db.Uuid
+  title     String          @db.VarChar(180)
+  quantity  Int             @default(1)
+  unitPrice Decimal         @map("unit_price") @db.Decimal(14,2)
+  total     Decimal         @db.Decimal(14,2)
+  order     QrCheckoutOrder @relation(fields:[orderId],references:[id],onDelete:Cascade)
+  offer     QrCheckoutOffer @relation(fields:[offerId],references:[id])
+  @@index([orderId])
+  @@map("qr_checkout_order_items")
 }
 
 model PizzaSettings {

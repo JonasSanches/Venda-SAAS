@@ -22,6 +22,7 @@ import { TransportationModule } from "./modules/transportation/transportation.mo
 import { PizzeriaModule } from "./modules/pizzeria/pizzeria.module";
 import { ScannerModule } from "./modules/scanner/scanner.module";
 import { EmailMarketingModule } from "./modules/email-marketing/email-marketing.module";
+import { QrCheckoutModule } from "./modules/qr-checkout/qr-checkout.module";
 
 @Module({
   imports: [
@@ -44,7 +45,8 @@ import { EmailMarketingModule } from "./modules/email-marketing/email-marketing.
     TransportationModule,
     PizzeriaModule,
     ScannerModule,
-    EmailMarketingModule
+    EmailMarketingModule,
+    QrCheckoutModule
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }]

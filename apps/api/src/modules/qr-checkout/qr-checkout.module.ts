@@ -1,0 +1,1 @@
+import { Module } from "@nestjs/common";import { QrCheckoutController } from "./qr-checkout.controller";import { QrCheckoutService } from "./qr-checkout.service";@Module({controllers:[QrCheckoutController],providers:[QrCheckoutService]})export class QrCheckoutModule{}
