@@ -73,10 +73,10 @@ export class QrCheckoutService {
   async publicLink(token: string) {
     const item = await prisma.qrCheckoutLink.findFirst({
       where: { token, active: true },
-      include: { tenant: { select: { name: true, logoDataUrl: true, phone: true } }, offers: { where: { active: true }, orderBy: { createdAt: "asc" } } },
+      include: { tenant: { select: { name: true, logoDataUrl: true, phone: true } }, offers: { where: { active: true }, orderBy: { createdAt: "asc" }, include: { product: { select: { imageDataUrl: true } } } } },
     });
     if (!item) throw new NotFoundException("Este QR Code não está disponível.");
-    return { id: item.id, name: item.name, deliveryEnabled: item.deliveryEnabled, addressRequired: item.addressRequired, company: item.tenant, offers: item.offers.map((offer) => ({ ...offer, price: Number(offer.price) })) };
+    return { id: item.id, name: item.name, deliveryEnabled: item.deliveryEnabled, addressRequired: item.addressRequired, company: item.tenant, offers: item.offers.map((offer) => ({ id: offer.id, title: offer.title, description: offer.description, price: Number(offer.price), imageDataUrl: offer.product?.imageDataUrl ?? null })) };
   }
 
   async checkout(token: string, input: any) {

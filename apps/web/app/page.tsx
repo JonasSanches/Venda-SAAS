@@ -16,6 +16,7 @@ type Product = {
   sku: string;
   barcode?: string;
   name: string;
+  imageDataUrl?: string;
   price: number;
   cost?: number;
   ncm?: string;
@@ -914,12 +915,25 @@ function Products({
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     try {
+      const image = form.get("image");
+      let imageDataUrl: string | undefined;
+      if (image instanceof File && image.size > 0) {
+        if (!image.type.startsWith("image/")) throw Error("Escolha uma imagem válida.");
+        if (image.size > 500 * 1024) throw Error("A foto deve ter no máximo 500 KB.");
+        imageDataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onerror = () => reject(Error("Não foi possível ler a foto."));
+          reader.onload = () => resolve(String(reader.result));
+          reader.readAsDataURL(image);
+        });
+      }
       const product = await request<Product>("/products", token, {
         method: "POST",
         body: JSON.stringify({
           sku: form.get("sku"),
           barcode: form.get("barcode") || undefined,
           name: form.get("name"),
+          imageDataUrl,
           price: Number(form.get("price")),
           cost: Number(form.get("cost") || 0),
           ncm: form.get("ncm") || undefined,
@@ -1054,6 +1068,11 @@ function Products({
           <label>
             Nome
             <input name="name" required minLength={2} />
+          </label>
+          <label>
+            Foto do produto
+            <input name="image" type="file" accept="image/png,image/jpeg,image/webp" />
+            <small>PNG, JPG ou WebP; até 500 KB. Aparece na venda por QR Code.</small>
           </label>
           <label>
             Preço

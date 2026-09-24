@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsNumber, IsObject, IsOptional, IsString, Length, Matches, Min, ValidateNested } from "class-validator";
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsDataURI, IsIn, IsNumber, IsObject, IsOptional, IsString, Length, Matches, MaxLength, Min, ValidateNested } from "class-validator";
 
 export class CreateProductDto {
   @ApiProperty() @IsString() @Length(1, 64) sku!: string;
@@ -8,6 +8,7 @@ export class CreateProductDto {
   @ApiProperty({ required: false }) @IsOptional() @IsIn(["BOARD_SHORTS_SLIT", "BOARD_SHORTS_SLIT_2", "BOARD_SHORTS_STRAIGHT", "TSHIRT_REGULAR", "TANK_TOP"]) designTemplate?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsObject() designData?: Record<string, unknown>;
   @ApiProperty() @IsString() @Length(2, 160) name!: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsDataURI() @MaxLength(750000) imageDataUrl?: string;
   @ApiProperty() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) price!: number;
   @ApiProperty({ required: false }) @IsOptional() @IsNumber({ maxDecimalPlaces: 4 }) @Min(0) cost?: number;
   @ApiProperty({ required: false }) @IsOptional() @IsString() @Length(8, 8) ncm?: string;

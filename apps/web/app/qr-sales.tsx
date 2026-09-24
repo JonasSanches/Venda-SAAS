@@ -16,6 +16,7 @@ const brl = (value: number) => value.toLocaleString("pt-BR", { style: "currency"
 
 export function QrSales({ token }: { token: string }) {
   const [links, setLinks] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
@@ -23,12 +24,14 @@ export function QrSales({ token }: { token: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const load = async () => {
     try {
-      const [nextLinks, nextDashboard] = await Promise.all([
+      const [nextLinks, nextDashboard, nextProducts] = await Promise.all([
         request<any[]>("/qr-checkout/links", token),
         request<Dashboard>("/qr-checkout/dashboard", token),
+        request<any[]>("/products", token),
       ]);
       setLinks(nextLinks);
       setDashboard(nextDashboard);
+      setProducts(nextProducts);
       setError("");
     } catch (err) {
       setError((err as Error).message);
@@ -45,11 +48,12 @@ export function QrSales({ token }: { token: string }) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     try {
+      const product = products.find((item) => item.id === form.get("productId"));
       const result = await request<any>("/qr-checkout/links", token, {
         method: "POST",
         body: JSON.stringify({
           name: form.get("name"), deliveryEnabled: form.get("deliveryEnabled") === "on", addressRequired: form.get("addressRequired") === "on",
-          offers: [{ title: form.get("title"), description: form.get("description"), price: Number(form.get("price")) }],
+          offers: [{ productId: product?.id, title: product?.name ?? form.get("title"), description: form.get("description"), price: product?.price ?? Number(form.get("price")) }],
         }),
       });
       setSelected(result);
@@ -72,7 +76,7 @@ export function QrSales({ token }: { token: string }) {
       <article><small>Pedidos pendentes</small><strong>{dashboard.pendingOrders}</strong><span>aguardando pagamento</span></article>
     </section>}
     {message && <div className="success">{message}</div>}{error && <div className="error">{error}</div>}
-    <form className="email-form" onSubmit={create}><h3>Novo QR de venda</h3><input name="name" placeholder="Nome do QR (ex.: Balcão da loja)" required/><input name="title" placeholder="Produto ou serviço" required/><input name="price" type="number" min="0.01" step="0.01" placeholder="Preço" required/><input name="description" placeholder="Descrição (opcional)"/><label><input name="deliveryEnabled" type="checkbox"/> Oferecer entrega</label><label><input name="addressRequired" type="checkbox"/> Exigir endereço</label><button>Criar QR Code</button></form>
+    <form className="email-form" onSubmit={create}><h3>Novo QR de venda</h3><input name="name" placeholder="Nome do QR (ex.: Balcão da loja)" required/><label>Produto cadastrado (recomendado para mostrar a foto)<select name="productId" defaultValue=""><option value="">Produto ou serviço avulso</option>{products.filter((product) => product.active).map((product) => <option value={product.id} key={product.id}>{product.name} · {brl(product.price)}{product.imageDataUrl ? " · com foto" : ""}</option>)}</select></label><input name="title" placeholder="Produto ou serviço avulso"/><input name="price" type="number" min="0.01" step="0.01" placeholder="Preço do item avulso"/><input name="description" placeholder="Descrição (opcional)"/><label><input name="deliveryEnabled" type="checkbox"/> Oferecer entrega</label><label><input name="addressRequired" type="checkbox"/> Exigir endereço</label><button>Criar QR Code</button></form>
     {selected && <section className="qr-created"><canvas ref={canvas}/><div><h3>{selected.name}</h3><p>Imprima este QR Code e deixe-o no local de venda.</p><a href={selected.url} target="_blank" rel="noreferrer">Abrir página de compra</a></div></section>}
     <section className="email-list"><h3>Pedidos recentes</h3>{dashboard?.recent.length ? dashboard.recent.map((order) => <article className="qr-order" key={order.id}><div><strong>{order.buyerName}</strong><span>{new Date(order.createdAt).toLocaleString("pt-BR")} · {order.status === "APPROVED" ? "Pago" : order.status === "REJECTED" ? "Recusado" : "Pendente"}</span></div><div><strong>{brl(order.total)}</strong><span>Comissão: {brl(order.platformCommissionAmount)} · Líquido: {brl(order.merchantAmount)}</span></div></article>) : <p className="empty-state">Nenhum pedido por QR Code ainda.</p>}</section>
     <section className="email-list"><h3>QR Codes criados</h3>{links.map((link) => <article className="qr-link" key={link.id}><div><strong>{link.name}</strong><span>{link.offers.length} oferta(s) · {link._count?.orders ?? 0} pedido(s)</span></div><button className="secondary" onClick={() => setSelected({ ...link, url: `${location.origin}/comprar/${link.token}` })}>Ver QR</button></article>)}</section>
