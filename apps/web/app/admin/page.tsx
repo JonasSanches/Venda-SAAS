@@ -1,6 +1,5 @@
 "use client";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import "./admin-client-modal.css";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 type Session = {
