@@ -192,6 +192,11 @@ export default function Home() {
   const [passwordOpen, setPasswordOpen] = useState(false);
   const refresh = useCallback(async (s: Session) => {
     try {
+      if (s.tenant.segment === "QR_SALES") {
+        setProducts(await request<Product[]>("/products", s.accessToken));
+        setError("");
+        return;
+      }
       const [p, stats] = await Promise.all([
         request<Product[]>("/products", s.accessToken),
         request<Summary>("/sales/summary", s.accessToken),
@@ -222,6 +227,9 @@ export default function Home() {
   useEffect(() => {
     if (session && !isPlatformAdmin) void refresh(session);
   }, [session, isPlatformAdmin, refresh]);
+  useEffect(() => {
+    if (session?.tenant.segment === "QR_SALES" && page === "Visão geral") setPage("Venda por QR Code");
+  }, [session?.tenant.segment, page]);
   useEffect(() => {
     if (!session?.accessToken || isPlatformAdmin) return;
     let active = true;
@@ -1994,6 +2002,10 @@ function CommercialFiscal() {
 const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pagesFor = (roles: string[], segment?: string) => {
+  if (segment === "QR_SALES") {
+    if (roles.some((role) => ["ADMIN", "MANAGER", "SELLER"].includes(role))) return ["Venda por QR Code", "Produtos", "Clientes"];
+    return ["Venda por QR Code"];
+  }
   const studio = segment === "APPAREL_CUSTOMIZATION" ? ["Estúdio de moldes"] : [];
   const pizzeria = segment === "PIZZERIA" ? ["Pizzaria"] : [];
   const transportation = segment === "TRANSPORTATION" ? ["Transportation Detention Recovery"] : [];
