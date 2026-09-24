@@ -159,6 +159,24 @@ main[data-theme] .product-row.head{background:color-mix(in srgb,var(--pale) 78%,
 main[data-theme] .product-row strong{color:var(--ink)}
 main[data-theme] .product-cost-editor input{background:color-mix(in srgb,var(--paper) 73%,#000);color:var(--ink);border-color:var(--line)}
 main[data-theme] .product-cost-editor button{background:color-mix(in srgb,var(--pale) 78%,#718095);color:var(--ink)}
+
+/* Superfícies internas: cada tela operacional respeita a paleta ativa. */
+main[data-theme] :is(.product-form,.stock-form,.user-form,.branch-form,.bulk-import,.detail,.empty,.stock-grid article,.branch-grid article,.pdv-scanner,.pdv aside.cart,.cash-summary,.cash-actions,.fiscal-grid>article,.tax-list>article,.issue,.pizzeria-card,.pizza-builder,.pizza-kds,.email-form,.email-metrics article,.qr-summary article,.qr-created,.qr-link,.qr-order){background:color-mix(in srgb,var(--paper) 84%,#18324a);border-color:var(--line);color:var(--ink);box-shadow:none}
+main[data-theme] :is(.row.head,.movement.head){background:color-mix(in srgb,var(--pale) 78%,#000);color:var(--muted);border-color:var(--line)}
+main[data-theme] :is(.row:not(.head),.movement:not(.head),.sale-line,.cash-line,.tax-list article,.fiscal-grid article){border-color:var(--line);color:var(--ink)}
+main[data-theme] :is(.row:not(.head),.movement:not(.head),.sale-line,.cash-line):nth-child(odd){background:color-mix(in srgb,var(--paper) 92%,#000)}
+main[data-theme] :is(.product-form,.stock-form,.user-form,.branch-form,.bulk-import,.detail,.empty,.stock-grid article,.branch-grid article,.pdv-scanner,.pdv aside.cart,.cash-summary,.cash-actions,.fiscal-grid>article,.tax-list>article,.issue,.pizzeria-card,.pizza-builder,.pizza-kds,.email-form,.email-metrics article,.qr-summary article,.qr-created,.qr-link,.qr-order) :is(h1,h2,h3,h4,strong,b){color:var(--ink)}
+main[data-theme] :is(.template-picker button,.studio-controls,.garment-view,.studio-product){background:color-mix(in srgb,var(--paper) 82%,#18324a)!important;color:var(--ink)!important;border-color:var(--line)!important}
+main[data-theme] :is(.template-picker button b,.studio-controls label,.studio-product label){color:var(--ink)!important}
+main[data-theme] :is(.template-picker button span,.studio-controls label small,.studio-mode-note){color:var(--muted)!important}
+main[data-theme] .pizza-ticket :is(input,select,textarea){background:color-mix(in srgb,var(--paper) 70%,#000);color:var(--ink);border:1px solid var(--line)}
+main[data-theme] .pizza-kds-column{background:color-mix(in srgb,var(--paper) 76%,#000)}
+main[data-theme] .pizza-kds-column.preparing{background:color-mix(in srgb,var(--pale) 75%,#a8740d)}
+main[data-theme] .pizza-kds-column.oven{background:color-mix(in srgb,var(--pale) 72%,#99522b)}
+main[data-theme] .pizza-kds-column.ready,main[data-theme] .pizza-kds-column.out_for_delivery{background:color-mix(in srgb,var(--pale) 75%,#16845d)}
+main[data-theme] .pizza-kds-column article{background:color-mix(in srgb,var(--paper) 88%,#18324a);color:var(--ink);box-shadow:none}
+main[data-theme] .pizza-kds-column article :is(small,p,strong){color:var(--ink)}
+main[data-theme] .trial-remaining,main[data-theme] .qr-commission-note{background:color-mix(in srgb,var(--pale) 80%,#a8740d);color:var(--ink);border-color:var(--line)}
 .curated-library{margin:0 0 30px;padding:24px;background:#f7f4ec;border:1px solid #e7d8b4;border-radius:16px}.curated-library-title{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:18px}.curated-library-title small{font-size:9px;letter-spacing:1.3px;color:#9a6500}.curated-library-title h2{margin:5px 0}.curated-library-title p{margin:0;color:var(--muted);font-size:12px}.curated-books{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.curated-books article{display:grid;grid-template-columns:82px 1fr;gap:13px;min-width:0;padding:12px;background:#fff;border:1px solid #e1d9c7;border-radius:11px}.curated-books img{width:82px;height:116px;object-fit:cover;border-radius:6px;background:#edf0ed}.curated-books article>div{min-width:0;display:grid;align-content:start;gap:5px}.curated-books small{font-size:9px;color:#9a6500;font-weight:800}.curated-books h3{margin:0;font-size:15px;line-height:1.18}.curated-books p{margin:0;color:var(--muted);font-size:11px}.curated-books span{font-size:9px;color:#617067;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.curated-books article>div>div{display:flex;gap:7px;flex-wrap:wrap;margin-top:3px}.curated-books a{color:#087a53;font-size:10px;font-weight:800;text-decoration:none}.curated-books .curated-source{color:#65738a}@media(max-width:1000px){.curated-books{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.curated-library{padding:16px}.curated-library-title{align-items:start;flex-direction:column}.curated-books{grid-template-columns:1fr}}
 
 /* Transportation Detention Recovery */
