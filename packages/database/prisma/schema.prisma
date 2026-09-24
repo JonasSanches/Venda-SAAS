@@ -648,6 +648,9 @@ model QrCheckoutOrder {
   buyerPhone        String?               @map("buyer_phone") @db.VarChar(40)
   deliveryAddress   String?               @map("delivery_address") @db.Text
   total             Decimal               @db.Decimal(14,2)
+  platformCommissionRate Decimal          @default(0.12) @map("platform_commission_rate") @db.Decimal(5,4)
+  platformCommissionAmount Decimal        @default(0) @map("platform_commission_amount") @db.Decimal(14,2)
+  merchantAmount    Decimal               @default(0) @map("merchant_amount") @db.Decimal(14,2)
   status            QrCheckoutOrderStatus @default(PENDING)
   createdAt         DateTime              @default(now()) @map("created_at")
   paidAt            DateTime?             @map("paid_at")
