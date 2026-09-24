@@ -917,6 +917,7 @@ function Products({
   const [open, setOpen] = useState(false),
     [importOpen, setImportOpen] = useState(false),
     [scannerOpen, setScannerOpen] = useState(false),
+    [mobileScannerOpen, setMobileScannerOpen] = useState(false),
     [barcode, setBarcode] = useState(""),
     [error, setError] = useState(""),
     [message, setMessage] = useState("");
@@ -1109,13 +1110,14 @@ function Products({
           <button>Salvar produto</button>
         </form>
       )}
-      {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onRead={(code) => {
+      {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onUseMobile={() => { setScannerOpen(false); setMobileScannerOpen(true); }} onRead={(code) => {
         const existing = products.find((product) => product.barcode === code);
         setBarcode(code);
         setScannerOpen(false);
         setError(existing ? `Este código já pertence a ${existing.name}.` : "");
         setMessage(existing ? "" : `Código ${code} lido com sucesso.`);
       }} />}
+      {mobileScannerOpen&&<MobileScannerPair token={token} onClose={()=>setMobileScannerOpen(false)} onRead={(code)=>{const existing=products.find(product=>product.barcode===code);setBarcode(code);setMobileScannerOpen(false);setError(existing?`Este código já pertence a ${existing.name}.`:"");setMessage(existing?"":`Código ${code} lido com sucesso.`)}}/>}
       <div className="table products-table">
         <div className="product-row head">
           <span>SKU</span>
@@ -1169,6 +1171,7 @@ function Inventory({
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [scannerOpen, setScannerOpen] = useState(false);
+  const [mobileScannerOpen, setMobileScannerOpen] = useState(false);
   const [productId, setProductId] = useState("");
   const load = useCallback(
     () =>
@@ -1240,7 +1243,7 @@ function Inventory({
         </label>
         <button>Registrar movimento</button>
       </form>
-      {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onRead={(code) => {
+      {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onUseMobile={() => { setScannerOpen(false); setMobileScannerOpen(true); }} onRead={(code) => {
         const product = stock.find((item) => item.barcode === code);
         setScannerOpen(false);
         if (!product) {
@@ -1252,6 +1255,7 @@ function Inventory({
         setError("");
         setMessage(`${product.name} selecionado — saldo atual: ${product.quantity}.`);
       }} />}
+      {mobileScannerOpen&&<MobileScannerPair token={token} onClose={()=>setMobileScannerOpen(false)} onRead={(code)=>{const product=stock.find(item=>item.barcode===code);setMobileScannerOpen(false);if(!product){setError(`Nenhum produto encontrado para o código ${code}.`);setMessage("");return}setProductId(product.id);setError("");setMessage(`${product.name} selecionado — saldo atual: ${product.quantity}.`)}}/>}
       <h2 className="subtitle">Saldos</h2>
       <div className="stock-grid">
         {stock.map((p) => (
