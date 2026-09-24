@@ -422,6 +422,8 @@ export default function Home() {
           <Users token={session.accessToken} roles={session.user.roles} />
         ) : page === "Filial" ? (
           <Branch session={session} onSelect={selectBranch} />
+        ) : page === "Configurações" && session.tenant.segment === "QR_SALES" ? (
+          <QrStorefrontSettings token={session.accessToken} />
         ) : page === "Configurações" ? (
           <ThemeSettings
             token={session.accessToken}
@@ -455,6 +457,13 @@ function ThemeSettings({ token, theme, onChange }: { token:string; theme: System
     </button>)}</div>
     <form className="dashboard-settings" onSubmit={saveOperations}><div><small>ALERTAS OPERACIONAIS</small><h3>Tempo máximo para entrega</h3><p>Pedidos de entrega acima desse tempo aparecem como alerta na página inicial.</p></div><label>Minutos<input type="number" min="5" max="240" step="1" value={minutes} onChange={event=>setMinutes(Number(event.target.value))}/></label><button>Salvar limite</button>{message&&<span className="success">{message}</span>}{error&&<span className="error">{error}</span>}</form>
   </section>;
+}
+function QrStorefrontSettings({token}:{token:string}){
+  const options=[{id:"ACAI",name:"Açaí",note:"Roxo energético, fresco e vibrante"},{id:"SNACKS",name:"Lanches & porções",note:"Laranja quente, fome e agilidade"},{id:"SKATE",name:"Skate",note:"Urbano, escuro e ousado"},{id:"FRUITS",name:"Frutas",note:"Natural, leve e colorido"}] as const;
+  const [selected,setSelected]=useState<typeof options[number]["id"]>("ACAI"),[message,setMessage]=useState(""),[error,setError]=useState("");
+  useEffect(()=>{request<{template:typeof selected}>("/qr-checkout/storefront-settings",token).then(data=>setSelected(data.template)).catch(cause=>setError((cause as Error).message))},[token]);
+  async function save(){try{await request("/qr-checkout/storefront-settings",token,{method:"POST",body:JSON.stringify({template:selected})});setMessage("Visual da vitrine QR salvo. Todos os QR Codes ativos usarão este modelo.");setError("")}catch(cause){setError((cause as Error).message)}}
+  return <section className="qr-storefront-settings"><header><small>VENDA POR QR CODE</small><h2>Visual da vitrine</h2><p>Escolha como seus produtos aparecem para o comprador. A alteração vale para todos os QR Codes ativos.</p></header><div className="storefront-options">{options.map(option=><button type="button" key={option.id} className={`storefront-option ${option.id.toLowerCase()} ${selected===option.id?"selected":""}`} onClick={()=>setSelected(option.id)}><i><b>Produto</b><span>R$ 24,90</span><em>Comprar</em></i><strong>{option.name}</strong><small>{option.note}</small></button>)}</div><button onClick={save}>Salvar visual da vitrine</button>{message&&<div className="success">{message}</div>}{error&&<div className="error">{error}</div>}</section>
 }
 function ChangePassword({
   token,
@@ -2022,7 +2031,8 @@ const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pagesFor = (roles: string[], segment?: string) => {
   if (segment === "QR_SALES") {
-    if (roles.some((role) => ["ADMIN", "MANAGER", "SELLER"].includes(role))) return ["Venda por QR Code", "Produtos", "Clientes"];
+    if (roles.some((role) => ["ADMIN", "MANAGER"].includes(role))) return ["Venda por QR Code", "Produtos", "Clientes", "Configurações"];
+    if (roles.includes("SELLER")) return ["Venda por QR Code", "Produtos", "Clientes"];
     return ["Venda por QR Code"];
   }
   const studio = segment === "APPAREL_CUSTOMIZATION" ? ["Estúdio de moldes"] : [];

@@ -133,6 +133,7 @@ model Tenant {
   phone           String?
   pixKey          String?          @map("pix_key")
   pixKeyType      String?          @map("pix_key_type")
+  qrStorefrontTemplate String       @default("ACAI") @map("qr_storefront_template")
   logoDataUrl     String?          @map("logo_data_url")
   trialStartsAt   DateTime?        @map("trial_starts_at")
   trialExpiresAt  DateTime?        @map("trial_expires_at")

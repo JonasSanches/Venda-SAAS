@@ -34,7 +34,7 @@ export default function Comprar({ params }: { params: Promise<{ token: string }>
     } catch (cause) { setError((cause as Error).message); setLoading(false); }
   }
   if (error && !shop) return <main className="qr-public"><p>{error}</p></main>;
-  return <main className="qr-public"><section>
+  return <main className={`qr-public qr-template-${String(shop?.template??"ACAI").toLowerCase()}`}><section>
     <small>VENDA ONLINE</small><h1>{shop?.company?.name ?? "Carregando..."}</h1><h2>{shop?.name}</h2><p>Escolha os itens e pague com Pix, cartão ou outro meio disponível no Mercado Pago.</p>
     <div className="qr-offers">{shop?.offers.map((offer: any) => <article key={offer.id}>
       {offer.imageDataUrl && <img className="qr-product-image" src={offer.imageDataUrl} alt={offer.title} />}
