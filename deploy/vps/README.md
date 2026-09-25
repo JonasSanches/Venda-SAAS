@@ -12,6 +12,13 @@ Requisitos: Ubuntu 22.04, Docker Engine, Docker Compose, Git e portas 22, 80 e 4
 
 O Caddy provisiona e renova automaticamente o certificado HTTPS depois que o DNS estiver propagado.
 
+## Transcrição de vídeos do YouTube
+
+Para que vídeos autorizados sem legendas públicas possam ser transcritos pelo
+áudio, inclua `OPENAI_API_KEY` em `deploy/vps/.env.production`. A chave fica
+somente no servidor, nunca no navegador. A imagem da API já instala `ffmpeg` e
+`yt-dlp` para preparar o áudio antes do envio ao provedor de transcrição.
+
 ## Atualização automática
 
 O timer `vendamais-deploy.timer` consulta a branch `main` a cada dois minutos. Uma
