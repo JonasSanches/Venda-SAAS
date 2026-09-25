@@ -33,7 +33,7 @@ input:focus { border-color:#418c69; box-shadow:0 0 0 3px #dceee5; }
 .badge { display:inline-block; background:var(--pale); color:var(--green); padding:6px 10px; border-radius:20px; font-size:12px; font-weight:700; }.modules article { cursor:pointer; }
 @media(max-width:900px){.product-form{grid-template-columns:1fr 1fr}.product-form button{grid-column:1/-1}}
 @media(max-width:560px){.row{grid-template-columns:1fr 1fr}.row span:nth-child(3){display:none}.product-form{grid-template-columns:1fr}}
-.stock-form { display:grid; grid-template-columns:2fr auto 1fr 2fr auto; align-items:end; gap:12px; background:white; border:1px solid var(--line); border-radius:11px; padding:18px; }.stock-form>.error,.stock-form>.success{grid-column:1/-1;margin:0}.scan-stock{white-space:nowrap}
+.stock-form { display:grid; grid-template-columns:2fr auto auto 1fr 2fr auto; align-items:end; gap:12px; background:white; border:1px solid var(--line); border-radius:11px; padding:18px; }.stock-form>.error,.stock-form>.success{grid-column:1/-1;margin:0}.scan-stock{white-space:nowrap}
 select { border:1px solid #ccd5d0; border-radius:8px; padding:11px 12px; background:white; font:inherit; }
 .subtitle { font-size:16px; margin:28px 0 12px; }
 .stock-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
@@ -209,3 +209,4 @@ main[data-theme] .trial-remaining,main[data-theme] .qr-commission-note{backgroun
 /* Cadastro direto e PDV: leitura rápida em momentos de movimento intenso. */
 .product-form-wide .product-image-field{align-self:end;gap:4px}.product-image-field>small{min-height:28px;color:var(--muted);font-size:9px;font-weight:600;line-height:1.25}.product-image-field input[type="file"]{height:34px;box-sizing:border-box;padding:6px}
 .product-cards .pdv-product-card{display:grid;grid-template-columns:46px minmax(0,1fr);align-items:center;gap:10px;min-height:92px;padding:11px 12px}.pdv-product-thumb{display:grid;width:46px;height:46px;object-fit:cover;place-items:center;overflow:hidden;border:1px solid var(--line);border-radius:7px;background:color-mix(in srgb,var(--paper) 74%,#000);color:var(--green);font-size:17px;font-weight:900}.pdv-product-info{display:grid;min-width:0;gap:3px}.pdv-product-info small,.pdv-product-info i{overflow:hidden;color:var(--muted);font-size:9px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}.pdv-product-info strong{overflow:hidden;color:var(--ink);font-size:12px;text-overflow:ellipsis;white-space:nowrap}.pdv-product-info b{color:var(--green);font-size:12px}@media(max-width:700px){.product-cards .pdv-product-card{min-height:78px}.product-image-field>small{min-height:0}}
+.product-form-wide .barcode-input input{flex:1;width:auto}.product-form-wide .barcode-input button{white-space:nowrap}

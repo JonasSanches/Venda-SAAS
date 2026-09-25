@@ -1073,6 +1073,7 @@ function Products({
             <span className="barcode-input">
               <input name="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value.trim())} inputMode="numeric" autoComplete="off" placeholder="Leia ou digite" />
               <button type="button" className="secondary" onClick={() => setScannerOpen(true)}>Câmera</button>
+              <button type="button" className="secondary" onClick={() => setMobileScannerOpen(true)}>Celular · QR</button>
             </span>
           </label>
           <label>
@@ -1227,6 +1228,7 @@ function Inventory({
           </select>
         </label>
         <button type="button" className="secondary scan-stock" onClick={() => setScannerOpen(true)}>Ler código</button>
+        <button type="button" className="secondary scan-stock" onClick={() => setMobileScannerOpen(true)}>Celular · QR</button>
         <label>
           Quantidade
           <input
