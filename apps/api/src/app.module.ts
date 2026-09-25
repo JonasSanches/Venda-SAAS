@@ -23,6 +23,7 @@ import { PizzeriaModule } from "./modules/pizzeria/pizzeria.module";
 import { ScannerModule } from "./modules/scanner/scanner.module";
 import { EmailMarketingModule } from "./modules/email-marketing/email-marketing.module";
 import { QrCheckoutModule } from "./modules/qr-checkout/qr-checkout.module";
+import { VideoTranscriptsModule } from "./modules/video-transcripts/video-transcripts.module";
 
 @Module({
   imports: [
@@ -46,7 +47,8 @@ import { QrCheckoutModule } from "./modules/qr-checkout/qr-checkout.module";
     PizzeriaModule,
     ScannerModule,
     EmailMarketingModule,
-    QrCheckoutModule
+    QrCheckoutModule,
+    VideoTranscriptsModule
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }]
