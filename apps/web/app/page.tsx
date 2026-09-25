@@ -921,6 +921,9 @@ function Products({
     [barcode, setBarcode] = useState(""),
     [error, setError] = useState(""),
     [message, setMessage] = useState("");
+  const barcodeInputRef=useRef<HTMLInputElement>(null), barcodeFallbackTimer=useRef<number|undefined>(undefined);
+  function startBarcodeReader(){window.clearTimeout(barcodeFallbackTimer.current);setBarcode("");barcodeInputRef.current?.focus();setMessage("Aguardando leitura da pistola USB…");barcodeFallbackTimer.current=window.setTimeout(()=>{setMobileScannerOpen(true);setMessage("Não recebemos uma leitura da pistola. Use o QR Code no celular.")},2500)}
+  function updateBarcode(value:string){window.clearTimeout(barcodeFallbackTimer.current);setMessage("");setBarcode(value.trim())}
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
@@ -1071,9 +1074,8 @@ function Products({
           <label>
             Código de barras
             <span className="barcode-input">
-              <input name="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value.trim())} inputMode="numeric" autoComplete="off" placeholder="Leia ou digite" />
-              <button type="button" className="secondary" onClick={() => setScannerOpen(true)}>Câmera</button>
-              <button type="button" className="secondary" onClick={() => setMobileScannerOpen(true)}>Celular · QR</button>
+              <input ref={barcodeInputRef} name="barcode" value={barcode} onChange={(e) => updateBarcode(e.target.value)} inputMode="numeric" autoComplete="off" placeholder="Leia ou digite" />
+              <button type="button" className="secondary" onClick={startBarcodeReader}>Ler código</button>
             </span>
           </label>
           <label>
@@ -1227,8 +1229,7 @@ function Inventory({
             ))}
           </select>
         </label>
-        <button type="button" className="secondary scan-stock" onClick={() => setScannerOpen(true)}>Ler código</button>
-        <button type="button" className="secondary scan-stock" onClick={() => setMobileScannerOpen(true)}>Celular · QR</button>
+        <button type="button" className="secondary scan-stock" onClick={() => { setMobileScannerOpen(true); setMessage("Use o QR Code para ler com o celular."); }}>Ler código</button>
         <label>
           Quantidade
           <input
@@ -1307,9 +1308,9 @@ function Pdv({
   const [method, setMethod] = useState("PIX");
   const [channel, setChannel] = useState<"PDV"|"DELIVERY">("PDV");
   const [message, setMessage] = useState("");
-  const [scannerOpen, setScannerOpen] = useState(false);
   const [mobileScannerOpen, setMobileScannerOpen] = useState(false);
   const [barcode, setBarcode] = useState("");
+  const barcodeInputRef=useRef<HTMLInputElement>(null), scannerFallbackTimer=useRef<number|undefined>(undefined);
   const load = useCallback(
     () =>
       Promise.all([
@@ -1329,6 +1330,7 @@ function Pdv({
     0,
   );
   function addByBarcode(code: string) {
+    window.clearTimeout(scannerFallbackTimer.current);
     const normalized = code.trim();
     const product = stock.find((item) => item.barcode === normalized);
     if (!product) {
@@ -1362,16 +1364,15 @@ function Pdv({
     }
   }
   async function markDelivered(orderId:string){try{await request(`/sales/orders/${orderId}/deliver`,token,{method:"POST"});setMessage("Entrega concluída e tempo registrado.");await load();onSale()}catch(err){setMessage((err as Error).message)}}
+  function startReader(){window.clearTimeout(scannerFallbackTimer.current);setBarcode("");barcodeInputRef.current?.focus();setMessage("Aguardando leitura da pistola USB…");scannerFallbackTimer.current=window.setTimeout(()=>{setMobileScannerOpen(true);setMessage("Pistola sem leitura. Leia o QR Code para usar o celular.")},2500)}
   return (
     <div className="pdv">
       <section>
         <form className="pdv-scanner" onSubmit={(event) => { event.preventDefault(); addByBarcode(barcode); }}>
-          <label>Código de barras<input value={barcode} onChange={(e) => setBarcode(e.target.value)} autoComplete="off" inputMode="numeric" autoFocus placeholder="Use a pistola ou digite o código" /></label>
+          <label>Código de barras<input ref={barcodeInputRef} value={barcode} onChange={(e) => {window.clearTimeout(scannerFallbackTimer.current);setMessage("");setBarcode(e.target.value)}} autoComplete="off" inputMode="numeric" autoFocus placeholder="Use a pistola ou digite o código" /></label>
           <button type="submit">Adicionar</button>
-          <button type="button" className="secondary" onClick={() => setScannerOpen(true)}>Usar câmera</button>
-          <button type="button" className="secondary" onClick={() => setMobileScannerOpen(true)}>Usar celular</button>
+          <button type="button" className="secondary" onClick={startReader}>Ler código</button>
         </form>
-        {scannerOpen && <BarcodeScanner onClose={() => setScannerOpen(false)} onUseMobile={() => { setScannerOpen(false); setMobileScannerOpen(true); }} onRead={(code) => { setScannerOpen(false); addByBarcode(code); }} />}
         {mobileScannerOpen&&<MobileScannerPair token={token} onClose={()=>setMobileScannerOpen(false)} onRead={addByBarcode}/>}
         <div className="product-cards">
           {stock.map((p) => (

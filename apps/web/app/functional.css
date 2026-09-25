@@ -33,7 +33,7 @@ input:focus { border-color:#418c69; box-shadow:0 0 0 3px #dceee5; }
 .badge { display:inline-block; background:var(--pale); color:var(--green); padding:6px 10px; border-radius:20px; font-size:12px; font-weight:700; }.modules article { cursor:pointer; }
 @media(max-width:900px){.product-form{grid-template-columns:1fr 1fr}.product-form button{grid-column:1/-1}}
 @media(max-width:560px){.row{grid-template-columns:1fr 1fr}.row span:nth-child(3){display:none}.product-form{grid-template-columns:1fr}}
-.stock-form { display:grid; grid-template-columns:2fr auto auto 1fr 2fr auto; align-items:end; gap:12px; background:white; border:1px solid var(--line); border-radius:11px; padding:18px; }.stock-form>.error,.stock-form>.success{grid-column:1/-1;margin:0}.scan-stock{white-space:nowrap}
+.stock-form { display:grid; grid-template-columns:2fr auto 1fr 2fr auto; align-items:end; gap:12px; background:white; border:1px solid var(--line); border-radius:11px; padding:18px; }.stock-form>.error,.stock-form>.success{grid-column:1/-1;margin:0}.scan-stock{white-space:nowrap}
 select { border:1px solid #ccd5d0; border-radius:8px; padding:11px 12px; background:white; font:inherit; }
 .subtitle { font-size:16px; margin:28px 0 12px; }
 .stock-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
