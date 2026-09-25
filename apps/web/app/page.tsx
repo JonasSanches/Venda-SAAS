@@ -327,42 +327,6 @@ export default function Home() {
             </button>
           ))}
         </nav>
-        <div className="tenant">
-          <small>EMPRESA ATUAL</small>
-          <strong>{session.tenant.name}</strong>
-          <select
-            className="branch-switch"
-            value={session.tenant.branch.id}
-            onChange={(e) => {
-              const branch = (
-                session.tenant.branches ?? [session.tenant.branch!]
-              ).find((item) => item.id === e.target.value);
-              if (branch) selectBranch(branch);
-            }}
-          >
-            {(session.tenant.branches ?? [session.tenant.branch]).map(
-              (branch) => (
-                <option value={branch.id} key={branch.id}>
-                  {branch.name} · {branch.state}
-                </option>
-              ),
-            )}
-          </select>
-          <button
-            className="account-action"
-            onClick={() => setPasswordOpen(true)}
-          >
-            Alterar minha senha
-          </button>
-          <button
-            onClick={() => {
-              if(supportView){sessionStorage.removeItem("varejo-preview-session");window.close();}else localStorage.removeItem("varejo-session");
-              setSession(null);
-            }}
-          >
-            Sair
-          </button>
-        </div>
       </aside>
       <section className="content">
         <header>
@@ -376,16 +340,10 @@ export default function Home() {
             </div>
             <h1>{page}</h1>
           </div>
-          <div className="profile">
+          <button className="profile" onClick={()=>setPage("Meu perfil")} aria-label="Abrir meu perfil">
             <span>{session.user.name}</span>
             <small>{summary.cashOpen ? "Caixa aberto" : "Caixa fechado"}</small>
-            <button
-              className="mobile-password"
-              onClick={() => setPasswordOpen(true)}
-            >
-              Alterar senha
-            </button>
-          </div>
+          </button>
         </header>
         {error && <div className="error">{error}</div>}
         {page === "Caixa" ? (
@@ -425,12 +383,15 @@ export default function Home() {
           <Users token={session.accessToken} roles={session.user.roles} />
         ) : page === "Filial" ? (
           <Branch session={session} onSelect={selectBranch} />
+        ) : page === "Meu perfil" ? (
+          <UserProfile session={session} onSelectBranch={selectBranch} onChangePassword={()=>setPasswordOpen(true)} onLogout={()=>{if(supportView){sessionStorage.removeItem("varejo-preview-session");window.close();}else localStorage.removeItem("varejo-session");setSession(null);}} />
         ) : page === "Configurações" && session.tenant.segment === "QR_SALES" ? (
-          <QrStorefrontSettings token={session.accessToken} />
+          <QrStorefrontSettings token={session.accessToken} onProfile={()=>setPage("Meu perfil")} />
         ) : page === "Configurações" ? (
           <ThemeSettings
             token={session.accessToken}
             theme={theme}
+            onProfile={()=>setPage("Meu perfil")}
             onChange={(next) => {
               setTheme(next);
               localStorage.setItem(`vendamais-theme:${session.tenant.tenantId}`, next);
@@ -449,11 +410,12 @@ export default function Home() {
     </main>
   );
 }
-function ThemeSettings({ token, theme, onChange }: { token:string; theme: SystemTheme; onChange: (theme: SystemTheme) => void }) {
+function ThemeSettings({ token, theme, onChange, onProfile }: { token:string; theme: SystemTheme; onChange: (theme: SystemTheme) => void; onProfile:()=>void }) {
   const [minutes,setMinutes]=useState(45),[message,setMessage]=useState(""),[error,setError]=useState("");
   useEffect(()=>{request<DashboardData>("/sales/dashboard",token).then(data=>setMinutes(data.deliveryAlertMinutes)).catch(cause=>setError((cause as Error).message))},[token]);
   async function saveOperations(event:FormEvent<HTMLFormElement>){event.preventDefault();try{await request("/sales/dashboard/settings",token,{method:"PUT",body:JSON.stringify({deliveryAlertMinutes:minutes})});setMessage("Configuração operacional salva.");setError("")}catch(cause){setError((cause as Error).message);setMessage("")}}
   return <section className="theme-settings">
+    <button type="button" className="settings-profile-link" onClick={onProfile}><span><small>CONTA E ACESSO</small><strong>Meu perfil</strong><em>Empresa, filial, senha e sessão</em></span><b>→</b></button>
     <div className="theme-settings-heading"><small>PERSONALIZAÇÃO DO SISTEMA</small><h2>Escolha as cores da sua operação.</h2><p>A aparência é salva apenas para esta empresa e pode ser alterada quando quiser.</p></div>
     <div className="theme-options">{systemThemes.map((option) => <button type="button" key={option.id} className={`theme-option ${theme === option.id ? "selected" : ""}`} onClick={() => onChange(option.id)} aria-pressed={theme === option.id}>
       <i className={`theme-sample ${option.id}`}><span /><b /><em /></i><strong>{option.name}</strong><small>{option.description}</small>{theme === option.id && <mark>Selecionado</mark>}
@@ -461,12 +423,17 @@ function ThemeSettings({ token, theme, onChange }: { token:string; theme: System
     <form className="dashboard-settings" onSubmit={saveOperations}><div><small>ALERTAS OPERACIONAIS</small><h3>Tempo máximo para entrega</h3><p>Pedidos de entrega acima desse tempo aparecem como alerta na página inicial.</p></div><label>Minutos<input type="number" min="5" max="240" step="1" value={minutes} onChange={event=>setMinutes(Number(event.target.value))}/></label><button>Salvar limite</button>{message&&<span className="success">{message}</span>}{error&&<span className="error">{error}</span>}</form>
   </section>;
 }
-function QrStorefrontSettings({token}:{token:string}){
+function QrStorefrontSettings({token,onProfile}:{token:string;onProfile:()=>void}){
   const options=[{id:"ACAI",name:"Açaí",note:"Roxo energético, fresco e vibrante"},{id:"SNACKS",name:"Lanches & porções",note:"Laranja quente, fome e agilidade"},{id:"SKATE",name:"Skate",note:"Urbano, escuro e ousado"},{id:"FRUITS",name:"Frutas",note:"Natural, leve e colorido"}] as const;
   const [selected,setSelected]=useState<typeof options[number]["id"]>("ACAI"),[message,setMessage]=useState(""),[error,setError]=useState("");
   useEffect(()=>{request<{template:typeof selected}>("/qr-checkout/storefront-settings",token).then(data=>setSelected(data.template)).catch(cause=>setError((cause as Error).message))},[token]);
   async function save(){try{await request("/qr-checkout/storefront-settings",token,{method:"POST",body:JSON.stringify({template:selected})});setMessage("Visual da vitrine QR salvo. Todos os QR Codes ativos usarão este modelo.");setError("")}catch(cause){setError((cause as Error).message)}}
-  return <section className="qr-storefront-settings"><header><small>VENDA POR QR CODE</small><h2>Visual da vitrine</h2><p>Escolha como seus produtos aparecem para o comprador. A alteração vale para todos os QR Codes ativos.</p></header><div className="storefront-options">{options.map(option=><button type="button" key={option.id} className={`storefront-option ${option.id.toLowerCase()} ${selected===option.id?"selected":""}`} onClick={()=>setSelected(option.id)}><i><b>Produto</b><span>R$ 24,90</span><em>Comprar</em></i><strong>{option.name}</strong><small>{option.note}</small></button>)}</div><button onClick={save}>Salvar visual da vitrine</button>{message&&<div className="success">{message}</div>}{error&&<div className="error">{error}</div>}</section>
+  return <section className="qr-storefront-settings"><button type="button" className="settings-profile-link" onClick={onProfile}><span><small>CONTA E ACESSO</small><strong>Meu perfil</strong><em>Empresa, filial, senha e sessão</em></span><b>→</b></button><header><small>VENDA POR QR CODE</small><h2>Visual da vitrine</h2><p>Escolha como seus produtos aparecem para o comprador. A alteração vale para todos os QR Codes ativos.</p></header><div className="storefront-options">{options.map(option=><button type="button" key={option.id} className={`storefront-option ${option.id.toLowerCase()} ${selected===option.id?"selected":""}`} onClick={()=>setSelected(option.id)}><i><b>Produto</b><span>R$ 24,90</span><em>Comprar</em></i><strong>{option.name}</strong><small>{option.note}</small></button>)}</div><button onClick={save}>Salvar visual da vitrine</button>{message&&<div className="success">{message}</div>}{error&&<div className="error">{error}</div>}</section>
+}
+function UserProfile({session,onSelectBranch,onChangePassword,onLogout}:{session:Session;onSelectBranch:(branch:BranchInfo)=>void;onChangePassword:()=>void;onLogout:()=>void}){
+  const role=session.user.roles.includes("ADMIN")?"Administrador":session.user.roles.includes("MANAGER")?"Gerente":"Vendedor";
+  const branches=session.tenant.branches??[session.tenant.branch!];
+  return <section className="user-profile-page"><header><small>CONTA CONECTADA</small><h2>Meu perfil</h2><p>Gerencie sua sessão, empresa e acesso em um só lugar.</p></header><article className="user-profile-card"><div className="profile-avatar">{session.user.name.trim().slice(0,1).toUpperCase()}</div><div><small>USUÁRIO CONECTADO</small><h3>{session.user.name}</h3><p>{session.user.email}</p><mark>{role}</mark></div></article><div className="profile-settings-grid"><article><small>EMPRESA ATUAL</small><strong>{session.tenant.name}</strong><p>Conta ativa para esta operação.</p></article><article><small>FILIAL DE TRABALHO</small><label>Escolha a filial<select value={session.tenant.branch?.id} onChange={event=>{const branch=branches.find(item=>item.id===event.target.value);if(branch)onSelectBranch(branch)}}>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label></article><article><small>SEGURANÇA</small><strong>Senha de acesso</strong><p>Altere sua senha sempre que necessário.</p><button type="button" className="secondary" onClick={onChangePassword}>Alterar minha senha</button></article><article className="profile-session"><small>SESSÃO</small><strong>Sair do sistema</strong><p>Encerra o acesso neste dispositivo.</p><button type="button" className="danger" onClick={onLogout}>Sair</button></article></div></section>
 }
 function ChangePassword({
   token,
