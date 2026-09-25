@@ -1079,10 +1079,10 @@ function Products({
             Nome
             <input name="name" required minLength={2} />
           </label>
-          <label>
+          <label className="product-image-field">
             Foto do produto
-            <input name="image" type="file" accept="image/png,image/jpeg,image/webp" />
             <small>PNG, JPG ou WebP; até 500 KB. Aparece na venda por QR Code.</small>
+            <input name="image" type="file" accept="image/png,image/jpeg,image/webp" />
           </label>
           <label>
             Preço
@@ -1380,10 +1380,8 @@ function Pdv({
                 setCart((old) => ({ ...old, [p.id]: (old[p.id] ?? 0) + 1 }))
               }
             >
-              <small>{p.sku}</small>
-              <strong>{p.name}</strong>
-              <span>{money(p.price)}</span>
-              <i>Saldo: {p.quantity}</i>
+              {p.imageDataUrl?<img className="pdv-product-thumb" src={p.imageDataUrl} alt=""/>:<span className="pdv-product-thumb placeholder" aria-hidden="true">{p.name.slice(0,1)}</span>}
+              <span className="pdv-product-info"><small>{p.sku}</small><strong>{p.name}</strong><b>{money(p.price)}</b><i>Saldo: {p.quantity}</i></span>
             </button>
           ))}
         </div>
