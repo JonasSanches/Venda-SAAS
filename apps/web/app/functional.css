@@ -210,3 +210,10 @@ main[data-theme] .trial-remaining,main[data-theme] .qr-commission-note{backgroun
 .product-form-wide .product-image-field{align-self:end;gap:4px}.product-image-field>small{min-height:28px;color:var(--muted);font-size:9px;font-weight:600;line-height:1.25}.product-image-field input[type="file"]{height:34px;box-sizing:border-box;padding:6px}
 .product-cards .pdv-product-card{display:grid;grid-template-columns:46px minmax(0,1fr);align-items:center;gap:10px;min-height:92px;padding:11px 12px}.pdv-product-thumb{display:grid;width:46px;height:46px;object-fit:cover;place-items:center;overflow:hidden;border:1px solid var(--line);border-radius:7px;background:color-mix(in srgb,var(--paper) 74%,#000);color:var(--green);font-size:17px;font-weight:900}.pdv-product-info{display:grid;min-width:0;gap:3px}.pdv-product-info small,.pdv-product-info i{overflow:hidden;color:var(--muted);font-size:9px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}.pdv-product-info strong{overflow:hidden;color:var(--ink);font-size:12px;text-overflow:ellipsis;white-space:nowrap}.pdv-product-info b{color:var(--green);font-size:12px}@media(max-width:700px){.product-cards .pdv-product-card{min-height:78px}.product-image-field>small{min-height:0}}
 .product-form-wide .barcode-input input{flex:1;width:auto}.product-form-wide .barcode-input button{white-space:nowrap}
+
+/* Contraste de leitura nas tabelas escuras: operação não pode depender de seleção. */
+main[data-theme] .products-table .product-row{color:#dcebe4!important}
+main[data-theme] .products-table .product-row strong{color:#fff!important}
+main[data-theme] .products-table .product-row.head{color:#b8d2c4!important}
+main[data-theme] .products-table .product-row time{color:#c6ddd2!important}
+main[data-theme] .products-table .product-row b{color:#59d7a5!important}
