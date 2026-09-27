@@ -2,7 +2,6 @@
 import { FormEvent, useState } from "react";
 import { OmegaCredit } from "../omega-credit";
 import { BrandName } from "../brand-name";
-import { Pricing } from "../pricing";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 const dataUrl = (f: File) =>
   new Promise<string>((ok, no) => {
@@ -35,9 +34,7 @@ export default function Trial() {
       return setMsg(
         Array.isArray(j.message) ? j.message.join(", ") : j.message,
       );
-    setMsg(
-      "Cadastro recebido! Aguarde a liberação. Seus 7 dias grátis começarão somente após a aprovação.",
-    );
+    setMsg("Cadastro criado com sucesso! Você já pode entrar com seu e-mail e senha.");
     target.reset();
   }
   return (
@@ -47,9 +44,8 @@ export default function Trial() {
           <span>V</span><BrandName />{" "}
           <OmegaCredit />
         </div>
-        <h1>Teste grátis por 7 dias</h1>
-        <p>Personalize a plataforma para sua empresa.</p>
-        <Pricing compact />
+        <h1>Cadastre sua empresa gratuitamente</h1>
+        <p>Crie seu acesso e comece a organizar sua operação agora.</p>
       </section>
       <form onSubmit={submit}>
         <h2>Crie sua conta</h2>
@@ -116,7 +112,7 @@ export default function Trial() {
             <input name="confirm" type="password" minLength={8} required />
           </label>
         </fieldset>
-        <button>Criar teste gratuito</button>
+        <button>Criar cadastro gratuito</button>
         <a href="/">Voltar ao login</a>
       </form>
     </div>

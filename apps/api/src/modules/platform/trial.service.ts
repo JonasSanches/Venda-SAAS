@@ -22,12 +22,12 @@ export class TrialService {
   async create(input:TrialInput){
     if(input.logoDataUrl&&input.logoDataUrl.length>700_000)throw new BadRequestException("Logo deve ter no máximo 500 KB");
     if(this.demoMode)return this.createDemo(input);
-    const document=`TRIAL-${randomUUID()}`,email=input.email.trim().toLowerCase();
+    const document=`FREE-${randomUUID()}`,email=input.email.trim().toLowerCase();
     const duplicate=await prisma.user.findUnique({where:{email},select:{id:true}});
     if(duplicate)throw new BadRequestException("Este e-mail já possui uma conta");
     try{
       const tenant=await prisma.$transaction(async tx=>{
-        const created=await tx.tenant.create({data:{name:input.companyName.trim(),document,status:"PENDING",state:input.state,city:input.city.trim(),segment:input.segment,phone:input.phone.replace(/\D/g,""),logoDataUrl:input.logoDataUrl}});
+        const created=await tx.tenant.create({data:{name:input.companyName.trim(),document,status:"ACTIVE",state:input.state,city:input.city.trim(),segment:input.segment,phone:input.phone.replace(/\D/g,""),logoDataUrl:input.logoDataUrl}});
         await tx.$executeRaw`SELECT set_config('app.tenant_id', ${created.id}, true)`;
         if(input.segment==="PIZZERIA"){
           await tx.tenantModule.create({data:{tenantId:created.id,module:"PIZZERIA",enabled:true}});
@@ -59,7 +59,7 @@ export class TrialService {
 
   async list(){
     if(this.demoMode){this.trials.forEach(item=>this.refreshDemo(item));return this.trials.map(item=>this.publicDemo(item))}
-    await prisma.tenant.updateMany({where:{status:"TRIAL",trialExpiresAt:{lte:new Date()}},data:{status:"EXPIRED"}});
+    await prisma.tenant.updateMany({where:{status:{in:["PENDING","TRIAL","EXPIRED"]}},data:{status:"ACTIVE",trialStartsAt:null,trialExpiresAt:null,subscriptionPlan:null,subscriptionExpiresAt:null}});
     const tenants=await prisma.tenant.findMany({where:{document:{not:"00000000000000"}},include:tenantInclude,orderBy:{createdAt:"desc"}});return tenants.map(item=>this.publicTenant(item));
   }
 
@@ -123,16 +123,16 @@ export class TrialService {
     const tenant=await prisma.tenant.findUnique({where:{id}});if(!tenant)throw new BadRequestException("Conta não encontrada");
     const current=tenant.trialExpiresAt?.getTime()??Date.now(),base=days>0?Math.max(Date.now(),current):current,trialExpiresAt=new Date(base+days*86_400_000),status=trialExpiresAt.getTime()<=Date.now()?"EXPIRED":tenant.status==="EXPIRED"?"TRIAL":tenant.status;await prisma.tenant.update({where:{id},data:{trialExpiresAt,status}});await this.audit(id,"TRIAL_DAYS_ADJUSTED","Tenant",id,{trialExpiresAt:tenant.trialExpiresAt,status:tenant.status},{trialExpiresAt,status,days});return this.get(id);
   }
-  async approveTrial(id:string){const startsAt=new Date(),expiresAt=new Date(startsAt.getTime()+7*86_400_000);if(this.demoMode){const t=this.requireDemo(id);t.status="TRIAL";t.startsAt=startsAt.toISOString();t.expiresAt=expiresAt.toISOString();this.save();return this.publicDemo(t)}const tenant=await prisma.tenant.findUnique({where:{id},select:{status:true}});if(!tenant)throw new BadRequestException("Conta não encontrada");if(tenant.status!=="PENDING")throw new BadRequestException("Este cadastro não está aguardando aprovação");await prisma.tenant.update({where:{id},data:{status:"TRIAL",trialStartsAt:startsAt,trialExpiresAt:expiresAt}});await this.audit(id,"TRIAL_APPROVED","Tenant",id,{status:tenant.status},{status:"TRIAL",startsAt,expiresAt});return this.get(id)}
+  async approveTrial(id:string){return this.activate(id)}
   async assertLogin(id:string){if(this.demoMode){const t=this.trials.find(item=>item.tenantId===id);if(!t)return;this.refreshDemo(t);return this.assertStatus(t.status)}const tenant=await this.refreshDatabase(id);if(tenant)this.assertStatus(tenant.status)}
   async assertWritable(id:string){return this.assertLogin(id)}
 
-  private async refreshDatabase(id:string){const tenant=await prisma.tenant.findUnique({where:{id}});if(tenant?.status==="TRIAL"&&tenant.trialExpiresAt&&tenant.trialExpiresAt<=new Date())return prisma.tenant.update({where:{id},data:{status:"EXPIRED"}});if(tenant?.status==="ACTIVE"&&tenant.subscriptionExpiresAt&&tenant.subscriptionExpiresAt<=new Date())return prisma.tenant.update({where:{id},data:{status:"EXPIRED"}});return tenant}
-  private assertStatus(status:string){if(status==="PENDING")throw new HttpException("Seu cadastro foi recebido e aguarda liberação. Você será avisado assim que os 7 dias grátis forem ativados.",HttpStatus.FORBIDDEN);if(status==="EXPIRED")throw new HttpException("Seu período de teste terminou. Atualize seu plano para continuar.",HttpStatus.PAYMENT_REQUIRED);if(status==="SUSPENDED"||status==="CANCELLED")throw new HttpException("Conta suspensa. Entre em contato com o suporte.",HttpStatus.FORBIDDEN)}
+  private async refreshDatabase(id:string){const tenant=await prisma.tenant.findUnique({where:{id}});if(tenant&&["PENDING","TRIAL","EXPIRED"].includes(tenant.status))return prisma.tenant.update({where:{id},data:{status:"ACTIVE",trialStartsAt:null,trialExpiresAt:null,subscriptionPlan:null,subscriptionExpiresAt:null}});return tenant}
+  private assertStatus(status:string){if(status==="SUSPENDED"||status==="CANCELLED")throw new HttpException("Conta suspensa. Entre em contato com o suporte.",HttpStatus.FORBIDDEN)}
   private async audit(tenantId:string,action:string,resource:string,resourceId:string|null,before:unknown,after:unknown){const context=tenantContext.getStore();await prisma.auditLog.create({data:{tenantId,actorId:context?.userId,action,resource,resourceId,requestId:context?.requestId??randomUUID(),before:before as any,after:after as any}})}
-  private createDemo(input:TrialInput){if(this.trials.some(t=>t.user.email.toLowerCase()===input.email.toLowerCase()))throw new BadRequestException("Este e-mail já possui uma conta");const tenantId=randomUUID();const t:DemoTrial={tenantId,name:input.companyName,document:`TRIAL-${randomUUID()}`,state:input.state,city:input.city,segment:input.segment,phone:input.phone,logoDataUrl:input.logoDataUrl,branch:{name:"Matriz",state:input.state},status:"PENDING",limits:{users:2,branches:1,sales:200},user:{id:randomUUID(),tenantId,name:input.name,email:input.email.toLowerCase(),passwordHash:hashPassword(input.password),roles:["ADMIN"]}};this.trials.push(t);this.save();return this.publicDemo(t)}
-  private refreshDemo(t:DemoTrial){if(t.status==="TRIAL"&&t.expiresAt&&new Date(t.expiresAt)<=new Date()){t.status="EXPIRED";this.save()}}
+  private createDemo(input:TrialInput){if(this.trials.some(t=>t.user.email.toLowerCase()===input.email.toLowerCase()))throw new BadRequestException("Este e-mail já possui uma conta");const tenantId=randomUUID();const t:DemoTrial={tenantId,name:input.companyName,document:`FREE-${randomUUID()}`,state:input.state,city:input.city,segment:input.segment,phone:input.phone,logoDataUrl:input.logoDataUrl,branch:{name:"Matriz",state:input.state},status:"ACTIVE",limits:{users:2,branches:1,sales:200},user:{id:randomUUID(),tenantId,name:input.name,email:input.email.toLowerCase(),passwordHash:hashPassword(input.password),roles:["ADMIN"]}};this.trials.push(t);this.save();return this.publicDemo(t)}
+  private refreshDemo(t:DemoTrial){if(["PENDING","TRIAL","EXPIRED"].includes(t.status)){t.status="ACTIVE";t.startsAt=undefined;t.expiresAt=undefined;this.save()}}
   private requireDemo(id:string){const t=this.trials.find(item=>item.tenantId===id);if(!t)throw new BadRequestException("Conta não encontrada");return t}
-  private publicDemo(t:DemoTrial){const{passwordHash:_,...user}=t.user;return{...t,document:t.document.startsWith("TRIAL-")?"":t.document,user}}
-  private publicTenant(t:any){const user=t.users?.[0],branches=(t.branches??[]).map((branch:any)=>({id:branch.id,name:branch.name,state:branch.state})),branch=branches[0]??null;return{tenantId:t.id,name:t.name,document:String(t.document).startsWith("TRIAL-")?"":t.document,state:t.state,city:t.city,segment:t.segment,phone:t.phone,pixKey:t.pixKey,pixKeyType:t.pixKeyType,logoDataUrl:t.logoDataUrl,branch,branches,status:t.status,startsAt:t.trialStartsAt?.toISOString(),expiresAt:t.trialExpiresAt?.toISOString(),subscriptionPlan:t.subscriptionPlan,subscriptionExpiresAt:t.subscriptionExpiresAt?.toISOString(),limits:{users:2,branches:1,sales:200},user:user?{id:user.id,tenantId:user.tenantId,name:user.name,email:user.email,roles:user.roles.map((item:any)=>item.role.name)}:null}}
+  private publicDemo(t:DemoTrial){const{passwordHash:_,...user}=t.user;return{...t,document:t.document.startsWith("TRIAL-")||t.document.startsWith("FREE-")?"":t.document,user}}
+  private publicTenant(t:any){const user=t.users?.[0],branches=(t.branches??[]).map((branch:any)=>({id:branch.id,name:branch.name,state:branch.state})),branch=branches[0]??null;return{tenantId:t.id,name:t.name,document:String(t.document).startsWith("TRIAL-")||String(t.document).startsWith("FREE-")?"":t.document,state:t.state,city:t.city,segment:t.segment,phone:t.phone,pixKey:t.pixKey,pixKeyType:t.pixKeyType,logoDataUrl:t.logoDataUrl,branch,branches,status:t.status,startsAt:t.trialStartsAt?.toISOString(),expiresAt:t.trialExpiresAt?.toISOString(),subscriptionPlan:t.subscriptionPlan,subscriptionExpiresAt:t.subscriptionExpiresAt?.toISOString(),limits:{users:2,branches:1,sales:200},user:user?{id:user.id,tenantId:user.tenantId,name:user.name,email:user.email,roles:user.roles.map((item:any)=>item.role.name)}:null}}
 }

@@ -7,13 +7,13 @@ type Lang = "pt" | "en";
 
 const copy = {
   pt: {
-    welcome: "Olá! Sou o assistente do Venda+. Uso as informações oficiais do site para responder com clareza. Posso ajudar com o sistema, planos, teste grátis, pagamentos, biblioteca digital, livros, área de membros, segurança e suporte.",
+    welcome: "Olá! Sou o assistente do Venda+. Uso as informações oficiais do site para responder com clareza. Posso ajudar com o sistema, cadastro gratuito, recursos, biblioteca digital, livros, área de membros, segurança e suporte.",
     title: "Assistente Venda+",
     status: "Online • atendimento 24h",
-    plans: "Planos",
+    plans: "Cadastro gratuito",
     features: "Recursos",
     dashboards: "Painéis e gráficos",
-    trial: "Teste grátis",
+    trial: "Criar cadastro",
     support: "Suporte",
     library: "Biblioteca",
     members: "Área de membros",
@@ -25,13 +25,13 @@ const copy = {
     whatsappText: "Olá, preciso de ajuda sobre o Venda+.",
   },
   en: {
-    welcome: "Hi! I'm the Venda+ assistant. I use official website information to answer clearly. Ask me about the system, plans, free trial, payments, digital library, books, member area, security or support.",
+    welcome: "Hi! I'm the Venda+ assistant. I use official website information to answer clearly. Ask me about the system, free registration, features, digital library, books, member area, security or support.",
     title: "Venda+ Assistant",
     status: "Online • 24/7 assistance",
-    plans: "Plans",
+    plans: "Free registration",
     features: "Features",
     dashboards: "Dashboards and charts",
-    trial: "Free trial",
+    trial: "Create registration",
     support: "Support",
     library: "Library",
     members: "Member area",
@@ -53,7 +53,7 @@ const officialLinks: Record<string, { pt: string; en: string; external?: boolean
   "https://wa.me/5511978436640": { pt: "Abrir WhatsApp", en: "Open WhatsApp", external: true },
   "https://www.vendamais-app.com/biblioteca": { pt: "Abrir biblioteca", en: "Open library" },
   "https://www.vendamais-app.com/biblioteca/membros": { pt: "Abrir área de membros", en: "Open member area" },
-  "https://www.vendamais-app.com/teste": { pt: "Solicitar teste grátis", en: "Request free trial" },
+  "https://www.vendamais-app.com/teste": { pt: "Criar cadastro gratuito", en: "Create free registration" },
   "https://www.omega-ia.com": { pt: "Conhecer a Omega", en: "Meet Omega", external: true },
 };
 
@@ -83,12 +83,12 @@ function answer(question: string, lang: Lang) {
       : "O Venda+ tem uma Biblioteca Digital organizada por assunto: negócios, vendas e finanças; inteligência artificial e tecnologia; saúde e bem-estar; e espiritualidade, simbolismo e autoconhecimento.\n\nCada título mostra capa, páginas de prévia e quantidade de páginas. O PDF parte de R$ 7,90; as edições Kindle · EPUB usam o preço padrão de R$ 39,99 quando disponíveis. A disponibilidade varia por livro e o download é liberado após a aprovação do Mercado Pago.\n\nAbrir a biblioteca: https://www.vendamais-app.com/biblioteca";
   if (has("onde", "página", "pagina", "link", "site", "navegar", "navigation", "where"))
     return lang === "en"
-      ? "The official Venda+ pages are:\n\n• Free trial: https://www.vendamais-app.com/teste\n• Digital library: https://www.vendamais-app.com/biblioteca\n• Library Member Area: https://www.vendamais-app.com/biblioteca/membros\n\nYou can also tell me what you want to do and I will point you to the right page."
-      : "As páginas oficiais do Venda+ são:\n\n• Teste grátis: https://www.vendamais-app.com/teste\n• Biblioteca Digital: https://www.vendamais-app.com/biblioteca\n• Área de Membros da Biblioteca: https://www.vendamais-app.com/biblioteca/membros\n\nVocê também pode me dizer o que deseja fazer que eu indico a página certa.";
+      ? "The official Venda+ pages are:\n\n• Free registration: https://www.vendamais-app.com/teste\n• Digital library: https://www.vendamais-app.com/biblioteca\n• Library Member Area: https://www.vendamais-app.com/biblioteca/membros\n\nYou can also tell me what you want to do and I will point you to the right page."
+      : "As páginas oficiais do Venda+ são:\n\n• Cadastro gratuito: https://www.vendamais-app.com/teste\n• Biblioteca Digital: https://www.vendamais-app.com/biblioteca\n• Área de Membros da Biblioteca: https://www.vendamais-app.com/biblioteca/membros\n\nVocê também pode me dizer o que deseja fazer que eu indico a página certa.";
   if (has("anual", "annual", "semestral", "semiannual", "desconto", "discount", "parcela", "installment"))
     return lang === "en"
-      ? "Venda+ offers three billing periods for every plan:\n\n• MONTHLY: regular price and 30 days of access.\n• SEMIANNUAL: 20% off the total of 6 months and 180 days of access.\n• ANNUAL: 30% off the total of 12 months and 365 days of access.\n\nESSENTIAL: R$129 monthly, R$619.20 semiannual, or R$1,083.60 annual.\nPERFORMANCE: R$249 monthly, R$1,195.20 semiannual, or R$2,091.60 annual.\nSCALE: R$499 monthly, R$2,395.20 semiannual, or R$4,191.60 annual.\n\nPix, debit card and boleto charge the full selected period. For credit cards, Mercado Pago may offer up to 6 or 12 installments, subject to approval and account availability. This is not an automatic recurring subscription: the customer authorizes the payment."
-      : "O Venda+ oferece três períodos em todos os planos:\n\n• MENSAL: preço normal e 30 dias de acesso.\n• SEMESTRAL: 20% de desconto sobre 6 meses e 180 dias de acesso.\n• ANUAL: 30% de desconto sobre 12 meses e 365 dias de acesso.\n\nESSENCIAL: R$ 129 mensal, R$ 619,20 semestral ou R$ 1.083,60 anual.\nPERFORMANCE: R$ 249 mensal, R$ 1.195,20 semestral ou R$ 2.091,60 anual.\nESCALA: R$ 499 mensal, R$ 2.395,20 semestral ou R$ 4.191,60 anual.\n\nPix, débito e boleto cobram o total do período. No crédito, o Mercado Pago poderá oferecer até 6 ou 12 parcelas, conforme aprovação e disponibilidade. Não é assinatura recorrente automática: o cliente autoriza o pagamento.";
+      ? "Venda+ is currently available at no charge. Create your business registration and start using the system; there are no plans, billing periods, or subscription charges during this initial phase."
+      : "O Venda+ está disponível sem cobrança nesta fase inicial. Basta cadastrar sua empresa e começar a usar o sistema; não há planos, períodos de cobrança ou assinatura neste momento.";
   if (has("entrega", "delivery", "rota", "pedido atrasado", "motoboy"))
     return lang === "en"
       ? "The delivery preview addresses a common restaurant problem: knowing which orders are waiting, being prepared, on route or delivered. A configured workflow can show the customer, region, expected time, average delivery time, on-time percentage and orders that need immediate action.\n\nImportant: delivery tracking is a configurable workflow and is not yet part of the standard operational module. Our team must first understand your process before confirming its implementation."
@@ -113,30 +113,18 @@ function answer(question: string, lang: Lang) {
     return lang === "en"
       ? "Venda+ records technical visits to public pages for security and audience measurement, including IP address, date and time, page, source, device, browser, operating system, language, time zone and approximate location. This information is restricted to platform administration, is not sold and may be retained for up to 365 days. Requests for correction or deletion can be sent to https://wa.me/5511978436640."
       : "O Venda+ registra dados técnicos de acesso às páginas públicas para segurança e medição de audiência: IP, data e hora, página, origem, dispositivo, navegador, sistema, idioma, fuso e localização aproximada. Essas informações ficam restritas à administração, não são vendidas e podem ser mantidas por até 365 dias. Pedidos de correção ou exclusão podem ser enviados em https://wa.me/5511978436640.";
-  if (has("essencial", "essential", "129", "básico", "basico"))
+  if (has("essencial", "essential", "129", "performance", "249", "escala", "scale", "499", "premium", "plano", "plan", "preço", "preco", "valor", "price", "cost"))
     return lang === "en"
-      ? "ESSENTIAL — R$129/month\n\nThis is the entry plan for a business that wants to leave notebooks and scattered spreadsheets behind. You can register products, use the POS to record sales, track inventory, open and close the cash register, and see key indicators.\n\nSimple example: when the cashier sells 2 units of a product, the system records the sale and removes those 2 units from inventory.\n\nIt also includes secure team access and 24/7 support. It is a good starting point for a smaller or simpler operation."
-      : "ESSENCIAL — R$ 129 por mês\n\nÉ o plano de entrada para quem quer deixar de controlar o negócio em cadernos ou planilhas separadas. Você pode cadastrar produtos, usar o PDV para registrar vendas, acompanhar o estoque, abrir e fechar o caixa e consultar os principais números.\n\nExemplo simples: se o caixa vender 2 unidades de um produto, o sistema registra a venda e retira essas 2 unidades do estoque.\n\nTambém inclui acesso seguro para a equipe e suporte 24 horas. É um bom começo para uma operação menor ou mais simples.";
-  if (has("performance", "249", "médio", "medio", "professional"))
-    return lang === "en"
-      ? "PERFORMANCE — R$249/month\n\nDesigned for a growing business with a larger team or more management needs. In addition to daily sales, inventory and cash control, it helps organize users by responsibility, branches and administrative controls.\n\nExample: the cashier can focus on sales, the inventory employee can adjust balances, and the manager can follow the main indicators. Each person uses their own access.\n\nIt includes 24/7 support and is a good fit when the owner needs more visibility and organization."
-      : "PERFORMANCE — R$ 249 por mês\n\nFoi pensado para um negócio que está crescendo, tem uma equipe maior ou precisa de mais organização na gestão. Além de vendas, estoque e caixa, ajuda a separar usuários por responsabilidade, filiais e controles administrativos.\n\nExemplo: o caixa pode cuidar das vendas, a pessoa do estoque pode ajustar quantidades e o gerente pode acompanhar os principais números. Cada pessoa usa seu próprio acesso.\n\nInclui suporte 24 horas e é indicado quando o dono precisa enxergar e organizar melhor a operação.";
-  if (has("escala", "scale", "499", "premium", "rede", "franquia"))
-    return lang === "en"
-      ? "SCALE — R$499/month\n\nMade for operations with multiple teams, branches or plans to expand. Information from the operation is organized in one management structure, with users, permissions, branches, monitoring and administrative history.\n\nExample: instead of controlling every location in a different file, the administrator uses one platform and keeps each business environment properly separated.\n\nIt includes 24/7 support and is the best option for a more complex operation that needs room to grow."
-      : "ESCALA — R$ 499 por mês\n\nÉ voltado para operações com várias equipes, filiais ou planos de expansão. As informações ficam organizadas em uma estrutura central de gestão, com usuários, permissões, filiais, monitoramento e histórico administrativo.\n\nExemplo: em vez de controlar cada unidade em um arquivo diferente, o administrador usa uma única plataforma e mantém cada ambiente devidamente separado.\n\nInclui suporte 24 horas e é a opção mais indicada para uma operação mais complexa e preparada para crescer.";
-  if (has("preço", "preco", "valor", "plano", "plan", "price", "cost"))
-    return lang === "en"
-      ? "We offer ESSENTIAL at R$129/month, PERFORMANCE at R$249/month and SCALE at R$499/month. Every plan includes 24/7 support and can be paid monthly, semiannually with 20% off, or annually with 30% off. There is also a free 7-day trial with no payment required to register. Ask me about annual or semiannual pricing and I will show every total."
-      : "Temos o ESSENCIAL por R$ 129/mês, PERFORMANCE por R$ 249/mês e ESCALA por R$ 499/mês. Todos incluem suporte 24 horas e podem ser pagos mensalmente, no semestral com 20% de desconto ou no anual com 30% de desconto. O teste de 7 dias é gratuito e não exige pagamento no cadastro. Pergunte pelos valores anuais ou semestrais que eu mostro todos os totais.";
+      ? "Venda+ is available at no charge during this initial phase. Create your business registration to use the system; there are no plans or subscription fees at this time."
+      : "O Venda+ está disponível sem cobrança nesta fase inicial. Crie o cadastro da sua empresa para usar o sistema; não há planos nem assinatura neste momento.";
   if (has("teste", "grátis", "gratis", "trial", "free", "cadastro", "cadastrar", "cnpj", "register", "signup"))
     return lang === "en"
-      ? "The free trial lasts 7 days. First, you complete a simple registration with your business and account owner information. The Venda+ team reviews and approves the request.\n\nThe 7 days only start after approval, so you do not lose trial time while waiting. During the trial, you can learn the interface, register products, organize initial settings and test the daily operation before choosing a plan."
-      : "O teste gratuito dura 7 dias e o cadastro não exige CNPJ nem pagamento. Você informa os dados básicos da empresa e da pessoa responsável. A equipe do Venda+ analisa e libera o acesso.\n\nOs 7 dias só começam depois da liberação. Quando terminam, o acesso é bloqueado até a confirmação do pagamento de um plano. Durante o teste, você pode conhecer as telas, cadastrar produtos, organizar as configurações iniciais e experimentar a operação.";
+      ? "Registration is free during this initial phase. Fill in your business and account owner details, create your password and sign in with the same email and password to start using Venda+."
+      : "O cadastro é gratuito nesta fase inicial. Informe os dados da empresa e do responsável, crie sua senha e entre com o mesmo e-mail e senha para começar a usar o Venda+.";
   if (has("suporte", "atendimento", "ajuda", "support", "help", "24"))
     return lang === "en"
-      ? "24/7 support is included in every plan. This means you can ask for guidance at any time when you have a question about using the platform or an important operational situation.\n\nThe goal is to help people who are not technology experts. Guidance should be clear, step by step and aligned with the way your business works."
-      : "O suporte 24 horas está incluído em todos os planos. Isso significa que você pode pedir orientação a qualquer momento quando tiver dúvida sobre o uso da plataforma ou enfrentar uma situação importante na operação.\n\nA proposta é ajudar também quem não entende muito de tecnologia. A orientação deve ser clara, passo a passo e alinhada à forma como o seu negócio trabalha.";
+      ? "24/7 support is available to help with questions about the platform or important operational situations. Guidance is clear, step by step and aligned with the way your business works."
+      : "O suporte 24 horas está disponível para ajudar com dúvidas sobre a plataforma ou situações importantes da operação. A orientação é clara, passo a passo e alinhada à forma como o seu negócio trabalha.";
   if (has("recurso", "funcionalidade", "função", "funcao", "feature", "function", "serviço", "servico", "service"))
     return lang === "en"
       ? "Venda+ organizes the main parts of the operation in one place:\n\n• POS: the screen used to record a sale.\n• Products: names, prices and other product information.\n• Inventory: how many units are available, plus entries, losses and adjustments.\n• Cash control: opening, sales, deposits, withdrawals and closing.\n• Dashboards: a simple view of revenue, sales, products and stock units.\n• Users: individual access and permissions for each responsibility.\n• Branches: organization of different locations.\n• Administrative history: a record of important management changes.\n\nThe system runs on desktop, tablet and mobile, with 24/7 support."
@@ -159,15 +147,15 @@ function answer(question: string, lang: Lang) {
       : "O Venda+ pode ser alinhado a diferentes tipos de operação:\n\n• Restaurantes e adegas: vendas, produtos, estoque e caixa.\n• Pizzarias: cardápio por tamanhos, sabores, massas, bordas, adicionais e regras de preço.\n• Lojas e materiais para construção: catálogo amplo, quantidades, preços e diferentes funcionários.\n• Advogados e contratos: organização de serviços, responsáveis, recebimentos e acessos.\n• Consultórios: serviços, recebimentos, equipe e unidades em um ambiente centralizado.\n• Locadoras de veículos: cadastros, cobranças, responsáveis e filiais adaptados ao processo da operação.\n\nA ideia simples é a mesma para todos: centralizar informações, definir quem pode acessar e facilitar o controle do dia a dia.";
   if (has("pagamento", "pix", "cartão", "cartao", "boleto", "payment", "card"))
     return lang === "en"
-      ? "Venda+ payments are sent to Mercado Pago's secure environment. Customers can use Pix, credit card, debit card or boleto, depending on account availability.\n\nMonthly payments release 30 days, semiannual payments release 180 days and annual payments release 365 days. Access is activated only after Mercado Pago confirms an approved payment. Pix, debit and boleto charge the full period; installments may be available for credit cards, subject to approval. Venda+ never asks for card details in this chat."
-      : "O pagamento do Venda+ é direcionado para o ambiente seguro do Mercado Pago. O cliente pode escolher Pix, crédito, débito ou boleto conforme a disponibilidade da conta.\n\nMensal libera 30 dias, semestral libera 180 e anual libera 365. A conta só é ativada depois que o Mercado Pago confirma o pagamento como aprovado. Pix, débito e boleto cobram o total do período; parcelamento é uma possibilidade do cartão de crédito, sujeito à aprovação. O Venda+ não pede dados do cartão por este chat.";
+      ? "There is no charge to register or use Venda+ during this initial phase. Payment methods such as Pix can still be used by a business inside its own sales operation when its Mercado Pago integration is configured. Venda+ never asks for card details in this chat."
+      : "Não há cobrança para cadastrar ou usar o Venda+ nesta fase inicial. Formas de pagamento como Pix continuam podendo ser usadas pelo comércio na própria operação de vendas, quando a integração com Mercado Pago estiver configurada. O Venda+ não pede dados de cartão por este chat.";
   if (has("celular", "mobile", "tablet", "computador", "browser", "navegador"))
     return lang === "en"
       ? "Venda+ runs in the internet browser, such as Chrome, Safari or Edge. There is no program to install for normal use.\n\nOn a computer, the system uses the larger screen to display more information. On a phone or tablet, menus and content reorganize themselves to fit the smaller screen. The same account can be used according to the employee's permission."
       : "O Venda+ funciona no navegador de internet, como Chrome, Safari ou Edge. Não é necessário instalar um programa para o uso normal.\n\nNo computador, o sistema aproveita a tela maior para mostrar mais informações. No celular ou tablet, os menus e conteúdos se reorganizam para caber na tela menor. A mesma conta pode ser usada de acordo com a permissão do funcionário.";
   return lang === "en"
-    ? "I don't have reliable information about that in the official Venda+ content, so I won't invent an answer. I can help with plans, the system, free trial, payments, digital library, books, member area, security and support. For a specific question, speak to our team on WhatsApp.\n\nOpen WhatsApp: https://wa.me/5511978436640"
-    : "Não encontrei uma informação confiável sobre isso no conteúdo oficial do Venda+, então não vou inventar uma resposta. Posso ajudar com planos, sistema, teste grátis, pagamentos, biblioteca digital, livros, área de membros, segurança e suporte. Para uma questão específica, fale com nossa equipe pelo WhatsApp.\n\nAbrir WhatsApp: https://wa.me/5511978436640";
+    ? "I don't have reliable information about that in the official Venda+ content, so I won't invent an answer. I can help with free registration, the system, payments, digital library, books, member area, security and support. For a specific question, speak to our team on WhatsApp.\n\nOpen WhatsApp: https://wa.me/5511978436640"
+    : "Não encontrei uma informação confiável sobre isso no conteúdo oficial do Venda+, então não vou inventar uma resposta. Posso ajudar com cadastro gratuito, sistema, pagamentos, biblioteca digital, livros, área de membros, segurança e suporte. Para uma questão específica, fale com nossa equipe pelo WhatsApp.\n\nAbrir WhatsApp: https://wa.me/5511978436640";
 }
 
 export function ChatAssistant() {

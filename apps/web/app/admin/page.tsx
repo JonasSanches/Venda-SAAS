@@ -135,21 +135,6 @@ export default function Admin() {
     const reference=prompt("Referência do Pix (opcional):")??undefined;
     try{await call(`/platform/qr-payouts/${id}/paid`,{reference});setMessage("Repasse marcado como pago.");await load()}catch(cause){setError((cause as Error).message)}
   }
-  async function extend(id: string) {
-    const value = prompt(
-      "Ajuste os dias do teste. Use um número positivo para acrescentar ou negativo para retirar (ex.: 7 ou -3).",
-      "7",
-    );
-    if (value === null) return;
-    const days = Number(value);
-    if (Number.isInteger(days) && days !== 0 && days >= -365 && days <= 365) {
-      await call(`/platform/trials/${id}/extend`, { days });
-      await load();
-      if (detail?.tenantId === id) await openDetail(id);
-      return;
-    }
-    alert("Informe um número inteiro de -365 a 365, exceto zero.");
-  }
   async function openLiveView(tenantId:string){
     const tab=window.open("about:blank","_blank");
     if(!tab){setError("O navegador bloqueou a nova aba. Autorize pop-ups para abrir a visualização.");return;}
@@ -338,7 +323,7 @@ export default function Admin() {
       </section>
       <section className="analytics-admin" id="visitas">
         {analyticsError&&<div className="error">Não foi possível carregar as visitas: {analyticsError}</div>}
-        <div className="analytics-title"><div><small>INTELIGÊNCIA DE ACESSO</small><h2>Painel de visitantes</h2><p>Visitas à página pública, teste gratuito e pagamento · horário de Brasília.</p></div><div><select value={analyticsDays} onChange={e=>{const days=Number(e.target.value);setAnalyticsDays(days);void loadAnalytics(days,1)}}><option value={7}>Últimos 7 dias</option><option value={30}>Últimos 30 dias</option><option value={90}>Últimos 90 dias</option><option value={365}>Último ano</option></select><button className="secondary" disabled={analyticsLoading} onClick={()=>void loadAnalytics(analyticsDays,analytics?.pagination.page??1)}>{analyticsLoading?"Atualizando...":"Atualizar"}</button></div></div>
+        <div className="analytics-title"><div><small>INTELIGÊNCIA DE ACESSO</small><h2>Painel de visitantes</h2><p>Visitas à página pública e ao cadastro · horário de Brasília.</p></div><div><select value={analyticsDays} onChange={e=>{const days=Number(e.target.value);setAnalyticsDays(days);void loadAnalytics(days,1)}}><option value={7}>Últimos 7 dias</option><option value={30}>Últimos 30 dias</option><option value={90}>Últimos 90 dias</option><option value={365}>Último ano</option></select><button className="secondary" disabled={analyticsLoading} onClick={()=>void loadAnalytics(analyticsDays,analytics?.pagination.page??1)}>{analyticsLoading?"Atualizando...":"Atualizar"}</button></div></div>
         <div className="analytics-metrics"><article><small>VISITAS NO PERÍODO</small><strong>{analytics?.summary.total??0}</strong></article><article><small>VISITANTES ÚNICOS</small><strong>{analytics?.summary.uniqueVisitors??0}</strong></article><article><small>VISITAS HOJE</small><strong>{analytics?.summary.today??0}</strong></article></div>
         <div className="analytics-chart"><h3>Volume diário</h3><div>{analytics?.daily.length?analytics.daily.map(item=>{const max=Math.max(...analytics.daily.map(day=>day.visits),1);return <span key={item.day} title={`${item.day}: ${item.visits} visita(s)`}><i style={{height:`${Math.max(8,item.visits/max*100)}%`}}></i><small>{item.day.slice(5).replace("-","/")}</small></span>}):<p>Nenhuma visita registrada no período.</p>}</div></div>
         <div className="analytics-table-card"><div><h3>Acessos recentes</h3><p>{analytics?.pagination.total??0} visitante(s) no período · uma linha por IP</p></div><div className="analytics-table"><table><thead><tr><th>Último acesso</th><th>IP</th><th>Dispositivo</th><th>Páginas acessadas</th><th>Localidade aproximada</th><th>Origem</th></tr></thead><tbody>{analytics?.visits.map(visit=>{const location=[visit.city,visit.region,visit.country,visit.timezone].filter(Boolean).join(" · ");return <tr key={visit.id}><td>{new Date(visit.visitedAt).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})}</td><td><code>{visit.ipAddress||"—"}</code></td><td>{visit.device||visit.platform||"—"}<small>{[visit.browser,visit.operatingSystem,visit.language].filter(Boolean).join(" · ")}</small></td><td className="analytics-paths">{visit.paths.length?visit.paths.join("; "):visit.path.split("?")[0]}<small>{visit.pageViews} acesso(s) contabilizado(s)</small></td><td>{location||"Não informada"}</td><td className="analytics-referrer">{visit.referrer||"Acesso direto"}</td></tr>})}</tbody></table>{!analytics?.visits.length&&<p className="analytics-empty">Nenhum acesso encontrado.</p>}</div>
@@ -356,16 +341,8 @@ export default function Admin() {
           <strong>{items.length}</strong>
         </article>
         <article>
-          <span>Em teste</span>
-          <strong>{items.filter((x) => x.status === "TRIAL").length}</strong>
-        </article>
-        <article>
-          <span>Ativos</span>
+          <span>Cadastros ativos</span>
           <strong>{items.filter((x) => x.status === "ACTIVE").length}</strong>
-        </article>
-        <article>
-          <span>Expirados</span>
-          <strong>{items.filter((x) => x.status === "EXPIRED").length}</strong>
         </article>
         <article>
           <span>Aguardando aprovação</span>
@@ -396,41 +373,13 @@ export default function Admin() {
               <br />
               {t.phone}
             </p>
-            <small>
-              Vencimento:{" "}
-              {t.expiresAt
-                ? new Date(t.expiresAt).toLocaleDateString("pt-BR")
-                : "—"}
-            </small>
-            {t.status !== "PENDING" && (
-              <button onClick={() => extend(t.tenantId)}>Ajustar dias de teste</button>
-            )}
+            <small>{t.status === "ACTIVE" ? "Cadastro ativo · acesso gratuito" : `Situação: ${t.status}`}</small>
             <button
               className="secondary"
               onClick={() => openDetail(t.tenantId)}
             >
               Gerenciar cliente
             </button>
-            {t.status !== "ACTIVE" && t.status !== "PENDING" && (
-              <button
-                onClick={async () => {
-                  await call(`/platform/trials/${t.tenantId}/activate`, {});
-                  await load();
-                }}
-              >
-                Ativar plano
-              </button>
-            )}
-            {t.status === "PENDING" && (
-              <button
-                onClick={async () => {
-                  await call(`/platform/trials/${t.tenantId}/approve`, {});
-                  await load();
-                }}
-              >
-                Liberar 7 dias grátis
-              </button>
-            )}
           </article>
         ))}
       </div>
@@ -471,15 +420,7 @@ export default function Admin() {
                 <strong>{detail.status}</strong>
               </div>
               <div>
-                <small>Início do teste</small>
-                <strong>{date(detail.startsAt)}</strong>
-              </div>
-              <div>
-                <small>Vencimento</small>
-                <strong>{date(detail.expiresAt)}</strong>
-              </div>
-              <div>
-                <small>Limites do teste</small>
+                <small>Limites do cadastro</small>
                 <strong>
                   {detail.limits?.users ?? "—"} usuários ·{" "}
                   {detail.limits?.branches ?? "—"} filial
@@ -540,27 +481,14 @@ export default function Admin() {
             <h3>Controle da conta</h3>
             <div className="account-controls">
               <button className="secondary" onClick={() => openLiveView(detail.tenantId)}>Ver sistema ao vivo</button>
-              <a className="payment-link" href={`/pagamento?cliente=${detail.tenantId}`} target="_blank" rel="noopener noreferrer">Gerar pagamento</a>
               <button onClick={() => changeClientStatus("ACTIVE")}>
                 Ativar conta
-              </button>
-              <button
-                className="secondary"
-                onClick={() => changeClientStatus("TRIAL")}
-              >
-                Voltar para teste
               </button>
               <button
                 className="danger"
                 onClick={() => changeClientStatus("SUSPENDED")}
               >
                 Suspender acesso
-              </button>
-              <button
-                className="secondary"
-                onClick={() => extend(detail.tenantId)}
-              >
-                Ajustar dias de teste
               </button>
             </div>
             <h3>Filiais</h3>
@@ -669,8 +597,8 @@ const auditLabel = (action: string) =>
     PASSWORD_RESET: "Senha provisória redefinida",
     USER_STATUS_CHANGED: "Situação do usuário alterada",
     USER_ROLE_CHANGED: "Perfil do usuário alterado",
-    TRIAL_EXTENDED: "Período de teste estendido",
-    TRIAL_APPROVED: "Teste gratuito aprovado",
+    TRIAL_EXTENDED: "Acesso gratuito atualizado",
+    TRIAL_APPROVED: "Cadastro ativado",
   })[action] ?? action;
 const surveyAnswerLabels:Record<string,string>={priority:"Principais prioridades",problem:"Principal problema",manual:"Controles manuais atuais",users:"Quantidade de usuários",branches:"Unidades ou filiais",dashboard:"Informações desejadas no painel",mobile:"Importância do acesso móvel",automation:"Automações desejadas",support:"Suporte preferido",reason:"Motivo para trocar de sistema",budget:"Valor mensal considerado adequado",essential:"Função indispensável"};
 const surveyAnswerLabel=(key:string)=>surveyAnswerLabels[key]??key;

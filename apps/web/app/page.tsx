@@ -3,7 +3,6 @@ import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { OmegaCredit } from "./omega-credit";
 import { ErpSurvey } from "./erp-survey";
 import { BrandName } from "./brand-name";
-import { Pricing } from "./pricing";
 import { GarmentStudio } from "./garment-studio";
 import { TransportationRecovery } from "./transportation-recovery";
 import { Pizzeria } from "./pizzeria";
@@ -143,27 +142,6 @@ function MobileScannerPair({token,onRead,onClose}:{token:string;onRead:(code:str
   useEffect(()=>{if(!pair)return;let active=true;const poll=async()=>{try{const data=await request<{events:{code:string}[];cursor:number}>(`/scanner/sessions/${pair.id}/events?cursor=${cursor.current}`,token);cursor.current=data.cursor;data.events.forEach(event=>onRead(event.code))}catch(cause){if(active)setError((cause as Error).message)}};void poll();const timer=window.setInterval(()=>void poll(),900);return()=>{active=false;window.clearInterval(timer)}},[pair,token,onRead]);
   return <div className="scanner-backdrop" role="dialog" aria-modal="true" aria-label="Conectar celular como leitor"><div className="scanner-modal mobile-pair-modal"><div className="scanner-heading"><div><small>CELULAR COMO LEITOR</small><h2>Leia o QR Code com o celular</h2></div><button type="button" className="secondary" onClick={onClose}>Fechar</button></div>{pair?<><canvas ref={canvasRef} className="mobile-pair-qr"/><p>Abra a câmera do celular, escaneie este QR Code e use a câmera do celular como pistola. Cada leitura será enviada ao PDV deste computador.</p><small>Conexão temporária até {dateTime(pair.expiresAt)}.</small></>:<p>Gerando conexão segura…</p>}{error&&<div className="error">{error}</div>}</div></div>
 }
-function trialDays(expiresAt?: string) {
-  if (!expiresAt) return null;
-  const end = new Date(expiresAt).getTime();
-  if (!Number.isFinite(end)) return null;
-  return Math.max(0, Math.ceil((end - Date.now()) / 86_400_000));
-}
-function TrialRemaining({
-  status,
-  expiresAt,
-}: {
-  status?: string;
-  expiresAt?: string;
-}) {
-  const days = trialDays(expiresAt);
-  if (status !== "TRIAL" || days === null) return null;
-  return (
-    <strong className="trial-remaining">
-      Você ainda tem {days} {days === 1 ? "dia grátis" : "dias grátis"}.
-    </strong>
-  );
-}
 function MenuIcon({ name }: { name: string }) {
   const common = { width: 17, height: 17, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, "aria-hidden": true };
   if (name === "Visão geral") return <svg {...common}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>;
@@ -270,15 +248,6 @@ export default function Home() {
       <Login
         onLogin={(value) => {
           localStorage.setItem("varejo-session", JSON.stringify(value));
-          if (
-            value.tenant.status === "TRIAL" &&
-            !localStorage.getItem(
-              `varejo-onboarding-seen:${value.tenant.tenantId}`,
-            )
-          ) {
-            location.href = "/onboarding";
-            return;
-          }
           setSession(value);
         }}
       />
@@ -333,10 +302,6 @@ export default function Home() {
           <div>
             <div className="environment-line">
               <small>AMBIENTE DE DEMONSTRAÇÃO</small>
-              <TrialRemaining
-                status={session.tenant.status}
-                expiresAt={session.tenant.expiresAt}
-              />
             </div>
             <h1>{page}</h1>
           </div>
@@ -569,10 +534,9 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <a href="#recursos">Recursos</a>
           <a href="#segmentos">Para quem é</a>
           <a href="#como-funciona">Como funciona</a>
-          <a href="#planos">Planos</a>
           <a href="#suporte">Suporte 24h</a>
           <a href="/biblioteca">Livros digitais</a>
-          <a href="/teste">Teste grátis</a>
+          <a href="/teste">Cadastro grátis</a>
           <a className="header-login" href="#entrar">
             Entrar
           </a>
@@ -596,12 +560,11 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
             <li><strong>Gerencie de qualquer lugar:</strong> computador ou celular</li>
           </ul>
           <div className="free-trial-call">
-            <strong>Experimente grátis por 7 dias</strong>
+            <strong>Comece gratuitamente</strong>
             <span>
-              Cadastre sua empresa sem compromisso. Após nossa liberação, seus 7
-              dias começam a contar.
+              Cadastre sua empresa e comece a organizar sua operação, sem cobrança.
             </span>
-            <a href="/teste">Quero testar grátis</a>
+            <a href="/teste">Criar meu cadastro</a>
           </div>
           <div className="support-call" id="suporte">
             <span>24h</span>
@@ -645,12 +608,12 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           </button>
           <small>
             Ainda não tem acesso?{" "}
-            <a href="/teste">Solicite seus 7 dias grátis.</a>
+            <a href="/teste">Crie seu cadastro gratuito.</a>
           </small>
         </form>
       </div>
       <section className="trust-strip" aria-label="Principais vantagens">
-        <span><b>7 dias grátis</b> para conhecer</span>
+        <span><b>Cadastro gratuito</b> para começar</span>
         <span><b>Dados separados</b> por empresa</span>
         <span><b>Suporte 24h</b> para sua operação</span>
         <span><b>Acesso responsivo</b> no celular e computador</span>
@@ -729,7 +692,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           </article>
         </div>
         <small className="showcase-data-note">Dados demonstrativos para exemplificar a leitura dos painéis. O fluxo de entregas é configurável e ainda não integra o módulo operacional padrão.</small>
-        <div className="showcase-cta"><div><strong>Não é apenas um sistema. É uma visão mais clara da sua empresa.</strong><span>Teste com seus próprios produtos, equipe e rotina durante 7 dias.</span></div><a href="/teste">Quero ver funcionando</a></div>
+        <div className="showcase-cta"><div><strong>Não é apenas um sistema. É uma visão mais clara da sua empresa.</strong><span>Cadastre sua empresa e comece com seus próprios produtos, equipe e rotina.</span></div><a href="/teste">Criar cadastro gratuito</a></div>
       </section>
       <section className="segment-section" id="segmentos" aria-labelledby="segment-title">
         <div className="section-heading"><small>FEITO PARA QUEM VENDE TODOS OS DIAS</small><h2 id="segment-title">Varejo e personalizados prontos para operar. Novos segmentos em expansão.</h2><p>Hoje, o Venda+ atende operações de venda, produtos, estoque, caixa, equipe e filiais. Os segmentos marcados como em expansão receberão módulos próprios de CRM, propostas, agenda e processos especializados.</p></div>
@@ -755,15 +718,14 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       </section>
       <section className="control-highlight">
         <div><small>CONTROLE SEM PRENDER VOCÊ AO BALCÃO</small><h2>Veja sua operação de onde estiver.</h2><p>Separe usuários por função, administre filiais e consulte os principais indicadores em uma interface preparada para computador, tablet e celular.</p><ul><li>Administrador, gerente, caixa e estoque com acessos próprios</li><li>Dados e configurações isolados para cada empresa</li><li>Histórico de alterações administrativas</li><li>Monitoramento e suporte 24 horas</li></ul></div>
-        <aside><span>PAINEL EM TEMPO REAL</span><strong>Vendas + Estoque + Caixa</strong><p>Uma visão centralizada reduz conferências manuais e ajuda a identificar diferenças antes que elas cresçam.</p><a href="/teste">Começar meus 7 dias grátis</a></aside>
+        <aside><span>PAINEL EM TEMPO REAL</span><strong>Vendas + Estoque + Caixa</strong><p>Uma visão centralizada reduz conferências manuais e ajuda a identificar diferenças antes que elas cresçam.</p><a href="/teste">Criar cadastro gratuito</a></aside>
       </section>
-      <Pricing />
       <ErpSurvey />
       <section className="public-faq" aria-labelledby="faq-title">
         <div className="section-heading"><small>PERGUNTAS FREQUENTES</small><h2 id="faq-title">Comece com tranquilidade.</h2></div>
-        <div><details open><summary>Preciso instalar alguma coisa?</summary><p>Não. O Venda+ funciona pelo navegador no computador, tablet ou celular.</p></details><details><summary>Quando começam os 7 dias grátis?</summary><p>Depois do seu cadastro ser analisado e liberado, o período de teste começa a contar.</p></details><details><summary>Meus dados ficam misturados com os de outra empresa?</summary><p>Não. Cada empresa possui ambiente, usuários, dados e configurações independentes.</p></details><details><summary>Consigo controlar quem acessa o sistema?</summary><p>Sim. Você cria usuários e define funções como administrador, gerente, caixa ou estoque.</p></details></div>
+        <div><details open><summary>Preciso instalar alguma coisa?</summary><p>Não. O Venda+ funciona pelo navegador no computador, tablet ou celular.</p></details><details><summary>O cadastro é gratuito?</summary><p>Sim. Nesta fase inicial, basta cadastrar sua empresa para começar a usar o sistema.</p></details><details><summary>Meus dados ficam misturados com os de outra empresa?</summary><p>Não. Cada empresa possui ambiente, usuários, dados e configurações independentes.</p></details><details><summary>Consigo controlar quem acessa o sistema?</summary><p>Sim. Você cria usuários e define funções como administrador, gerente, caixa ou estoque.</p></details></div>
       </section>
-      <section className="final-cta"><small>PRONTO PARA ORGANIZAR SUA OPERAÇÃO?</small><h2>Teste o Venda+ gratuitamente por 7 dias.</h2><p>Cadastre sua empresa sem compromisso e conheça o sistema com acompanhamento da nossa equipe.</p><a href="/teste">Quero testar o Venda+</a><span>Sem cobrança para solicitar o teste.</span></section>
+      <section className="final-cta"><small>PRONTO PARA ORGANIZAR SUA OPERAÇÃO?</small><h2>Cadastre sua empresa gratuitamente.</h2><p>Comece a usar o Venda+ com sua empresa, equipe e rotina.</p><a href="/teste">Criar cadastro gratuito</a><span>Sem cobrança nesta fase inicial.</span></section>
       <footer className="public-footer">
         <div>
           <strong>
@@ -775,7 +737,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <strong>Recursos</strong>
           <a href="#recursos">PDV e estoque</a>
           <a href="#como-funciona">Como funciona</a>
-          <a href="/teste">Teste grátis</a>
+          <a href="/teste">Cadastro grátis</a>
           <a href="/biblioteca">Biblioteca digital</a>
         </div>
         <div>
