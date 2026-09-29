@@ -318,7 +318,7 @@ export default function Admin() {
         </form>
       )}
       <section className="survey-admin" id="repasses-pix">
-        <div className="survey-admin-title"><div><small>FINANCEIRO · MENU DIGITAL</small><h2>Repasses Pix pendentes</h2><p>{payouts.length} venda(s) aguardando seu Pix. A comissão de 12% já foi separada.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar</button></div>
+        <div className="survey-admin-title"><div><small>FINANCEIRO · MENU DIGITAL POR QRCODE</small><h2>Repasses Pix pendentes</h2><p>{payouts.length} venda(s) aguardando seu Pix. A comissão de 12% já foi separada.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar</button></div>
         <div className="analytics-table-card"><div className="analytics-table"><table><thead><tr><th>Cliente</th><th>Chave Pix</th><th>Venda</th><th>Comissão</th><th>Enviar</th><th></th></tr></thead><tbody>{payouts.map(payout=><tr key={payout.id}><td><strong>{payout.company}</strong><small>{payout.phone||"—"} · compra: {payout.buyerName}</small></td><td>{payout.pixKey?<><code>{payout.pixKey}</code><small>{payout.pixKeyType||"Tipo não informado"}</small></>:<strong className="error-text">Chave não cadastrada</strong>}</td><td>{money(payout.total)}</td><td>{money(payout.commission)}</td><td><strong>{money(payout.amount)}</strong></td><td><button disabled={!payout.pixKey} onClick={()=>void markPayoutPaid(payout.id)}>Marcar pago</button></td></tr>)}</tbody></table>{!payouts.length&&<p className="analytics-empty">Nenhum repasse Pix pendente.</p>}</div></div>
       </section>
       <section className="analytics-admin" id="visitas">
@@ -472,7 +472,7 @@ export default function Admin() {
                   <option value="RETAIL">Loja</option>
                   <option value="APPAREL_CUSTOMIZATION">Confecção e personalizados</option>
                   <option value="TRANSPORTATION">Transportadora</option>
-                  <option value="QR_SALES">Menu Digital</option>
+                  <option value="QR_SALES">Menu Digital por QRCode</option>
                 </select>
               </label>
               <button>Salvar alterações</button>
@@ -585,7 +585,7 @@ export default function Admin() {
 const date = (value?: string) =>
   value ? new Date(value).toLocaleString("pt-BR") : "—";
 const segmentName = (value?: string) =>
-  ({ RESTAURANT: "Restaurante", PIZZERIA: "Pizzaria", WINERY: "Adega", RETAIL: "Loja", APPAREL_CUSTOMIZATION: "Confecção e personalizados", TRANSPORTATION: "Transportadora", QR_SALES: "Menu Digital" })[
+  ({ RESTAURANT: "Restaurante", PIZZERIA: "Pizzaria", WINERY: "Adega", RETAIL: "Loja", APPAREL_CUSTOMIZATION: "Confecção e personalizados", TRANSPORTATION: "Transportadora", QR_SALES: "Menu Digital por QRCode" })[
     value ?? ""
   ] ??
   value ??

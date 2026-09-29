@@ -90,7 +90,7 @@ export default function Trial() {
               <option value="RETAIL">Loja/varejo</option>
               <option value="APPAREL_CUSTOMIZATION">Confecção e personalizados</option>
               <option value="TRANSPORTATION">Transportadora</option>
-              <option value="QR_SALES">Menu Digital</option>
+              <option value="QR_SALES">Menu Digital por QRCode</option>
             </select>
           </label>
           <label>

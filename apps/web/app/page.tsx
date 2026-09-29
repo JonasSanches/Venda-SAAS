@@ -208,7 +208,7 @@ export default function Home() {
     if (session && !isPlatformAdmin) void refresh(session);
   }, [session, isPlatformAdmin, refresh]);
   useEffect(() => {
-    if (session?.tenant.segment === "QR_SALES" && page === "Visão geral") setPage("Menu Digital");
+    if (session?.tenant.segment === "QR_SALES" && page === "Visão geral") setPage("Menu Digital por QRCode");
   }, [session?.tenant.segment, page]);
   useEffect(() => {
     if (!session?.accessToken || isPlatformAdmin) return;
@@ -333,7 +333,7 @@ export default function Home() {
           <EmailMarketing token={session.accessToken} />
         ) : page === "Transcrições de vídeo" ? (
           <VideoTranscripts token={session.accessToken} />
-        ) : page === "Menu Digital" ? (
+        ) : page === "Menu Digital por QRCode" ? (
           <QrSales token={session.accessToken} />
         ) : page === "Estúdio de moldes" ? (
           <GarmentStudio onSave={async (input) => {
@@ -392,8 +392,8 @@ function QrStorefrontSettings({token,onProfile}:{token:string;onProfile:()=>void
   const options=[{id:"ACAI",name:"Açaí",note:"Roxo energético, fresco e vibrante"},{id:"SNACKS",name:"Lanches & porções",note:"Laranja quente, fome e agilidade"},{id:"SKATE",name:"Skate",note:"Urbano, escuro e ousado"},{id:"FRUITS",name:"Frutas",note:"Natural, leve e colorido"}] as const;
   const [selected,setSelected]=useState<typeof options[number]["id"]>("ACAI"),[message,setMessage]=useState(""),[error,setError]=useState("");
   useEffect(()=>{request<{template:typeof selected}>("/qr-checkout/storefront-settings",token).then(data=>setSelected(data.template)).catch(cause=>setError((cause as Error).message))},[token]);
-  async function save(){try{await request("/qr-checkout/storefront-settings",token,{method:"POST",body:JSON.stringify({template:selected})});setMessage("Visual do Menu Digital salvo. Todos os QR Codes ativos usarão este modelo.");setError("")}catch(cause){setError((cause as Error).message)}}
-  return <section className="qr-storefront-settings"><button type="button" className="settings-profile-link" onClick={onProfile}><span><small>CONTA E ACESSO</small><strong>Meu perfil</strong><em>Empresa, filial, senha e sessão</em></span><b>→</b></button><header><small>MENU DIGITAL</small><h2>Visual da vitrine</h2><p>Escolha como seus produtos aparecem para o comprador. A alteração vale para todos os QR Codes ativos.</p></header><div className="storefront-options">{options.map(option=><button type="button" key={option.id} className={`storefront-option ${option.id.toLowerCase()} ${selected===option.id?"selected":""}`} onClick={()=>setSelected(option.id)}><i><b>Produto</b><span>R$ 24,90</span><em>Comprar</em></i><strong>{option.name}</strong><small>{option.note}</small></button>)}</div><button onClick={save}>Salvar visual da vitrine</button>{message&&<div className="success">{message}</div>}{error&&<div className="error">{error}</div>}</section>
+  async function save(){try{await request("/qr-checkout/storefront-settings",token,{method:"POST",body:JSON.stringify({template:selected})});setMessage("Visual do Menu Digital por QRCode salvo. Todos os QR Codes ativos usarão este modelo.");setError("")}catch(cause){setError((cause as Error).message)}}
+  return <section className="qr-storefront-settings"><button type="button" className="settings-profile-link" onClick={onProfile}><span><small>CONTA E ACESSO</small><strong>Meu perfil</strong><em>Empresa, filial, senha e sessão</em></span><b>→</b></button><header><small>MENU DIGITAL POR QRCODE</small><h2>Visual da vitrine</h2><p>Escolha como seus produtos aparecem para o comprador. A alteração vale para todos os QR Codes ativos.</p></header><div className="storefront-options">{options.map(option=><button type="button" key={option.id} className={`storefront-option ${option.id.toLowerCase()} ${selected===option.id?"selected":""}`} onClick={()=>setSelected(option.id)}><i><b>Produto</b><span>R$ 24,90</span><em>Comprar</em></i><strong>{option.name}</strong><small>{option.note}</small></button>)}</div><button onClick={save}>Salvar visual da vitrine</button>{message&&<div className="success">{message}</div>}{error&&<div className="error">{error}</div>}</section>
 }
 function UserProfile({session,onSelectBranch,onChangePassword,onLogout}:{session:Session;onSelectBranch:(branch:BranchInfo)=>void;onChangePassword:()=>void;onLogout:()=>void}){
   const role=session.user.roles.includes("ADMIN")?"Administrador":session.user.roles.includes("MANAGER")?"Gerente":"Vendedor";
@@ -1016,7 +1016,7 @@ function Products({
           </label>
           <label className="product-image-field">
             Foto do produto
-            <small>PNG, JPG ou WebP; até 500 KB. Aparece no Menu Digital.</small>
+            <small>PNG, JPG ou WebP; até 500 KB. Aparece no Menu Digital por QRCode.</small>
             <input name="image" type="file" accept="image/png,image/jpeg,image/webp" />
           </label>
           <label>
@@ -1968,16 +1968,16 @@ const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pagesFor = (roles: string[], segment?: string) => {
   if (segment === "QR_SALES") {
-    if (roles.some((role) => ["ADMIN", "MANAGER"].includes(role))) return ["Menu Digital", "Produtos", "Clientes", "Configurações"];
-    if (roles.includes("SELLER")) return ["Menu Digital", "Produtos", "Clientes"];
-    return ["Menu Digital"];
+    if (roles.some((role) => ["ADMIN", "MANAGER"].includes(role))) return ["Menu Digital por QRCode", "Produtos", "Clientes", "Configurações"];
+    if (roles.includes("SELLER")) return ["Menu Digital por QRCode", "Produtos", "Clientes"];
+    return ["Menu Digital por QRCode"];
   }
   const studio = segment === "APPAREL_CUSTOMIZATION" ? ["Estúdio de moldes"] : [];
   const pizzeria = segment === "PIZZERIA" ? ["Pizzaria"] : [];
   const transportation = segment === "TRANSPORTATION" ? ["Transportation Detention Recovery"] : [];
   const operations = [...studio, ...pizzeria, ...transportation];
-  if (roles.includes("ADMIN")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "Menu Digital", "E-mail Marketing", "Transcrições de vídeo", ...operations, "Usuários", "Filial", "Configurações", "Fiscal"];
-  if (roles.includes("MANAGER")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "Menu Digital", "E-mail Marketing", "Transcrições de vídeo", ...operations, "Usuários"];
+  if (roles.includes("ADMIN")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "Menu Digital por QRCode", "E-mail Marketing", "Transcrições de vídeo", ...operations, "Usuários", "Filial", "Configurações", "Fiscal"];
+  if (roles.includes("MANAGER")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "Menu Digital por QRCode", "E-mail Marketing", "Transcrições de vídeo", ...operations, "Usuários"];
   if (roles.includes("SELLER")) return ["Visão geral", "PDV", "Produtos", "Clientes", ...(segment === "PIZZERIA" ? ["Pizzaria"] : [])];
   if (roles.includes("STOCK")) return ["Visão geral", "Estoque", "Produtos"];
   return ["Visão geral", "Caixa", "PDV"];
