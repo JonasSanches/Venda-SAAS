@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
+const fontFamilies:Record<string,string>={ARIAL:"Arial, sans-serif",GEORGIA:"Georgia, serif",VERDANA:"Verdana, sans-serif",TREBUCHET:"'Trebuchet MS', sans-serif",PALATINO:"Palatino, serif",COURIER:"'Courier New', monospace",IMPACT:"Impact, sans-serif"};
 
 export default function Comprar({ params }: { params: Promise<{ token: string }> }) {
   const [token, setToken] = useState("");
@@ -34,7 +35,7 @@ export default function Comprar({ params }: { params: Promise<{ token: string }>
     } catch (cause) { setError((cause as Error).message); setLoading(false); }
   }
   if (error && !shop) return <main className="qr-public"><p>{error}</p></main>;
-  return <main className={`qr-public qr-template-${String(shop?.template??"ACAI").toLowerCase()}`}><section>
+  return <main className={`qr-public qr-template-${String(shop?.template??"ACAI").toLowerCase()}`} style={{fontFamily:fontFamilies[String(shop?.font??"ARIAL")]??fontFamilies.ARIAL,fontSize:Number(shop?.fontSize??16),color:String(shop?.fontColor??"#172033")}}><section>
     <small>VENDA ONLINE</small><h1>{shop?.company?.name ?? "Carregando..."}</h1><h2>{shop?.name}</h2><p>Escolha os itens e pague com Pix, cartão ou outro meio disponível no Mercado Pago.</p>
     <div className="qr-offers">{shop?.offers.map((offer: any) => <article key={offer.id}>
       {offer.imageDataUrl && <img className="qr-product-image" src={offer.imageDataUrl} alt={offer.title} />}

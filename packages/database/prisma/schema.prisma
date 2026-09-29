@@ -134,6 +134,9 @@ model Tenant {
   pixKey          String?          @map("pix_key")
   pixKeyType      String?          @map("pix_key_type")
   qrStorefrontTemplate String       @default("ACAI") @map("qr_storefront_template")
+  qrStorefrontFont     String       @default("ARIAL") @map("qr_storefront_font")
+  qrStorefrontFontSize Int          @default(16) @map("qr_storefront_font_size")
+  qrStorefrontFontColor String      @default("#172033") @map("qr_storefront_font_color")
   logoDataUrl     String?          @map("logo_data_url")
   trialStartsAt   DateTime?        @map("trial_starts_at")
   trialExpiresAt  DateTime?        @map("trial_expires_at")
@@ -657,7 +660,7 @@ model QrCheckoutOrder {
   buyerPhone        String?               @map("buyer_phone") @db.VarChar(40)
   deliveryAddress   String?               @map("delivery_address") @db.Text
   total             Decimal               @db.Decimal(14,2)
-  platformCommissionRate Decimal          @default(0.12) @map("platform_commission_rate") @db.Decimal(5,4)
+  platformCommissionRate Decimal          @default(0.07) @map("platform_commission_rate") @db.Decimal(5,4)
   platformCommissionAmount Decimal        @default(0) @map("platform_commission_amount") @db.Decimal(14,2)
   merchantAmount    Decimal               @default(0) @map("merchant_amount") @db.Decimal(14,2)
   payoutStatus      QrCheckoutPayoutStatus @default(PENDING) @map("payout_status")
