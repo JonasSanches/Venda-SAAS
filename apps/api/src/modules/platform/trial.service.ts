@@ -83,15 +83,18 @@ export class TrialService {
   async qrPayoutQueue(){
     if(this.demoMode)return[];
     const orders=await prisma.qrCheckoutOrder.findMany({where:{status:"APPROVED",payoutStatus:"PENDING",tenant:{segment:"QR_SALES"}},include:{tenant:{select:{name:true,phone:true,pixKey:true,pixKeyType:true}}},orderBy:{paidAt:"asc"}});
-    return orders.map(order=>({id:order.id,tenantId:order.tenantId,company:order.tenant.name,phone:order.tenant.phone,pixKey:order.tenant.pixKey,pixKeyType:order.tenant.pixKeyType,buyerName:order.buyerName,total:Number(order.total),commission:Number(order.platformCommissionAmount),amount:Number(order.merchantAmount),paidAt:order.paidAt?.toISOString(),createdAt:order.createdAt.toISOString()}));
+    const expressLimit=2*60*60*1000;
+    return orders.map(order=>({id:order.id,tenantId:order.tenantId,company:order.tenant.name,phone:order.tenant.phone,pixKey:order.tenant.pixKey,pixKeyType:order.tenant.pixKeyType,buyerName:order.buyerName,total:Number(order.total),commission:Number(order.platformCommissionAmount),amount:Number(order.merchantAmount),commissionRate:Number(order.platformCommissionRate),paidAt:order.paidAt?.toISOString(),createdAt:order.createdAt.toISOString(),expressEligible:!!order.paidAt&&Date.now()-order.paidAt.getTime()<=expressLimit}));
   }
-  async markQrPayoutPaid(orderId:string,reference?:string){
+  async markQrPayoutPaid(orderId:string,reference?:string,express=false){
     if(this.demoMode)return{message:"Repasse marcado como pago"};
     const order=await prisma.qrCheckoutOrder.findFirst({where:{id:orderId,status:"APPROVED",payoutStatus:"PENDING",tenant:{segment:"QR_SALES"}}});
     if(!order)throw new BadRequestException("Repasse pendente não encontrado");
-    await prisma.qrCheckoutOrder.update({where:{id:order.id},data:{payoutStatus:"PAID",paidOutAt:new Date(),payoutReference:reference?.trim()||null}});
-    await this.audit(order.tenantId,"QR_PAYOUT_MARKED_PAID","QrCheckoutOrder",order.id,{payoutStatus:"PENDING"},{payoutStatus:"PAID",reference:reference?.trim()||null});
-    return{message:"Repasse marcado como pago"};
+    if(express&&(!order.paidAt||Date.now()-order.paidAt.getTime()>2*60*60*1000))throw new BadRequestException("O resgate expresso só pode ser feito até duas horas após a confirmação do pagamento");
+    const rate=express?0.10:Number(order.platformCommissionRate),commission=Number((Number(order.total)*rate).toFixed(2)),amount=Number((Number(order.total)-commission).toFixed(2));
+    await prisma.qrCheckoutOrder.update({where:{id:order.id},data:{payoutStatus:"PAID",paidOutAt:new Date(),payoutReference:reference?.trim()||null,platformCommissionRate:rate,platformCommissionAmount:commission,merchantAmount:amount}});
+    await this.audit(order.tenantId,"QR_PAYOUT_MARKED_PAID","QrCheckoutOrder",order.id,{payoutStatus:"PENDING",platformCommissionRate:Number(order.platformCommissionRate)},{payoutStatus:"PAID",reference:reference?.trim()||null,platformCommissionRate:rate,express});
+    return{message:express?"Resgate expresso marcado como pago (comissão de 10%)":"Repasse marcado como pago"};
   }
   async setTenantPixKey(tenantId:string,pixKey:string,pixKeyType?:string){
     if(!pixKey.trim())throw new BadRequestException("Informe a chave Pix");

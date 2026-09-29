@@ -131,9 +131,9 @@ export default function Admin() {
       setMessage("Notificações do Mac ativadas para novos cadastros.");setError("");
     }else setError("Permissão de notificações não foi concedida. Ative-a nas configurações do navegador.");
   }
-  async function markPayoutPaid(id:string){
+  async function markPayoutPaid(id:string,express=false){
     const reference=prompt("Referência do Pix (opcional):")??undefined;
-    try{await call(`/platform/qr-payouts/${id}/paid`,{reference});setMessage("Repasse marcado como pago.");await load()}catch(cause){setError((cause as Error).message)}
+    try{const result=await call(`/platform/qr-payouts/${id}/paid`,{reference,express});setMessage(result.message??"Repasse marcado como pago.");await load()}catch(cause){setError((cause as Error).message)}
   }
   async function openLiveView(tenantId:string){
     const tab=window.open("about:blank","_blank");
@@ -318,8 +318,8 @@ export default function Admin() {
         </form>
       )}
       <section className="survey-admin" id="repasses-pix">
-        <div className="survey-admin-title"><div><small>FINANCEIRO · MENU DIGITAL POR QRCODE</small><h2>Repasses Pix pendentes</h2><p>{payouts.length} venda(s) aguardando seu Pix. A comissão de 7% já foi separada; faça o repasse até as 10h do dia seguinte à confirmação.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar</button></div>
-        <div className="analytics-table-card"><div className="analytics-table"><table><thead><tr><th>Cliente</th><th>Chave Pix</th><th>Venda</th><th>Comissão</th><th>Enviar</th><th></th></tr></thead><tbody>{payouts.map(payout=><tr key={payout.id}><td><strong>{payout.company}</strong><small>{payout.phone||"—"} · compra: {payout.buyerName}</small></td><td>{payout.pixKey?<><code>{payout.pixKey}</code><small>{payout.pixKeyType||"Tipo não informado"}</small></>:<strong className="error-text">Chave não cadastrada</strong>}</td><td>{money(payout.total)}</td><td>{money(payout.commission)}</td><td><strong>{money(payout.amount)}</strong></td><td><button disabled={!payout.pixKey} onClick={()=>void markPayoutPaid(payout.id)}>Marcar pago</button></td></tr>)}</tbody></table>{!payouts.length&&<p className="analytics-empty">Nenhum repasse Pix pendente.</p>}</div></div>
+        <div className="survey-admin-title"><div><small>FINANCEIRO · MENU DIGITAL POR QRCODE</small><h2>Repasses Pix pendentes</h2><p>{payouts.length} venda(s) aguardando seu Pix. Repasse padrão: comissão de 7% até as 10h do dia seguinte. Resgate expresso: comissão de 10%, no mesmo dia e em até duas horas.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar</button></div>
+        <div className="analytics-table-card"><div className="analytics-table"><table><thead><tr><th>Cliente</th><th>Chave Pix</th><th>Venda</th><th>Comissão</th><th>Enviar</th><th></th></tr></thead><tbody>{payouts.map(payout=><tr key={payout.id}><td><strong>{payout.company}</strong><small>{payout.phone||"—"} · compra: {payout.buyerName}</small></td><td>{payout.pixKey?<><code>{payout.pixKey}</code><small>{payout.pixKeyType||"Tipo não informado"}</small></>:<strong className="error-text">Chave não cadastrada</strong>}</td><td>{money(payout.total)}</td><td>{money(payout.commission)}<small>{Math.round((payout.commissionRate??.07)*100)}%</small></td><td><strong>{money(payout.amount)}</strong></td><td><button disabled={!payout.pixKey} onClick={()=>void markPayoutPaid(payout.id)}>Pagar 7%</button>{payout.expressEligible&&<button className="secondary" disabled={!payout.pixKey} onClick={()=>void markPayoutPaid(payout.id,true)}>Expresso 10%</button>}</td></tr>)}</tbody></table>{!payouts.length&&<p className="analytics-empty">Nenhum repasse Pix pendente.</p>}</div></div>
       </section>
       <section className="analytics-admin" id="visitas">
         {analyticsError&&<div className="error">Não foi possível carregar as visitas: {analyticsError}</div>}
