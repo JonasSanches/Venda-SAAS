@@ -12,6 +12,7 @@ const dataUrl = (f: File) =>
   });
 export default function Trial() {
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(false);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const target = e.currentTarget,
@@ -24,18 +25,33 @@ export default function Trial() {
     delete body.confirm;
     delete body.logoFile;
     if (file.size) body.logoDataUrl = await dataUrl(file);
+    setLoading(true);
     const r = await fetch(API + "/platform/trials", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify(body),
       }),
       j = await r.json();
-    if (!r.ok)
+    if (!r.ok) {
+      setLoading(false);
       return setMsg(
         Array.isArray(j.message) ? j.message.join(", ") : j.message,
       );
-    setMsg("Cadastro criado com sucesso! Você já pode entrar com seu e-mail e senha.");
-    target.reset();
+    }
+    try {
+      const login = await fetch(API + "/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ access: body.email, password: body.password }),
+      });
+      const session = await login.json();
+      if (!login.ok) throw new Error();
+      localStorage.setItem("varejo-session", JSON.stringify(session));
+      location.assign("/");
+    } catch {
+      setLoading(false);
+      setMsg("Cadastro criado com sucesso. Entre com seu e-mail e senha.");
+    }
   }
   return (
     <div className="trial-page">
@@ -112,7 +128,7 @@ export default function Trial() {
             <input name="confirm" type="password" minLength={8} required />
           </label>
         </fieldset>
-        <button>Criar cadastro gratuito</button>
+        <button disabled={loading}>{loading ? "Criando acesso..." : "Criar cadastro gratuito"}</button>
         <a href="/">Voltar ao login</a>
       </form>
     </div>
