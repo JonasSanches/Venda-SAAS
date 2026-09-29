@@ -48,7 +48,7 @@ export class AuthGuard implements CanActivate {
       path.startsWith("/api/auth/") ||
       path === "/api/platform/trial";
     if (!allowed) {
-      throw new ForbiddenException("Este tipo de empresa possui acesso somente às funções de venda por QR Code.");
+      throw new ForbiddenException("Este tipo de empresa possui acesso somente às funções do Menu Digital.");
     }
   }
 }
