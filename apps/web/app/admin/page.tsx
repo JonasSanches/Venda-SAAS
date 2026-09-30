@@ -334,12 +334,12 @@ export default function Admin() {
         {analytics&&<div className="analytics-pagination"><button className="secondary" disabled={analyticsLoading||analytics.pagination.page<=1} onClick={()=>void loadAnalytics(analyticsDays,analytics.pagination.page-1)}>Anterior</button><span>Página {analytics.pagination.page} de {analytics.pagination.totalPages}</span><button className="secondary" disabled={analyticsLoading||analytics.pagination.page>=analytics.pagination.totalPages} onClick={()=>void loadAnalytics(analyticsDays,analytics.pagination.page+1)}>Próxima</button></div>}</div>
         <p className="analytics-privacy">🔒 IP e dados técnicos são de acesso exclusivo da administração e devem ser usados somente para segurança e análise, com retenção limitada.</p>
       </section>
-      <section className="survey-admin" id="respostas">
+      <section className="survey-admin admin-form-responses" id="respostas">
         {surveyError&&<div className="error">Não foi possível carregar as respostas: {surveyError}</div>}
         <div className="survey-admin-title"><div><small>PESQUISA DE NECESSIDADES</small><h2>Respostas do questionário</h2><p>{surveys.length} resposta(s) recebida(s), da mais recente para a mais antiga.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar respostas</button></div>
         <div className="survey-response-list">{surveys.map(response=><details key={response.id}><summary><div><strong>{response.name} · {response.company}</strong><span>{response.contact}</span></div><small>{new Date(response.submittedAt).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"})}</small></summary><div className="survey-response-data"><span><small>Contato</small><b>{response.contact}</b></span><span><small>Idioma</small><b>{response.language?.toUpperCase()||"—"}</b></span><span><small>IP</small><b>{response.ipAddress||"—"}</b></span>{Object.entries(response.answers).map(([key,values])=><span key={key}><small>{surveyAnswerLabel(key)}</small><b>{Array.isArray(values)&&values.length?values.join(", "):"Não respondeu"}</b></span>)}</div></details>)}{!surveys.length&&<p className="analytics-empty">As novas respostas aparecerão aqui automaticamente.</p>}</div>
       </section>
-      <div className="cash-summary">
+      <div className="cash-summary admin-client-summary">
         <article>
           <span>Total</span>
           <strong>{items.length}</strong>
@@ -353,7 +353,7 @@ export default function Admin() {
           <strong>{items.filter((x) => x.status === "PENDING").length}</strong>
         </article>
       </div>
-      <div className="toolbar">
+      <div className="toolbar admin-client-toolbar">
         <input
           placeholder="Buscar cliente"
           value={q}
@@ -361,7 +361,7 @@ export default function Admin() {
         />
         <span>{users.length} administrador(es) da plataforma</span>
       </div>
-      <div className="trial-cards">
+      <div className="trial-cards admin-client-list">
         {list.map((t) => (
           <article key={t.tenantId}>
             {t.logoDataUrl ? (
