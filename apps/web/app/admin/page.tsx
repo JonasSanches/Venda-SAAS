@@ -37,6 +37,7 @@ export default function Admin() {
     [analyticsLoading,setAnalyticsLoading]=useState(false),
     [notificationPermission,setNotificationPermission]=useState<NotificationPermission|"unsupported">("default");
   const knownTrialIds=useRef<Set<string>|null>(null);
+  const knownPayoutIds=useRef<Set<string>|null>(null);
   async function call(path: string, body?: object) {
     if (!session) throw Error("Sessão expirada");
     const r = await fetch(API + path, {
@@ -106,7 +107,7 @@ export default function Admin() {
     let active=true;
     const check=async()=>{
       try{
-        const trials=await call("/platform/trials") as any[];
+        const [trials,pendingPayouts]=await Promise.all([call("/platform/trials") as Promise<any[]>,call("/platform/qr-payouts") as Promise<any[]>]);
         if(!active)return;
         const previous=knownTrialIds.current;
         const current=new Set(trials.map(item=>item.tenantId));
@@ -116,6 +117,13 @@ export default function Admin() {
         }
         knownTrialIds.current=current;
         setItems(trials);
+        const previousPayouts=knownPayoutIds.current,currentPayouts=new Set(pendingPayouts.map(item=>item.id));
+        if(previousPayouts){
+          const newSales=pendingPayouts.filter(item=>!previousPayouts.has(item.id));
+          if(Notification.permission==="granted")newSales.forEach(item=>new Notification("Nova venda no Menu Digital",{body:`${item.company} · ${money(item.total)}`,tag:`qr-payout-${item.id}`}));
+        }
+        knownPayoutIds.current=currentPayouts;
+        setPayouts(pendingPayouts);
       }catch{ /* a tela principal já apresenta erros de sessão e carregamento */ }
     };
     void check();
@@ -127,8 +135,8 @@ export default function Admin() {
     const permission=await Notification.requestPermission();
     setNotificationPermission(permission);
     if(permission==="granted"){
-      const en=document.documentElement.lang==="en";new Notification(en?"Notifications enabled":"Notificações ativadas",{body:en?"You will be notified on this Mac when there is a new registration.":"Você será avisado aqui no Mac quando houver um novo cadastro."});
-      setMessage("Notificações do Mac ativadas para novos cadastros.");setError("");
+      const en=document.documentElement.lang==="en";new Notification(en?"Notifications enabled":"Notificações ativadas",{body:en?"You will be notified on this Mac about new registrations and sales.":"Você será avisado aqui no Mac sobre novos cadastros e vendas."});
+      setMessage("Notificações do Mac ativadas para novos cadastros e vendas.");setError("");
     }else setError("Permissão de notificações não foi concedida. Ative-a nas configurações do navegador.");
   }
   async function markPayoutPaid(id:string,mode:"STANDARD"|"EXPRESS"|"INSTANT"="STANDARD"){

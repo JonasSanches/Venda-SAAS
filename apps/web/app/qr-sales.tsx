@@ -22,6 +22,8 @@ export function QrSales({ token }: { token: string }) {
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<any>();
   const canvas = useRef<HTMLCanvasElement>(null);
+  const knownOrders = useRef<Map<string, string> | null>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | "unsupported">("default");
   const load = async () => {
     try {
       const [nextLinks, nextDashboard, nextProducts] = await Promise.all([
@@ -38,6 +40,26 @@ export function QrSales({ token }: { token: string }) {
     }
   };
   useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    if (!("Notification" in window)) { setNotificationPermission("unsupported"); return; }
+    setNotificationPermission(Notification.permission);
+    let active = true;
+    const checkSales = async () => {
+      try {
+        const next = await request<Dashboard>("/qr-checkout/dashboard", token);
+        if (!active) return;
+        const previous = knownOrders.current;
+        if (previous && Notification.permission === "granted") next.recent.filter(order => order.status === "APPROVED" && previous.get(order.id) !== "APPROVED").forEach(order => {
+          new Notification("Nova venda confirmada", { body: `${order.buyerName} · ${brl(order.total)}`, tag: `qr-sale-${order.id}` });
+        });
+        knownOrders.current = new Map(next.recent.map(order => [order.id, order.status]));
+        setDashboard(next);
+      } catch { /* a lista de pedidos continua disponível na próxima atualização */ }
+    };
+    void checkSales();
+    const timer = window.setInterval(() => void checkSales(), 20_000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [token]);
   useEffect(() => {
     if (selected && canvas.current) {
       void import("qrcode").then((QR) => QR.toCanvas(canvas.current!, `${location.origin}/comprar/${selected.token}`, { width: 260, margin: 2 }));
@@ -65,9 +87,19 @@ export function QrSales({ token }: { token: string }) {
     }
   }
 
+  async function enableSaleNotifications() {
+    if (!("Notification" in window)) { setNotificationPermission("unsupported"); setError("Este navegador não oferece notificações."); return; }
+    const permission = await Notification.requestPermission();
+    setNotificationPermission(permission);
+    if (permission === "granted") {
+      new Notification("Notificações ativadas", { body: "Você será avisado neste dispositivo quando uma venda for confirmada." });
+      setMessage("Notificações de vendas ativadas."); setError("");
+    } else setError("Permissão de notificações não foi concedida. Ative-a nas configurações do navegador.");
+  }
+
   const rate = dashboard ? Math.round(dashboard.commissionRate * 100) : 7;
   return <section className="qr-sales">
-    <header><div><small>MENU DIGITAL POR QRCODE</small><h2>Venda no local, receba online</h2><p>Crie seu menu público, imprima o QR Code e receba pagamentos pelo Mercado Pago.</p></div></header>
+    <header><div><small>MENU DIGITAL POR QRCODE</small><h2>Venda no local, receba online</h2><p>Crie seu menu público, imprima o QR Code e receba pagamentos pelo Mercado Pago.</p></div><button className="secondary qr-notification-button" onClick={() => void enableSaleNotifications()}>{notificationPermission === "granted" ? "Notificações de vendas ativadas" : "Ativar notificações de vendas"}</button></header>
     <section className="qr-commission-note"><strong>Comissão da plataforma: {rate}%</strong><span>Ela é calculada somente sobre vendas aprovadas. O estabelecimento recebe {100 - rate}% por Pix até as 10h do dia seguinte à confirmação do pagamento.</span></section>
     {dashboard && <section className="qr-summary" aria-label="Resumo financeiro do Menu Digital por QRCode">
       <article><small>Vendas aprovadas</small><strong>{brl(dashboard.grossSales)}</strong><span>{dashboard.approvedOrders} pedido(s)</span></article>
