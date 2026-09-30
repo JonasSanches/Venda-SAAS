@@ -20,7 +20,7 @@ for unit in deploy/vps/systemd/*.service deploy/vps/systemd/*.timer; do
     units_changed=1
   fi
 done
-chmod 750 deploy/vps/auto-deploy.sh deploy/vps/monitor.sh deploy/vps/backup-config.sh
+chmod 750 deploy/vps/auto-deploy.sh deploy/vps/monitor.sh deploy/vps/backup-config.sh deploy/vps/configure-push.sh
 if [[ "$units_changed" -eq 1 ]]; then
   systemctl daemon-reload
   systemctl enable --now vendamais-deploy.timer vendamais-monitor.timer vendamais-backup.timer

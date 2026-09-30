@@ -38,11 +38,8 @@ Se o console da hospedagem não permitir colar, gere e grave as chaves somente
 na VPS, sem mostrá-las na tela:
 
 ```bash
-docker compose -f deploy/vps/docker-compose.yml run --rm --no-deps api node apps/api/scripts/print-vapid-env.cjs > /tmp/vendamais-push.env
-sed -i '/^PUSH_VAPID_/d' deploy/vps/.env.production
-cat /tmp/vendamais-push.env >> deploy/vps/.env.production
-rm /tmp/vendamais-push.env
-docker compose -f deploy/vps/docker-compose.yml up -d --force-recreate api
+cd /opt/vendamais-app
+bash deploy/vps/configure-push.sh
 ```
 
 No celular, abra o Venda+ em HTTPS, instale-o na tela inicial e toque em
