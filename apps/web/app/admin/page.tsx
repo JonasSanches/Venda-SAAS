@@ -1,5 +1,6 @@
 "use client";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { enablePushNotifications, hasPushNotifications } from "../push-client";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3101/api";
 const money = (value: number) => Number(value ?? 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -113,14 +114,14 @@ export default function Admin() {
         const current=new Set(trials.map(item=>item.tenantId));
         if(previous){
           const newTrials=trials.filter(item=>!previous.has(item.tenantId));
-          if(Notification.permission==="granted")newTrials.forEach(item=>{const en=document.documentElement.lang==="en";new Notification(en?"New Venda+ registration":"Novo cadastro no Venda+",{body:`${item.name} · ${item.user?.email??(en?"no email":"sem e-mail")}`,tag:`trial-${item.tenantId}`})});
+          if(Notification.permission==="granted"&&!hasPushNotifications())newTrials.forEach(item=>{const en=document.documentElement.lang==="en";new Notification(en?"New Venda+ registration":"Novo cadastro no Venda+",{body:`${item.name} · ${item.user?.email??(en?"no email":"sem e-mail")}`,tag:`trial-${item.tenantId}`})});
         }
         knownTrialIds.current=current;
         setItems(trials);
         const previousPayouts=knownPayoutIds.current,currentPayouts=new Set(pendingPayouts.map(item=>item.id));
         if(previousPayouts){
           const newSales=pendingPayouts.filter(item=>!previousPayouts.has(item.id));
-          if(Notification.permission==="granted")newSales.forEach(item=>new Notification("Nova venda no Menu Digital",{body:`${item.company} · ${money(item.total)}`,tag:`qr-payout-${item.id}`}));
+          if(Notification.permission==="granted"&&!hasPushNotifications())newSales.forEach(item=>new Notification("Nova venda no Menu Digital",{body:`${item.company} · ${money(item.total)}`,tag:`qr-payout-${item.id}`}));
         }
         knownPayoutIds.current=currentPayouts;
         setPayouts(pendingPayouts);
@@ -131,13 +132,8 @@ export default function Admin() {
     return()=>{active=false;window.clearInterval(timer)};
   },[session]);
   async function enableMacNotifications(){
-    if(!("Notification" in window)){setNotificationPermission("unsupported");setError("Este navegador não oferece notificações.");return}
-    const permission=await Notification.requestPermission();
-    setNotificationPermission(permission);
-    if(permission==="granted"){
-      const en=document.documentElement.lang==="en";new Notification(en?"Notifications enabled":"Notificações ativadas",{body:en?"You will be notified on this Mac about new registrations and sales.":"Você será avisado aqui no Mac sobre novos cadastros e vendas."});
-      setMessage("Notificações do Mac ativadas para novos cadastros e vendas.");setError("");
-    }else setError("Permissão de notificações não foi concedida. Ative-a nas configurações do navegador.");
+    if(!session)return;
+    try{await enablePushNotifications(session.accessToken);setNotificationPermission("granted");setMessage("Notificações deste dispositivo ativadas para novos cadastros e vendas.");setError("")}catch(cause){setError((cause as Error).message)}
   }
   async function markPayoutPaid(id:string,mode:"STANDARD"|"EXPRESS"|"INSTANT"="STANDARD"){
     const reference=prompt("Referência do Pix (opcional):")??undefined;

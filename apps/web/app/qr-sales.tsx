@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { request } from "./api-client";
+import { enablePushNotifications, hasPushNotifications } from "./push-client";
 
 type Dashboard = {
   commissionRate: number;
@@ -49,7 +50,7 @@ export function QrSales({ token }: { token: string }) {
         const next = await request<Dashboard>("/qr-checkout/dashboard", token);
         if (!active) return;
         const previous = knownOrders.current;
-        if (previous && Notification.permission === "granted") next.recent.filter(order => order.status === "APPROVED" && previous.get(order.id) !== "APPROVED").forEach(order => {
+        if (previous && Notification.permission === "granted" && !hasPushNotifications()) next.recent.filter(order => order.status === "APPROVED" && previous.get(order.id) !== "APPROVED").forEach(order => {
           new Notification("Nova venda confirmada", { body: `${order.buyerName} · ${brl(order.total)}`, tag: `qr-sale-${order.id}` });
         });
         knownOrders.current = new Map(next.recent.map(order => [order.id, order.status]));
@@ -88,13 +89,11 @@ export function QrSales({ token }: { token: string }) {
   }
 
   async function enableSaleNotifications() {
-    if (!("Notification" in window)) { setNotificationPermission("unsupported"); setError("Este navegador não oferece notificações."); return; }
-    const permission = await Notification.requestPermission();
-    setNotificationPermission(permission);
-    if (permission === "granted") {
-      new Notification("Notificações ativadas", { body: "Você será avisado neste dispositivo quando uma venda for confirmada." });
-      setMessage("Notificações de vendas ativadas."); setError("");
-    } else setError("Permissão de notificações não foi concedida. Ative-a nas configurações do navegador.");
+    try {
+      await enablePushNotifications(token);
+      setNotificationPermission("granted");
+      setMessage("Notificações de vendas ativadas neste celular."); setError("");
+    } catch (cause) { setError((cause as Error).message); }
   }
 
   const rate = dashboard ? Math.round(dashboard.commissionRate * 100) : 7;

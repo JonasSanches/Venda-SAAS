@@ -14,6 +14,8 @@ const english: Record<string, string> = {
   "Ativar notificações de vendas": "Enable sales notifications",
   "Notificações de vendas ativadas": "Sales notifications enabled",
   "Notificações de vendas ativadas.": "Sales notifications enabled.",
+  "Notificações de vendas ativadas neste celular.": "Sales notifications enabled on this phone.",
+  "Notificações deste dispositivo ativadas para novos cadastros e vendas.": "Notifications enabled on this device for new registrations and sales.",
   "Você será avisado neste dispositivo quando uma venda for confirmada.": "You will be notified on this device when a sale is confirmed.",
   "Nova venda confirmada": "New sale confirmed",
   "Nova venda no Menu Digital": "New Digital Menu sale",

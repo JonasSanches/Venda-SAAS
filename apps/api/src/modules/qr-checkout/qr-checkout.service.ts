@@ -1,12 +1,14 @@
 import { BadGatewayException, BadRequestException, Injectable, NotFoundException } from "@nestjs/common";
 import { prisma, withTenant } from "@varejo/database";
 import { randomBytes, randomUUID } from "node:crypto";
+import { PushNotificationsService } from "../push-notifications/push-notifications.service";
 
 const PLATFORM_COMMISSION_RATE = 0.07;
 const money = (value: number) => Number(value.toFixed(2));
 
 @Injectable()
 export class QrCheckoutService {
+  constructor(private readonly push: PushNotificationsService) {}
   private token() {
     const value = process.env.MERCADO_PAGO_ACCESS_TOKEN;
     if (!value) throw new BadRequestException("Mercado Pago não configurado.");
@@ -127,6 +129,17 @@ export class QrCheckoutService {
     if (Number(data.transaction_amount) !== Number(order.total)) throw new BadRequestException("Valor não confere.");
     const approved = data.status === "approved";
     await prisma.qrCheckoutOrder.update({ where: { id: order.id }, data: { providerPaymentId: String(data.id), status: approved ? "APPROVED" : data.status === "rejected" ? "REJECTED" : "PENDING", paidAt: approved ? new Date(data.date_approved ?? Date.now()) : null } });
+    if (approved && order.status !== "APPROVED") {
+      const [managerUsers, platformUsers] = await Promise.all([
+        prisma.user.findMany({ where: { tenantId: order.tenantId, status: "ACTIVE", roles: { some: { role: { name: { in: ["ADMIN", "MANAGER"] } } } } }, select: { id: true } }),
+        prisma.user.findMany({ where: { tenantId: "10000000-0000-4000-8000-000000000001", status: "ACTIVE", roles: { some: { role: { name: "PLATFORM_ADMIN" } } } }, select: { id: true } }),
+      ]);
+      const total = Number(order.total).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+      await Promise.all([
+        this.push.sendToUsers(managerUsers.map((user) => user.id), { title: "Nova venda confirmada", body: `${order.buyerName} · ${total}`, url: "/#entrar", tag: `qr-sale-${order.id}` }),
+        this.push.sendToUsers(platformUsers.map((user) => user.id), { title: "Nova venda no Menu Digital", body: `${total} · aguardando repasse`, url: "/admin", tag: `qr-payout-${order.id}` }),
+      ]);
+    }
     return { received: true };
   }
 }

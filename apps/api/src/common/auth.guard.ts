@@ -43,6 +43,7 @@ export class AuthGuard implements CanActivate {
     const path = url.split("?")[0];
     const allowed =
       path.startsWith("/api/qr-checkout") ||
+      path.startsWith("/api/push") ||
       path.startsWith("/api/products") ||
       path.startsWith("/api/commercial/parties") ||
       path.startsWith("/api/auth/") ||

@@ -24,6 +24,7 @@ import { ScannerModule } from "./modules/scanner/scanner.module";
 import { EmailMarketingModule } from "./modules/email-marketing/email-marketing.module";
 import { QrCheckoutModule } from "./modules/qr-checkout/qr-checkout.module";
 import { VideoTranscriptsModule } from "./modules/video-transcripts/video-transcripts.module";
+import { PushNotificationsModule } from "./modules/push-notifications/push-notifications.module";
 
 @Module({
   imports: [
@@ -48,7 +49,8 @@ import { VideoTranscriptsModule } from "./modules/video-transcripts/video-transc
     ScannerModule,
     EmailMarketingModule,
     QrCheckoutModule,
-    VideoTranscriptsModule
+    VideoTranscriptsModule,
+    PushNotificationsModule
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: AuthGuard }]

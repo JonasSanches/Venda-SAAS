@@ -19,6 +19,25 @@ Para que vídeos autorizados sem legendas públicas possam ser transcritos pelo
 somente no servidor, nunca no navegador. A imagem da API já instala `ffmpeg` e
 `yt-dlp` para preparar o áudio antes do envio ao provedor de transcrição.
 
+## Notificações no celular
+
+As notificações de venda usam Web Push. Após publicar a versão que contém esse
+recurso, gere uma única vez as chaves VAPID no servidor:
+
+```bash
+cd /opt/vendamais-app
+docker compose -f deploy/vps/docker-compose.yml run --rm --no-deps api node -e "console.log(require('web-push').generateVAPIDKeys())"
+```
+
+Copie os valores retornados para `deploy/vps/.env.production` como
+`PUSH_VAPID_PUBLIC_KEY` e `PUSH_VAPID_PRIVATE_KEY`; defina também
+`PUSH_VAPID_SUBJECT="mailto:seu-email@dominio.com"`. Em seguida, execute o
+deploy novamente. Não publique nem envie a chave privada.
+
+No celular, abra o Venda+ em HTTPS, instale-o na tela inicial e toque em
+“Ativar notificações de vendas”. No iPhone, a instalação pela opção
+“Adicionar à Tela de Início” é necessária para receber avisos em segundo plano.
+
 ## Atualização automática
 
 O timer `vendamais-deploy.timer` consulta a branch `main` a cada dois minutos. Uma
