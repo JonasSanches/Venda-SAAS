@@ -284,7 +284,7 @@ export default function Admin() {
             <small>{session.user.email}</small>
           </div>
           <button onClick={() => setShowUser((v) => !v)}>Novo usuário</button>
-          <button className="secondary" onClick={()=>void enableMacNotifications()}>{notificationPermission==="granted"?"Notificações ativadas":"Ativar notificações no Mac"}</button>
+          <button className="secondary" onClick={()=>void enableMacNotifications()}>{notificationPermission==="granted"?"Notificações ativadas":"Ativar notificações no celular"}</button>
           <button className="secondary" onClick={()=>document.getElementById("visitas")?.scrollIntoView({behavior:"smooth"})}>Visitas</button>
           <button className="secondary" onClick={goHome}>
             Tela inicial

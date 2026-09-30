@@ -13,7 +13,7 @@ export async function enablePushNotifications(token: string) {
   if (permission !== "granted") throw Error("Permissão de notificações não foi concedida. Ative-a nas configurações do navegador.");
   const configResponse = await fetch(`${API}/push/public-key`, { headers: { authorization: `Bearer ${token}` } });
   const config = await configResponse.json();
-  if (!configResponse.ok || !config.enabled || !config.publicKey) throw Error("Notificações no celular ainda não estão configuradas no servidor.");
+  if (!configResponse.ok || !config.enabled || !config.publicKey) throw Error(config.message ?? "Notificações no celular ainda não estão configuradas no servidor.");
   const registration = await navigator.serviceWorker.register("/push-worker.js");
   const subscription = await registration.pushManager.getSubscription() ?? await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: vapidKey(config.publicKey) });
   const json = subscription.toJSON();

@@ -15,7 +15,8 @@ export class PushNotificationsService {
   }
 
   publicKey() {
-    return { enabled: this.configured(), publicKey: process.env.PUSH_VAPID_PUBLIC_KEY ?? null };
+    const enabled = this.configured();
+    return { enabled, publicKey: process.env.PUSH_VAPID_PUBLIC_KEY ?? null, message: enabled ? undefined : "As chaves de notificações ainda não foram carregadas pela API. Confira PUSH_VAPID_PUBLIC_KEY e PUSH_VAPID_PRIVATE_KEY no servidor e reinicie a API." };
   }
 
   async subscribe(userId: string, input: { endpoint: string; p256dh: string; auth: string }) {

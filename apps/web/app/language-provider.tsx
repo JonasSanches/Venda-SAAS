@@ -8,6 +8,7 @@ const english: Record<string, string> = {
   "PRIVACIDADE E TRANSPARÊNCIA": "PRIVACY AND TRANSPARENCY",
   "Dados de acesso": "Access data",
   "Ativar notificações no Mac": "Enable Mac notifications",
+  "Ativar notificações no celular": "Enable phone notifications",
   "Notificações ativadas": "Notifications enabled",
   "Notificações do Mac ativadas para novos cadastros e vendas.": "Mac notifications enabled for new registrations and sales.",
   "Você será avisado aqui no Mac sobre novos cadastros e vendas.": "You will be notified on this Mac about new registrations and sales.",
