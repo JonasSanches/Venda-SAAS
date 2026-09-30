@@ -34,6 +34,17 @@ Copie os valores retornados para `deploy/vps/.env.production` como
 `PUSH_VAPID_SUBJECT="mailto:seu-email@dominio.com"`. Em seguida, execute o
 deploy novamente. Não publique nem envie a chave privada.
 
+Se o console da hospedagem não permitir colar, gere e grave as chaves somente
+na VPS, sem mostrá-las na tela:
+
+```bash
+docker compose -f deploy/vps/docker-compose.yml run --rm --no-deps api node apps/api/scripts/print-vapid-env.cjs > /tmp/vendamais-push.env
+sed -i '/^PUSH_VAPID_/d' deploy/vps/.env.production
+cat /tmp/vendamais-push.env >> deploy/vps/.env.production
+rm /tmp/vendamais-push.env
+docker compose -f deploy/vps/docker-compose.yml up -d --force-recreate api
+```
+
 No celular, abra o Venda+ em HTTPS, instale-o na tela inicial e toque em
 “Ativar notificações de vendas”. No iPhone, a instalação pela opção
 “Adicionar à Tela de Início” é necessária para receber avisos em segundo plano.
