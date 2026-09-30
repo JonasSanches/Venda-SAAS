@@ -36,4 +36,9 @@ export class PushNotificationsService {
       }
     }));
   }
+
+  async sendTest(userId: string) {
+    await this.sendToUsers([userId], { title: "Notificação de teste", body: "Seu celular está pronto para receber avisos de vendas.", url: "/", tag: "push-test" });
+    return { ok: true };
+  }
 }

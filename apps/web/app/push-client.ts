@@ -21,6 +21,8 @@ export async function enablePushNotifications(token: string) {
   const result = await response.json().catch(() => ({}));
   if (!response.ok || !result.enabled) throw Error(result.message ?? "Não foi possível ativar as notificações no celular.");
   localStorage.setItem("varejo-push-enabled", "true");
+  const testResponse = await fetch(`${API}/push/test`, { method: "POST", headers: { authorization: `Bearer ${token}` } });
+  if (!testResponse.ok) throw Error("Notificações ativadas, mas não foi possível enviar o teste.");
 }
 
 export function hasPushNotifications() { return localStorage.getItem("varejo-push-enabled") === "true"; }

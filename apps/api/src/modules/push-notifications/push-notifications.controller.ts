@@ -8,4 +8,5 @@ export class PushNotificationsController {
   constructor(private readonly service: PushNotificationsService) {}
   @Get("public-key") key() { return this.service.publicKey(); }
   @Post("subscribe") subscribe(@Body() input: PushSubscriptionDto) { return this.service.subscribe(currentUserId(), input); }
+  @Post("test") test() { return this.service.sendTest(currentUserId()); }
 }
