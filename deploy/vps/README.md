@@ -26,7 +26,7 @@ recurso, gere uma única vez as chaves VAPID no servidor:
 
 ```bash
 cd /opt/vendamais-app
-docker compose -f deploy/vps/docker-compose.yml run --rm --no-deps api node -e "console.log(require('web-push').generateVAPIDKeys())"
+docker compose -f deploy/vps/docker-compose.yml run --rm --no-deps api node apps/api/scripts/generate-vapid-keys.cjs
 ```
 
 Copie os valores retornados para `deploy/vps/.env.production` como
