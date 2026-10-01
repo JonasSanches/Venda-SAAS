@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function Payment() {
-  redirect("/teste");
+  redirect("/cadastro");
 }

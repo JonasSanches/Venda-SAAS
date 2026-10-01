@@ -539,7 +539,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <a href="#como-funciona">Como funciona</a>
           <a href="#suporte">Suporte 24h</a>
           <a href="/biblioteca">Livros digitais</a>
-          <a href="/teste">Cadastro grátis</a>
+          <a href="/cadastro">Cadastro grátis</a>
           <a className="header-login" href="#entrar">
             Entrar
           </a>
@@ -567,7 +567,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
             <span>
               Cadastre sua empresa e comece a organizar sua operação, sem cobrança.
             </span>
-            <a href="/teste">Criar meu cadastro</a>
+            <a href="/cadastro">Criar meu cadastro</a>
           </div>
           <div className="support-call" id="suporte">
             <span>24h</span>
@@ -611,7 +611,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           </button>
           <small>
             Ainda não tem acesso?{" "}
-            <a href="/teste">Crie seu cadastro gratuito.</a>
+            <a href="/cadastro">Crie seu cadastro gratuito.</a>
           </small>
         </form>
       </div>
@@ -643,7 +643,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <small>TRANSPORTATION DETENTION RECOVERY · USA FREIGHT OPERATIONS</small>
           <h2 id="transportation-callout-title">Não deixe detention se perder entre o dock e o pagamento.</h2>
           <p>Para carriers, fleets e owner-operators nos Estados Unidos: registre o load e o broker, guarde os termos da rate confirmation, marque arrival e departure e acompanhe cada claim até o status pago.</p>
-          <a href="/teste">Conhecer o módulo de Detention Recovery <span>→</span></a>
+          <a href="/cadastro">Conhecer o módulo de Detention Recovery <span>→</span></a>
           <em>Fluxo operacional. Sem promessa de recuperação ou resultado financeiro.</em>
         </div>
         <figure className="transportation-system-shot"><img src="/erp-system-preview.jpg" alt="Painel real do sistema Venda+"/></figure>
@@ -695,7 +695,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           </article>
         </div>
         <small className="showcase-data-note">Dados demonstrativos para exemplificar a leitura dos painéis. O fluxo de entregas é configurável e ainda não integra o módulo operacional padrão.</small>
-        <div className="showcase-cta"><div><strong>Não é apenas um sistema. É uma visão mais clara da sua empresa.</strong><span>Cadastre sua empresa e comece com seus próprios produtos, equipe e rotina.</span></div><a href="/teste">Criar cadastro gratuito</a></div>
+        <div className="showcase-cta"><div><strong>Não é apenas um sistema. É uma visão mais clara da sua empresa.</strong><span>Cadastre sua empresa e comece com seus próprios produtos, equipe e rotina.</span></div><a href="/cadastro">Criar cadastro gratuito</a></div>
       </section>
       <section className="segment-section" id="segmentos" aria-labelledby="segment-title">
         <div className="section-heading"><small>FEITO PARA QUEM VENDE TODOS OS DIAS</small><h2 id="segment-title">Varejo e personalizados prontos para operar. Novos segmentos em expansão.</h2><p>Hoje, o Venda+ atende operações de venda, produtos, estoque, caixa, equipe e filiais. Os segmentos marcados como em expansão receberão módulos próprios de CRM, propostas, agenda e processos especializados.</p></div>
@@ -721,14 +721,14 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
       </section>
       <section className="control-highlight">
         <div><small>CONTROLE SEM PRENDER VOCÊ AO BALCÃO</small><h2>Veja sua operação de onde estiver.</h2><p>Separe usuários por função, administre filiais e consulte os principais indicadores em uma interface preparada para computador, tablet e celular.</p><ul><li>Administrador, gerente, caixa e estoque com acessos próprios</li><li>Dados e configurações isolados para cada empresa</li><li>Histórico de alterações administrativas</li><li>Monitoramento e suporte 24 horas</li></ul></div>
-        <aside><span>PAINEL EM TEMPO REAL</span><strong>Vendas + Estoque + Caixa</strong><p>Uma visão centralizada reduz conferências manuais e ajuda a identificar diferenças antes que elas cresçam.</p><a href="/teste">Criar cadastro gratuito</a></aside>
+        <aside><span>PAINEL EM TEMPO REAL</span><strong>Vendas + Estoque + Caixa</strong><p>Uma visão centralizada reduz conferências manuais e ajuda a identificar diferenças antes que elas cresçam.</p><a href="/cadastro">Criar cadastro gratuito</a></aside>
       </section>
       <ErpSurvey />
       <section className="public-faq" aria-labelledby="faq-title">
         <div className="section-heading"><small>PERGUNTAS FREQUENTES</small><h2 id="faq-title">Comece com tranquilidade.</h2></div>
         <div><details open><summary>Preciso instalar alguma coisa?</summary><p>Não. O Venda+ funciona pelo navegador no computador, tablet ou celular.</p></details><details><summary>O cadastro é gratuito?</summary><p>Sim. Nesta fase inicial, basta cadastrar sua empresa para começar a usar o sistema.</p></details><details><summary>Meus dados ficam misturados com os de outra empresa?</summary><p>Não. Cada empresa possui ambiente, usuários, dados e configurações independentes.</p></details><details><summary>Consigo controlar quem acessa o sistema?</summary><p>Sim. Você cria usuários e define funções como administrador, gerente, caixa ou estoque.</p></details></div>
       </section>
-      <section className="final-cta"><small>PRONTO PARA ORGANIZAR SUA OPERAÇÃO?</small><h2>Cadastre sua empresa gratuitamente.</h2><p>Comece a usar o Venda+ com sua empresa, equipe e rotina.</p><a href="/teste">Criar cadastro gratuito</a><span>Sem cobrança nesta fase inicial.</span></section>
+      <section className="final-cta"><small>PRONTO PARA ORGANIZAR SUA OPERAÇÃO?</small><h2>Cadastre sua empresa gratuitamente.</h2><p>Comece a usar o Venda+ com sua empresa, equipe e rotina.</p><a href="/cadastro">Criar cadastro gratuito</a><span>Sem cobrança nesta fase inicial.</span></section>
       <footer className="public-footer">
         <div>
           <strong>
@@ -740,7 +740,7 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <strong>Recursos</strong>
           <a href="#recursos">PDV e estoque</a>
           <a href="#como-funciona">Como funciona</a>
-          <a href="/teste">Cadastro grátis</a>
+          <a href="/cadastro">Cadastro grátis</a>
           <a href="/biblioteca">Biblioteca digital</a>
         </div>
         <div>

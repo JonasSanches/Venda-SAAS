@@ -53,7 +53,7 @@ const officialLinks: Record<string, { pt: string; en: string; external?: boolean
   "https://wa.me/5511978436640": { pt: "Abrir WhatsApp", en: "Open WhatsApp", external: true },
   "https://www.vendamais-app.com/biblioteca": { pt: "Abrir biblioteca", en: "Open library" },
   "https://www.vendamais-app.com/biblioteca/membros": { pt: "Abrir área de membros", en: "Open member area" },
-  "https://www.vendamais-app.com/teste": { pt: "Criar cadastro gratuito", en: "Create free registration" },
+  "https://www.vendamais-app.com/cadastro": { pt: "Criar cadastro gratuito", en: "Create free registration" },
   "https://www.omega-ia.com": { pt: "Conhecer a Omega", en: "Meet Omega", external: true },
 };
 
@@ -83,8 +83,8 @@ function answer(question: string, lang: Lang) {
       : "O Venda+ tem uma Biblioteca Digital organizada por assunto: negócios, vendas e finanças; inteligência artificial e tecnologia; saúde e bem-estar; e espiritualidade, simbolismo e autoconhecimento.\n\nCada título mostra capa, páginas de prévia e quantidade de páginas. O PDF parte de R$ 7,90; as edições Kindle · EPUB usam o preço padrão de R$ 39,99 quando disponíveis. A disponibilidade varia por livro e o download é liberado após a aprovação do Mercado Pago.\n\nAbrir a biblioteca: https://www.vendamais-app.com/biblioteca";
   if (has("onde", "página", "pagina", "link", "site", "navegar", "navigation", "where"))
     return lang === "en"
-      ? "The official Venda+ pages are:\n\n• Free registration: https://www.vendamais-app.com/teste\n• Digital library: https://www.vendamais-app.com/biblioteca\n• Library Member Area: https://www.vendamais-app.com/biblioteca/membros\n\nYou can also tell me what you want to do and I will point you to the right page."
-      : "As páginas oficiais do Venda+ são:\n\n• Cadastro gratuito: https://www.vendamais-app.com/teste\n• Biblioteca Digital: https://www.vendamais-app.com/biblioteca\n• Área de Membros da Biblioteca: https://www.vendamais-app.com/biblioteca/membros\n\nVocê também pode me dizer o que deseja fazer que eu indico a página certa.";
+      ? "The official Venda+ pages are:\n\n• Free registration: https://www.vendamais-app.com/cadastro\n• Digital library: https://www.vendamais-app.com/biblioteca\n• Library Member Area: https://www.vendamais-app.com/biblioteca/membros\n\nYou can also tell me what you want to do and I will point you to the right page."
+      : "As páginas oficiais do Venda+ são:\n\n• Cadastro gratuito: https://www.vendamais-app.com/cadastro\n• Biblioteca Digital: https://www.vendamais-app.com/biblioteca\n• Área de Membros da Biblioteca: https://www.vendamais-app.com/biblioteca/membros\n\nVocê também pode me dizer o que deseja fazer que eu indico a página certa.";
   if (has("anual", "annual", "semestral", "semiannual", "desconto", "discount", "parcela", "installment"))
     return lang === "en"
       ? "Venda+ is currently available at no charge. Create your business registration and start using the system; there are no plans, billing periods, or subscription charges during this initial phase."

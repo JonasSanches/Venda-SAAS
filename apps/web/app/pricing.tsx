@@ -28,7 +28,7 @@ export function Pricing({ compact = false }: { compact?: boolean }) {
           <ul className="plan-feature-list">{planComparison.map((feature) => { const included = feature.included[plan.code]; return <li className={included ? "included" : "excluded"} key={feature.label}><i aria-hidden="true">{included ? "✓" : "×"}</i><span>{feature.label}</span><small className="sr-only">{included ? "Incluído" : "Não incluído"}</small></li>; })}</ul>
         </article>)}
       </div>
-      <a className="pricing-cta" href="/teste">Começar meus 7 dias grátis</a>
+      <a className="pricing-cta" href="/cadastro">Começar meus 7 dias grátis</a>
       <small className="pricing-note">Sem cobrança no cadastro. Planos semestrais e anuais são cobrados pelo período escolhido; no cartão, o parcelamento depende da aprovação do Mercado Pago.</small>
     </section>
   );
