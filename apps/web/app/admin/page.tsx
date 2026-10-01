@@ -476,6 +476,7 @@ export default function Admin() {
                   <option value="RETAIL">Loja</option>
                   <option value="APPAREL_CUSTOMIZATION">Confecção e personalizados</option>
                   <option value="TRANSPORTATION">Transportadora</option>
+                  <option value="WORKSHOP">Oficina mecânica</option>
                   <option value="QR_SALES">Menu Digital por QRCode</option>
                 </select>
               </label>
@@ -589,7 +590,7 @@ export default function Admin() {
 const date = (value?: string) =>
   value ? new Date(value).toLocaleString("pt-BR") : "—";
 const segmentName = (value?: string) =>
-  ({ RESTAURANT: "Restaurante", PIZZERIA: "Pizzaria", WINERY: "Adega", RETAIL: "Loja", APPAREL_CUSTOMIZATION: "Confecção e personalizados", TRANSPORTATION: "Transportadora", QR_SALES: "Menu Digital por QRCode" })[
+  ({ RESTAURANT: "Restaurante", PIZZERIA: "Pizzaria", WINERY: "Adega", RETAIL: "Loja", APPAREL_CUSTOMIZATION: "Confecção e personalizados", TRANSPORTATION: "Transportadora", WORKSHOP: "Oficina mecânica", QR_SALES: "Menu Digital por QRCode" })[
     value ?? ""
   ] ??
   value ??
