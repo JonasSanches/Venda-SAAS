@@ -9,22 +9,22 @@ import { ChatAssistant } from "./chat-assistant";
 import { VisitorTracker } from "./visitor-tracker";
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.vendamais-app.com"),
-  title: "Venda+ | Vendas, estoque e gestão para empresas",
-  description: "Venda, estoque, pedidos, caixa e relacionamento em uma operação conectada para restaurantes, pizzarias, adegas, moda e empresas.",
+  title: "Venda+ | Sistemas prontos para a sua operação",
+  description: "Vendas, serviços, estoque, caixa e fluxos modelados para restaurantes, varejo, personalizados, transportadoras, oficinas e mais.",
   applicationName: "Venda+ by Omega",
   openGraph: {
     type: "website",
     locale: "pt_BR",
     url: "https://www.vendamais-app.com",
     siteName: "Venda+",
-    title: "Venda+ | Sua operação não pode parar.",
-    description: "Vendas, pedidos, estoque, caixa e pós-venda conectados para sua empresa crescer com controle.",
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Venda+ — vendas, estoque, pedidos e pós-venda" }],
+    title: "Venda+ | Soluções prontas para a sua operação",
+    description: "Vendas, serviços, estoque, caixa e fluxos modelados para a realidade da sua empresa.",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Venda+ — soluções de gestão para empresas" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Venda+ | Sua operação não pode parar.",
-    description: "Vendas, pedidos, estoque, caixa e pós-venda conectados para sua empresa crescer com controle.",
+    title: "Venda+ | Soluções prontas para a sua operação",
+    description: "Vendas, serviços, estoque, caixa e fluxos modelados para a realidade da sua empresa.",
     images: ["/opengraph-image"],
   },
   icons: {
