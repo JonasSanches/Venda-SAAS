@@ -22,9 +22,10 @@ import {
 } from "./trial.dto";
 import { TrialService } from "./trial.service";
 import { AuthService } from "../auth/auth.service";
+import { DigitalProductsService } from "../digital-products/digital-products.service";
 @Controller("platform")
 export class PlatformController {
-  constructor(private s: TrialService,private auth:AuthService) {}
+  constructor(private s: TrialService,private auth:AuthService,private digitalProducts:DigitalProductsService) {}
   private admin(request: PlatformRequest) {
     if (
       request.identity?.tenantId !== "10000000-0000-4000-8000-000000000001" ||
@@ -43,6 +44,7 @@ export class PlatformController {
     return this.s.list();
   }
   @Get("qr-payouts") payouts(@Req() request:PlatformRequest){this.admin(request);return this.s.qrPayoutQueue()}
+  @Get("library-downloads") libraryDownloads(@Req() request:PlatformRequest){this.admin(request);return this.digitalProducts.englishFreeDownloads()}
   @Post("qr-payouts/:id/paid") payoutPaid(@Req() request:PlatformRequest,@Param("id")id:string,@Body()body:{reference?:string;mode?:"STANDARD"|"EXPRESS"|"INSTANT"}){this.admin(request);return this.s.markQrPayoutPaid(id,body.reference,body.mode??"STANDARD")}
   @Post("trials/:id/pix-key") pixKey(@Req() request:PlatformRequest,@Param("id")id:string,@Body()body:{pixKey:string;pixKeyType?:string}){this.admin(request);return this.s.setTenantPixKey(id,body.pixKey,body.pixKeyType)}
   @Get("trials/:id") detail(

@@ -17,6 +17,7 @@ type PlatformUser = {
 };
 type AnalyticsReport={summary:{total:number;uniqueVisitors:number;today:number};daily:Array<{day:string;visits:number}>;visits:Array<{id:string;visitedAt:string;ipAddress?:string;path:string;paths:string[];pageViews:number;referrer?:string;device?:string;browser?:string;operatingSystem?:string;language?:string;timezone?:string;platform?:string;screenWidth?:number;screenHeight?:number;viewportWidth?:number;viewportHeight?:number;country?:string;region?:string;city?:string}>;pagination:{page:number;pageSize:number;total:number;totalPages:number}};
 type SurveyResponse={id:string;submittedAt:string;name:string;company:string;contact:string;language?:string;ipAddress?:string;answers:Record<string,string[]>};
+type LibraryDownloads={summary:{downloads:number;readers:number;lastDownloadedAt:string|null};items:Array<{id:string;title:string;format:string;downloads:number;downloadedAt:string|null;createdAt:string}>};
 
 export default function Admin() {
   const [session, setSession] = useState<Session | null>(null),
@@ -32,6 +33,7 @@ export default function Admin() {
     [analytics,setAnalytics]=useState<AnalyticsReport|null>(null),
     [surveys,setSurveys]=useState<SurveyResponse[]>([]),
     [payouts,setPayouts]=useState<any[]>([]),
+    [libraryDownloads,setLibraryDownloads]=useState<LibraryDownloads|null>(null),
     [analyticsError,setAnalyticsError]=useState(""),
     [surveyError,setSurveyError]=useState(""),
     [analyticsDays,setAnalyticsDays]=useState(30),
@@ -39,6 +41,7 @@ export default function Admin() {
     [notificationPermission,setNotificationPermission]=useState<NotificationPermission|"unsupported">("default");
   const knownTrialIds=useRef<Set<string>|null>(null);
   const knownPayoutIds=useRef<Set<string>|null>(null);
+  const knownLibraryDownloads=useRef<number|null>(null);
   async function call(path: string, body?: object) {
     if (!session) throw Error("Sessão expirada");
     const r = await fetch(API + path, {
@@ -65,14 +68,16 @@ export default function Admin() {
   }
   async function load() {
     try {
-      const [trials, platformUsers, qrPayouts] = await Promise.all([
+      const [trials, platformUsers, qrPayouts, englishDownloads] = await Promise.all([
         call("/platform/trials"),
         call("/platform/users"),
         call("/platform/qr-payouts"),
+        call("/platform/library-downloads"),
       ]);
       setItems(trials);
       setUsers(platformUsers);
       setPayouts(qrPayouts);
+      setLibraryDownloads(englishDownloads);
       setError("");
       try{setSurveys(await call("/analytics/surveys"));setSurveyError("")}catch(e){setSurveyError((e as Error).message)}
     } catch (e) {
@@ -108,7 +113,7 @@ export default function Admin() {
     let active=true;
     const check=async()=>{
       try{
-        const [trials,pendingPayouts]=await Promise.all([call("/platform/trials") as Promise<any[]>,call("/platform/qr-payouts") as Promise<any[]>]);
+        const [trials,pendingPayouts,englishDownloads]=await Promise.all([call("/platform/trials") as Promise<any[]>,call("/platform/qr-payouts") as Promise<any[]>,call("/platform/library-downloads") as Promise<LibraryDownloads>]);
         if(!active)return;
         const previous=knownTrialIds.current;
         const current=new Set(trials.map(item=>item.tenantId));
@@ -125,6 +130,10 @@ export default function Admin() {
         }
         knownPayoutIds.current=currentPayouts;
         setPayouts(pendingPayouts);
+        const previousDownloads=knownLibraryDownloads.current;
+        if(previousDownloads!==null&&englishDownloads.summary.downloads>previousDownloads&&Notification.permission==="granted"&&!hasPushNotifications())new Notification("Novo download gratuito em inglês",{body:`${englishDownloads.summary.downloads-previousDownloads} novo(s) download(s) na biblioteca.`,tag:`library-download-${englishDownloads.summary.downloads}`});
+        knownLibraryDownloads.current=englishDownloads.summary.downloads;
+        setLibraryDownloads(englishDownloads);
       }catch{ /* a tela principal já apresenta erros de sessão e carregamento */ }
     };
     void check();
@@ -133,7 +142,7 @@ export default function Admin() {
   },[session]);
   async function enableMacNotifications(){
     if(!session)return;
-    try{await enablePushNotifications(session.accessToken);setNotificationPermission("granted");setMessage("Notificações deste dispositivo ativadas para novos cadastros e vendas.");setError("")}catch(cause){setError((cause as Error).message)}
+    try{await enablePushNotifications(session.accessToken);setNotificationPermission("granted");setMessage("Notificações deste dispositivo ativadas para cadastros, vendas e downloads da biblioteca.");setError("")}catch(cause){setError((cause as Error).message)}
   }
   async function markPayoutPaid(id:string,mode:"STANDARD"|"EXPRESS"|"INSTANT"="STANDARD"){
     const reference=prompt("Referência do Pix (opcional):")??undefined;
@@ -324,6 +333,11 @@ export default function Admin() {
       <section className="survey-admin" id="repasses-pix">
         <div className="survey-admin-title"><div><small>FINANCEIRO · MENU DIGITAL POR QRCODE</small><h2>Repasses Pix pendentes</h2><p>{payouts.length} venda(s) aguardando seu Pix. Padrão: 7% até 10h do dia seguinte. Expresso: 10%, no mesmo dia e em até duas horas. Resgates instantâneos: 12%, pagos na hora.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar</button></div>
         <div className="analytics-table-card"><div className="analytics-table"><table><thead><tr><th>Cliente</th><th>Chave Pix</th><th>Venda</th><th>Comissão</th><th>Enviar</th><th></th></tr></thead><tbody>{payouts.map(payout=><tr key={payout.id}><td><strong>{payout.company}</strong><small>{payout.phone||"—"} · compra: {payout.buyerName}</small></td><td>{payout.pixKey?<><code>{payout.pixKey}</code><small>{payout.pixKeyType||"Tipo não informado"}</small></>:<strong className="error-text">Chave não cadastrada</strong>}</td><td>{money(payout.total)}</td><td>{money(payout.commission)}<small>{Math.round((payout.commissionRate??.07)*100)}%</small></td><td><strong>{money(payout.amount)}</strong></td><td><button disabled={!payout.pixKey} onClick={()=>void markPayoutPaid(payout.id)}>Pagar 7%</button>{payout.expressEligible&&<button className="secondary" disabled={!payout.pixKey} onClick={()=>void markPayoutPaid(payout.id,"EXPRESS")}>Expresso 10%</button>}<button className="secondary" disabled={!payout.pixKey} onClick={()=>void markPayoutPaid(payout.id,"INSTANT")}>Instantâneo 12%</button></td></tr>)}</tbody></table>{!payouts.length&&<p className="analytics-empty">Nenhum repasse Pix pendente.</p>}</div></div>
+      </section>
+      <section className="survey-admin" id="downloads-biblioteca">
+        <div className="survey-admin-title"><div><small>BIBLIOTECA DIGITAL · EDIÇÕES GRATUITAS EM INGLÊS</small><h2>Downloads monitorados</h2><p>Acompanhe cada download das edições gratuitas em inglês. Você recebe um aviso no celular a cada novo download.</p></div><button className="secondary" onClick={()=>void load()}>Atualizar</button></div>
+        <div className="analytics-metrics"><article><small>DOWNLOADS</small><strong>{libraryDownloads?.summary.downloads??0}</strong></article><article><small>LEITORES</small><strong>{libraryDownloads?.summary.readers??0}</strong></article><article><small>ÚLTIMO DOWNLOAD</small><strong>{libraryDownloads?.summary.lastDownloadedAt?new Date(libraryDownloads.summary.lastDownloadedAt).toLocaleDateString("pt-BR",{timeZone:"America/Sao_Paulo"}):"—"}</strong></article></div>
+        <div className="analytics-table-card"><div className="analytics-table"><table><thead><tr><th>Livro</th><th>Formato</th><th>Downloads</th><th>Último download</th></tr></thead><tbody>{libraryDownloads?.items.map(item=><tr key={item.id}><td><strong>{item.title}</strong></td><td>{item.format}</td><td>{item.downloads}</td><td>{item.downloadedAt?new Date(item.downloadedAt).toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"}):"Ainda não baixado"}</td></tr>)}</tbody></table>{!libraryDownloads?.items.length&&<p className="analytics-empty">Ainda não há downloads de edições gratuitas em inglês.</p>}</div></div>
       </section>
       <section className="analytics-admin" id="visitas">
         {analyticsError&&<div className="error">Não foi possível carregar as visitas: {analyticsError}</div>}

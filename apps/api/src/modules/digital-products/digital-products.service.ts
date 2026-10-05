@@ -4,9 +4,13 @@ import { createReadStream, existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { DIGITAL_PRODUCTS, DigitalFormat, digitalCurrency, digitalPrice, digitalPrices } from "./digital-catalog";
+import { PushNotificationsService } from "../push-notifications/push-notifications.service";
+
+const PLATFORM_TENANT_ID = "10000000-0000-4000-8000-000000000001";
 
 @Injectable()
 export class DigitalProductsService{
+  constructor(private readonly push: PushNotificationsService) {}
   private token(){const value=process.env.MERCADO_PAGO_ACCESS_TOKEN;if(!value)throw new BadRequestException("Pagamento temporariamente indisponível");return value}
   private directory(){return process.env.DIGITAL_PRODUCTS_DIR??"/app/storage/digital-products"}
   private file(product:{pdfFile:string;kindleFile:string},format:DigitalFormat){return resolve(this.directory(),format==="PDF"?"pdf":"kindle",format==="PDF"?product.pdfFile:product.kindleFile)}
@@ -52,7 +56,20 @@ export class DigitalProductsService{
   async download(id:string,token:string){
     const purchase=await prisma.digitalPurchase.findUnique({where:{id}});if(!purchase||purchase.downloadToken!==token)throw new NotFoundException("Download não encontrado");if(purchase.status!=="APPROVED")throw new ForbiddenException("Pagamento ainda não aprovado");
     const product=this.product(purchase.productSlug),file=this.file(product,purchase.format as DigitalFormat);if(!existsSync(file))throw new NotFoundException("Arquivo temporariamente indisponível");
-    await prisma.digitalPurchase.update({where:{id},data:{downloadCount:{increment:1},lastDownloadedAt:new Date()}});return{stream:createReadStream(file),name:purchase.format==="PDF"?product.pdfFile:product.kindleFile,type:purchase.format==="PDF"?"application/pdf":"application/epub+zip"};
+    const updated=await prisma.digitalPurchase.update({where:{id},data:{downloadCount:{increment:1},lastDownloadedAt:new Date()}});
+    if(product.language==="en"&&digitalPrice(product,purchase.format as DigitalFormat)===0){
+      const administrators=await prisma.user.findMany({where:{tenantId:PLATFORM_TENANT_ID,status:"ACTIVE",roles:{some:{role:{name:"PLATFORM_ADMIN"}}}},select:{id:true}});
+      await this.push.sendToUsers(administrators.map(administrator=>administrator.id),{title:"Novo download gratuito em inglês",body:`${product.title} · ${purchase.format}`,url:"/admin",tag:`library-download-${updated.id}-${updated.downloadCount}`});
+    }
+    return{stream:createReadStream(file),name:purchase.format==="PDF"?product.pdfFile:product.kindleFile,type:purchase.format==="PDF"?"application/pdf":"application/epub+zip"};
+  }
+  async englishFreeDownloads(){
+    const products=DIGITAL_PRODUCTS.filter(product=>product.language==="en");
+    const slugs=products.map(product=>product.slug);
+    const purchases=slugs.length?await prisma.digitalPurchase.findMany({where:{productSlug:{in:slugs},amount:0,status:"APPROVED"},orderBy:{lastDownloadedAt:"desc"},select:{id:true,productSlug:true,format:true,downloadCount:true,lastDownloadedAt:true,createdAt:true}}):[];
+    const productBySlug=new Map(products.map(product=>[product.slug,product]));
+    const downloads=purchases.reduce((total,purchase)=>total+purchase.downloadCount,0);
+    return{summary:{downloads,readers:purchases.length,lastDownloadedAt:purchases.find(purchase=>purchase.lastDownloadedAt)?.lastDownloadedAt??null},items:purchases.slice(0,12).map(purchase=>({id:purchase.id,title:productBySlug.get(purchase.productSlug)?.title??purchase.productSlug,format:purchase.format,downloads:purchase.downloadCount,downloadedAt:purchase.lastDownloadedAt,createdAt:purchase.createdAt}))};
   }
   async memberDownload(slug:string,format:string){
     if(format!=="PDF"&&format!=="KINDLE")throw new NotFoundException("Formato não encontrado");
