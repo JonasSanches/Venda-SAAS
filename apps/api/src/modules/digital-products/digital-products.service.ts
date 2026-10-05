@@ -16,6 +16,11 @@ export class DigitalProductsService{
   private file(product:{pdfFile:string;kindleFile:string},format:DigitalFormat){return resolve(this.directory(),format==="PDF"?"pdf":"kindle",format==="PDF"?product.pdfFile:product.kindleFile)}
   catalog(){return DIGITAL_PRODUCTS.map(product=>{const{pdfFile,kindleFile,prices:_,...publicProduct}=product;const stripeReady=digitalCurrency(product)!=="USD"||Boolean(process.env.STRIPE_SECRET_KEY);return{...publicProduct,currency:digitalCurrency(product),cover:`/pdf-covers/${product.slug}.png`,preview:`/pdf-previews/${product.slug}.jpg`,previewPages:[1,2,3].map(page=>`/pdf-previews/pages/${product.slug}-${page}.jpg`),prices:digitalPrices(product),available:{PDF:stripeReady&&existsSync(this.file({pdfFile,kindleFile},"PDF")),KINDLE:stripeReady&&existsSync(this.file({pdfFile,kindleFile},"KINDLE"))}}})}
   private product(slug:string){const product=DIGITAL_PRODUCTS.find(item=>item.slug===slug);if(!product)throw new NotFoundException("Livro não encontrado");return product}
+  private async notifyPlatformSale(product:ReturnType<DigitalProductsService["product"]>,purchase:{id:string;format:string;amount:{toString():string}|number},currency:"BRL"|"USD"){
+    const administrators=await prisma.user.findMany({where:{tenantId:PLATFORM_TENANT_ID,status:"ACTIVE",roles:{some:{role:{name:"PLATFORM_ADMIN"}}}},select:{id:true}});
+    const amount=Number(purchase.amount).toLocaleString(currency==="USD"?"en-US":"pt-BR",{style:"currency",currency});
+    await this.push.sendToUsers(administrators.map(administrator=>administrator.id),{title:"Nova venda na Biblioteca",body:`${product.title} · ${purchase.format} · ${amount}`,url:"/admin",tag:`digital-sale-${purchase.id}`});
+  }
   async checkout(slug:string,format:DigitalFormat,email:string){
     const product=this.product(slug);if(!existsSync(this.file(product,format)))throw new BadRequestException("Esta edição ainda está sendo preparada para venda");
     const amount=digitalPrice(product,format),currency=digitalCurrency(product),externalReference=`digital-${randomUUID()}`,downloadToken=randomUUID(),base=(process.env.PUBLIC_APP_URL??"https://www.vendamais-app.com").replace(/\/$/,"");
@@ -40,7 +45,10 @@ export class DigitalProductsService{
     if(digitalCurrency(product)!=="USD"||!purchase.preferenceId||!process.env.STRIPE_SECRET_KEY)return;
     const response=await fetch(`https://api.stripe.com/v1/checkout/sessions/${encodeURIComponent(purchase.preferenceId)}`,{headers:{Authorization:`Bearer ${process.env.STRIPE_SECRET_KEY}`}});if(!response.ok)return;
     const session=await response.json();const approved=session.payment_status==="paid";const terminal=session.status==="expired"||session.status==="complete";
-    if(approved||terminal)await prisma.digitalPurchase.update({where:{id:purchase.id},data:{providerPaymentId:session.payment_intent?String(session.payment_intent):undefined,status:approved?"APPROVED":session.status==="expired"?"EXPIRED":"PENDING",paidAt:approved?(purchase.paidAt??new Date()):purchase.paidAt}});
+    if(approved||terminal){
+      const updated=await prisma.digitalPurchase.update({where:{id:purchase.id},data:{providerPaymentId:session.payment_intent?String(session.payment_intent):undefined,status:approved?"APPROVED":session.status==="expired"?"EXPIRED":"PENDING",paidAt:approved?(purchase.paidAt??new Date()):purchase.paidAt}});
+      if(approved&&!purchase.paidAt)await this.notifyPlatformSale(product,updated,digitalCurrency(product));
+    }
   }
   async webhook(paymentId:string){
     if(!paymentId)return{received:true};
@@ -49,7 +57,8 @@ export class DigitalProductsService{
     const purchase=await prisma.digitalPurchase.findUnique({where:{externalReference}});if(!purchase)return{received:true};
     if(Number(data.transaction_amount)!==Number(purchase.amount))throw new BadRequestException("Valor do pagamento não confere");
     const approved=data.status==="approved";
-    await prisma.digitalPurchase.update({where:{id:purchase.id},data:{providerPaymentId:String(data.id??""),status:String(data.status??"pending").toUpperCase(),paidAt:approved?new Date(data.date_approved??Date.now()):purchase.paidAt}});
+    const updated=await prisma.digitalPurchase.update({where:{id:purchase.id},data:{providerPaymentId:String(data.id??""),status:String(data.status??"pending").toUpperCase(),paidAt:approved?new Date(data.date_approved??Date.now()):purchase.paidAt}});
+    if(approved&&purchase.status!=="APPROVED")await this.notifyPlatformSale(this.product(purchase.productSlug),updated,digitalCurrency(this.product(purchase.productSlug)));
     return{received:true};
   }
   async status(id:string,token:string){let purchase=await prisma.digitalPurchase.findUnique({where:{id}});if(!purchase||purchase.downloadToken!==token)throw new NotFoundException("Compra não encontrada");const product=this.product(purchase.productSlug);await this.refreshStripePurchase(purchase,product);purchase=await prisma.digitalPurchase.findUniqueOrThrow({where:{id}});return{id:purchase.id,status:purchase.status,title:product.title,format:purchase.format,downloadUrl:purchase.status==="APPROVED"?`/api/digital-products/purchases/${purchase.id}/download?token=${encodeURIComponent(token)}`:undefined}}
