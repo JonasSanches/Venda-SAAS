@@ -51,8 +51,9 @@ def convert(source: Path, destination: Path, title: str) -> None:
             navigation.append(f'<li><a href="{page_name}">Página {number}</a></li>')
         archive.writestr("OEBPS/nav.xhtml", f"""<?xml version="1.0" encoding="utf-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops"><head><title>Sumário</title></head><body><nav epub:type="toc"><h1>{html.escape(title)}</h1><ol>{''.join(navigation)}</ol></nav></body></html>""")
+        language = "en" if "-en-" in source.stem else "pt-BR"
         archive.writestr("OEBPS/content.opf", f"""<?xml version="1.0" encoding="utf-8"?>
-<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id" prefix="rendition: http://www.idpf.org/vocab/rendition/#"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="book-id">urn:uuid:{identifier}</dc:identifier><dc:title>{html.escape(title)}</dc:title><dc:language>pt-BR</dc:language><meta property="dcterms:modified">2026-09-08T00:00:00Z</meta><meta property="rendition:layout">pre-paginated</meta><meta property="rendition:orientation">auto</meta><meta property="rendition:spread">none</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>{''.join(manifest)}</manifest><spine>{''.join(spine)}</spine></package>""")
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="book-id" prefix="rendition: http://www.idpf.org/vocab/rendition/#"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="book-id">urn:uuid:{identifier}</dc:identifier><dc:title>{html.escape(title)}</dc:title><dc:language>{language}</dc:language><meta property="dcterms:modified">2026-10-08T00:00:00Z</meta><meta property="rendition:layout">pre-paginated</meta><meta property="rendition:orientation">auto</meta><meta property="rendition:spread">none</meta></metadata><manifest><item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>{''.join(manifest)}</manifest><spine>{''.join(spine)}</spine></package>""")
     document.close()
 
 
