@@ -646,13 +646,26 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <a href="/cadastro">Conhecer o módulo de Estadia <span>→</span></a>
           <em>Fluxo operacional e documental. A aplicação da regra depende do contrato e das condições da operação.</em>
         </div>
-        <figure className="transportation-system-shot"><img src="/erp-system-preview.jpg" alt="Painel real do sistema Venda+"/></figure>
+        <figure className="transportation-system-shot real-transport-shot" aria-label="Tela do módulo de estadia do Venda+">
+          <div className="transport-screen">
+            <header><span>V</span><b>Venda+ <small>Logística</small></b><em>Estadia · Viagem 0381</em></header>
+            <div className="transport-screen-body">
+              <aside><b>Visão geral</b><span>Viagens</span><span className="active">Estadia</span><span>Documentos</span></aside>
+              <main>
+                <div className="transport-screen-heading"><div><small>ACOMPANHAMENTO DE ESTADIA</small><strong>Chegada confirmada</strong><span>Transportadora Horizonte · placa ABC-1D23</span></div><b>Em franquia</b></div>
+                <div className="transport-screen-metrics"><span><small>CHEGADA</small><b>08:42</b></span><span><small>FRANQUIA LEGAL</small><b>5h 00min</b></span><span><small>LIBERAÇÃO</small><b>13:42</b></span></div>
+                <div className="transport-screen-timeline"><span><i></i><b>Chegada registrada</b><small>08:42</small></span><span><i></i><b>Documentos anexados</b><small>08:51</small></span><span><i></i><b>Aguardando liberação</b><small>agora</small></span></div>
+              </main>
+            </div>
+          </div>
+          <figcaption>Tela do módulo de logística e estadia</figcaption>
+        </figure>
       </section>
       <section className="product-showcase" aria-labelledby="product-showcase-title">
         <div className="showcase-heading">
-          <small>UMA SOLUÇÃO PARA ERP COMERCIAL, DE TRANSPORTE E TRIBUTÁRIO</small>
-          <h2 id="product-showcase-title">Um ERP de vendas, logística, faturamento e nota fiscal.</h2>
-          <p>O Venda+ reúne logística, PDV, vendas, estoque, faturamento e emissão fiscal em uma única operação. A estrutura tributária é preparada para acompanhar as notas técnicas e as regras da Reforma Tributária, conforme o cronograma oficial de implantação.</p>
+          <small>TELAS DO VENDA+ · OPERAÇÃO EM TEMPO REAL</small>
+          <h2 id="product-showcase-title">Veja as telas que sua equipe usa para vender e gerir.</h2>
+          <p>O Venda+ reúne PDV, vendas, estoque, entregas, faturamento e emissão fiscal em uma única operação. A prévia abaixo segue a interface azul do sistema, com dados demonstrativos para preservar a privacidade das empresas.</p>
           <div className="showcase-principles"><span><b>Logística e entregas integradas</b><small>organize pedidos, entregas e etapas da operação em um fluxo claro para a equipe. Nossa responsabilidade é dar tempo e segurança para você.</small></span><span><b>Vendas e faturamento sob controle</b><small>PDV, caixa, estoque e indicadores para decidir com dados reais</small></span><span><b>Nota Fiscal Eletrônica · NF-e</b><small>emissão fiscal e regras tributárias acompanhadas conforme notas técnicas oficiais</small></span></div>
         </div>
         {zoomedPreview && <button className="preview-backdrop" aria-label="Fechar visualização ampliada" onClick={() => setZoomedPreview(null)} />}
