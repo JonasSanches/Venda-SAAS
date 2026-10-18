@@ -23,7 +23,6 @@ export function ErpSurvey() {
     event.preventDefault();
     setStatus(en?"Saving your answers...":"Salvando suas respostas...");
     const data = new FormData(event.currentTarget);
-    const lines = [`*${en ? "ERP needs survey" : "Questionário de necessidades do ERP"}*`];
     const labels: Record<string, string> = {
       name: en ? "Name" : "Nome", company: en ? "Company" : "Empresa", contact: en ? "Contact" : "Contato",
       priority: en ? "Main priorities" : "Principais prioridades", problem: en ? "Main problem" : "Principal problema",
@@ -32,13 +31,8 @@ export function ErpSurvey() {
       automation: en ? "Desired automations" : "Automações desejadas", support: en ? "Preferred support" : "Suporte preferido",
       reason: en ? "Reason to switch" : "Motivo para trocar", budget: en ? "Monthly budget" : "Valor mensal", essential: en ? "Essential feature" : "Função indispensável",
     };
-    for (const [key, label] of Object.entries(labels)) {
-      const values = data.getAll(key).map(String).filter(Boolean);
-      if (values.length) lines.push(`\n*${label}:* ${values.join(", ")}`);
-    }
     const answers=Object.fromEntries(Object.keys(labels).filter(key=>!["name","company","contact"].includes(key)).map(key=>[key,data.getAll(key).map(String).filter(Boolean)]));
-    const whatsapp=window.open("about:blank","_blank");
-    try{const response=await fetch(`${API}/analytics/survey`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:data.get("name"),company:data.get("company"),contact:data.get("contact"),language:lang,answers})});const body=await response.json().catch(()=>({}));if(!response.ok)throw Error(body.message??(en?"Could not save your answers.":"Não foi possível salvar suas respostas."));const url=`https://wa.me/5511978436640?text=${encodeURIComponent(lines.join(""))}`;if(whatsapp)whatsapp.location.href=url;else location.href=url;setStatus(en?"Answers saved successfully. WhatsApp has been opened.":"Respostas salvas com sucesso. O WhatsApp foi aberto.")}catch(error){whatsapp?.close();setStatus((error as Error).message)}
+    try{const response=await fetch(`${API}/analytics/survey`,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name:data.get("name"),company:data.get("company"),contact:data.get("contact"),language:lang,answers})});const body=await response.json().catch(()=>({}));if(!response.ok)throw Error(body.message??(en?"Could not save your answers.":"Não foi possível salvar suas respostas."));event.currentTarget.reset();setStatus(en?"Answers saved successfully. Our team will review them in Venda+ administration.":"Respostas salvas com sucesso. Nossa equipe irá analisá-las na administração do Venda+.")}catch(error){setStatus((error as Error).message)}
   };
   return <section className="erp-survey" id="questionario">
     <div className="section-heading"><small>{en ? "HELP US UNDERSTAND YOUR BUSINESS" : "AJUDE-NOS A ENTENDER SEU NEGÓCIO"}</small><h2>{en ? "What would make an ERP truly useful to you?" : "O que tornaria um ERP realmente útil para você?"}</h2><p>{en ? "Answer in a few minutes. Your answers help our team understand your operation and recommend the most suitable structure." : "Responda em poucos minutos. Suas respostas ajudam nossa equipe a entender sua operação e indicar a estrutura mais adequada."}</p></div>
@@ -53,7 +47,7 @@ export function ErpSurvey() {
       <fieldset><legend>9. {en ? "What support channel do you prefer?" : "Qual tipo de suporte você prefere?"}</legend><div className="survey-checks compact">{["WhatsApp", "Chat", "Telefone", "Videoconferência", "Tutoriais", "Atendimento 24 horas"].map(option => <label key={option}><input type="checkbox" name="support" value={option} />{option}</label>)}</div></fieldset>
       <fieldset><legend>10. {en ? "What would make you switch your current system to Venda+?" : "O que faria você trocar seu sistema atual pelo Venda+?"}</legend><textarea name="reason" /></fieldset>
       <div className="survey-columns"><fieldset><legend>11. {en ? "What monthly price seems appropriate?" : "Qual valor mensal considera adequado?"}</legend><input name="budget" placeholder="R$" /></fieldset><fieldset><legend>12. {en ? "Is there an essential feature we did not mention?" : "Existe alguma função indispensável que não mencionamos?"}</legend><textarea name="essential" /></fieldset></div>
-      <div className="survey-submit"><div><strong>{en ? "Your answers go directly to our team." : "Suas respostas vão diretamente para nossa equipe."}</strong><small>{en ? "They are saved securely in Venda+ administration and WhatsApp opens with a copy." : "Elas ficam salvas com segurança na administração do Venda+ e o WhatsApp abre com uma cópia."}</small>{status&&<small className="survey-status">{status}</small>}</div><button>{en ? "Finish and send" : "Finalizar e enviar"}</button></div>
+      <div className="survey-submit"><div><strong>{en ? "Your answers go directly to our team." : "Suas respostas vão diretamente para nossa equipe."}</strong><small>{en ? "They are saved securely in the Venda+ administration table for our team to review." : "Elas ficam salvas com segurança na tabela da administração do Venda+ para análise da equipe."}</small>{status&&<small className="survey-status">{status}</small>}</div><button>{en ? "Finish and send" : "Finalizar e enviar"}</button></div>
     </form>
   </section>;
 }
