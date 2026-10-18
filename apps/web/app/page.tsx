@@ -11,6 +11,7 @@ import { EmailMarketing } from "./email-marketing";
 import { QrSales } from "./qr-sales";
 import { VideoTranscripts } from "./video-transcripts";
 import { request } from "./api-client";
+import styles from "./product-showcase.module.css";
 type Product = {
   id: string;
   sku: string;
@@ -628,14 +629,14 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <span aria-label="NFS-e"><b><i>NFS</i><em>e</em></b><small>SERVIÇOS</small></span>
         </div>
         <div>
-          <small>EMISSÃO FISCAL CONECTADA</small>
-          <h2 id="fiscal-integration-title">Notas fiscais de produto e serviço, sem sair da sua operação.</h2>
-          <p>O ERP conecta sua empresa à Secretaria da Fazenda e aos webservices das prefeituras para homologar e emitir NF-e e NFS-e, conforme a sua operação fiscal.</p>
+          <small>FISCAL · IMPLANTAÇÃO COMERCIAL</small>
+          <h2 id="fiscal-integration-title">Notas fiscais de produto e serviço na operação da sua empresa.</h2>
+          <p>Na implantação, configuramos o fluxo fiscal contratado para conectar vendas, cadastros e documentos à realidade da sua empresa, incluindo as integrações necessárias para NF-e e NFS-e.</p>
         </div>
         <ul>
-          <li><b>NF-e</b><span>Integração para notas de produtos</span></li>
-          <li><b>NFS-e</b><span>Integração municipal para serviços</span></li>
-          <li><b>Homologação</b><span>Acompanhamento da configuração fiscal</span></li>
+          <li><b>NF-e</b><span>Documentos de produto no fluxo da operação</span></li>
+          <li><b>NFS-e</b><span>Serviços e regras municipais configurados</span></li>
+          <li><b>Implantação</b><span>Integrações definidas conforme o projeto</span></li>
         </ul>
       </section>
       <section className="transportation-callout" aria-labelledby="transportation-callout-title">
@@ -661,31 +662,31 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
           <figcaption>Tela do módulo de logística e estadia</figcaption>
         </figure>
       </section>
-      <section className="product-showcase" aria-labelledby="product-showcase-title">
+      <section className={`product-showcase ${styles.previewUpgrade}`} aria-labelledby="product-showcase-title">
         <div className="showcase-heading">
-          <small>TELAS DO VENDA+ · OPERAÇÃO EM TEMPO REAL</small>
-          <h2 id="product-showcase-title">Veja as telas que sua equipe usa para vender e gerir.</h2>
-          <p>O Venda+ reúne PDV, vendas, estoque, entregas, faturamento e emissão fiscal em uma única operação. A prévia abaixo segue a interface azul do sistema, com dados demonstrativos para preservar a privacidade das empresas.</p>
-          <div className="showcase-principles"><span><b>Logística e entregas integradas</b><small>organize pedidos, entregas e etapas da operação em um fluxo claro para a equipe. Nossa responsabilidade é dar tempo e segurança para você.</small></span><span><b>Vendas e faturamento sob controle</b><small>PDV, caixa, estoque e indicadores para decidir com dados reais</small></span><span><b>Nota Fiscal Eletrônica · NF-e</b><small>emissão fiscal e regras tributárias acompanhadas conforme notas técnicas oficiais</small></span></div>
+          <small>TELAS DO VENDA+ · OPERAÇÃO COMPLETA</small>
+          <h2 id="product-showcase-title">Uma operação integrada, configurada para a sua empresa.</h2>
+          <p>O Venda+ centraliza atendimento, PDV, caixa, estoque, entregas, indicadores e fiscal em uma única operação. Cada implantação é modelada pela nossa equipe para os processos, produtos e filiais do cliente.</p>
+          <div className="showcase-principles"><span><b>PDV, caixa e estoque conectados</b><small>vendas, pagamentos e movimentações trabalham no mesmo fluxo operacional.</small></span><span><b>Painel por filial</b><small>receita, margem, caixa, estoque e entregas reunidos na visão de cada unidade.</small></span><span><b>Fiscal configurado no projeto</b><small>documentos e integrações definidos conforme a operação e a contratação.</small></span></div>
         </div>
         {zoomedPreview && <button className="preview-backdrop" aria-label="Fechar visualização ampliada" onClick={() => setZoomedPreview(null)} />}
         <div className="showcase-grid operational-showcase-grid">
           <article className={zoomedPreview === "daily" ? "preview-zoomed" : undefined}>
-            <div className="app-preview sales-report-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("daily")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("daily")} aria-label="Ampliar exemplo de gráfico diário de vendas">
+            <div className="app-preview sales-report-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("daily")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("daily")} aria-label="Ampliar prévia do painel operacional por filial">
               <span className="preview-zoom-trigger" aria-hidden="true">↗ <span>Ver detalhes</span></span>
-              <div className="preview-top"><i></i><i></i><i></i><span>Vendas · Hoje</span></div>
-              <div className="report-screen"><header><span><small>FATURAMENTO HOJE</small><b>R$ 3.460,00</b></span><span><small>98 vendas</small><b>Ticket médio R$ 35,31</b></span></header><div className="report-bars daily-bars"><span><i></i><small>08h</small></span><span><i></i><small>10h</small></span><span><i></i><small>12h</small></span><span><i></i><small>14h</small></span><span><i></i><small>16h</small></span><span><i></i><small>18h</small></span><span><i></i><small>20h</small></span></div><footer><b>Pico de vendas: 18h</b><span>R$ 820 no período</span></footer></div>
+              <div className="preview-top"><i></i><i></i><i></i><span>Visão geral · Filial Centro</span></div>
+              <div className="report-screen"><header><span><small>RECEITA HOJE</small><b>R$ 3.460,00</b></span><span><small>MARGEM REAL</small><b>38,4%</b></span></header><div className="report-bars daily-bars"><span><i></i><small>Seg</small></span><span><i></i><small>Ter</small></span><span><i></i><small>Qua</small></span><span><i></i><small>Qui</small></span><span><i></i><small>Sex</small></span><span><i></i><small>Sáb</small></span><span><i></i><small>Hoje</small></span></div><footer><b>Receita dos últimos 7 dias</b><span>Indicadores da filial</span></footer></div>
             </div>
-            <div className="showcase-copy"><span>01 · VENDAS DO DIA</span><h3>Descubra os horários que mais vendem</h3><p>O gráfico diário mostra a evolução das vendas por horário, o faturamento, o ticket médio e o pico do dia. Exemplo: às 18h foram vendidos R$ 820, ajudando a planejar equipe e reposição.</p><ul className="restaurant-details"><li><b>Salão:</b> 52% das vendas</li><li><b>Delivery:</b> 31% das vendas</li><li><b>Retirada:</b> 17% das vendas</li></ul></div>
+            <div className="showcase-copy"><span>01 · VISÃO GERAL</span><h3>Leia a situação da sua filial em uma tela</h3><p>O painel reúne receita do dia, margem real, divergências no caixa, produtos com risco de ruptura e entregas acima do tempo configurado.</p><ul className="restaurant-details"><li><b>Receita:</b> vendas pagas no período</li><li><b>Margem:</b> calculada com o custo cadastrado</li><li><b>Alertas:</b> caixa, estoque e entregas</li></ul></div>
             {zoomedPreview === "daily" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
           <article className={zoomedPreview === "weekly" ? "preview-zoomed" : undefined}>
-            <div className="app-preview sales-report-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("weekly")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("weekly")} aria-label="Ampliar exemplo de gráfico semanal de vendas">
+            <div className="app-preview stock-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("weekly")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("weekly")} aria-label="Ampliar prévia do PDV do Venda+">
               <span className="preview-zoom-trigger" aria-hidden="true">↗ <span>Ver detalhes</span></span>
-              <div className="preview-top"><i></i><i></i><i></i><span>Vendas · Semana</span></div>
-              <div className="report-screen"><header><span><small>FATURAMENTO SEMANAL</small><b>R$ 21.840,00</b></span><span><small>+12,4% sobre a semana anterior</small><b>642 vendas</b></span></header><div className="report-bars weekly-bars"><span><i></i><small>Seg</small></span><span><i></i><small>Ter</small></span><span><i></i><small>Qua</small></span><span><i></i><small>Qui</small></span><span><i></i><small>Sex</small></span><span><i></i><small>Sáb</small></span><span><i></i><small>Dom</small></span></div><footer><b>Melhor dia: sábado</b><span>R$ 4.920 em vendas</span></footer></div>
+              <div className="preview-top"><i></i><i></i><i></i><span>PDV · Nova venda</span></div>
+              <div className="stock-screen"><small>VENDA ATUAL</small><h4>Itens do carrinho</h4><div><span><b>Produto</b><b>Qtd.</b><b>Total</b></span><span><i>Produto cadastrado</i><b>2</b><em>R$ 24,00</em></span><span><i>Produto cadastrado</i><b>1</b><em>R$ 12,00</em></span><span><i>Pagamento: Pix</i><b></b><em>R$ 36,00</em></span></div></div>
             </div>
-            <div className="showcase-copy"><span>02 · VISÃO SEMANAL</span><h3>Compare resultados e reconheça tendências</h3><p>A visão semanal permite comparar cada dia e perceber crescimento ou queda. No exemplo, sábado faturou R$ 4.920 e a semana cresceu 12,4% em relação à anterior.</p><ul className="restaurant-details"><li><b>Melhor dia:</b> sábado</li><li><b>Ticket médio:</b> R$ 34,02</li><li><b>Planejamento:</b> reforce a equipe de sexta a domingo</li></ul></div>
+            <div className="showcase-copy"><span>02 · PDV</span><h3>Registre a venda sem perder o controle</h3><p>Selecione produtos, confira o saldo, escolha Pix, dinheiro, crédito ou débito e conclua a venda. O sistema registra o pedido, o pagamento e a baixa do estoque.</p><ul className="restaurant-details"><li><b>Produtos:</b> busca e leitura de código</li><li><b>Pagamento:</b> formas registradas na venda</li><li><b>Entrega:</b> balcão ou entrega</li></ul></div>
             {zoomedPreview === "weekly" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
           <article className={zoomedPreview === "stock" ? "preview-zoomed" : undefined}>
@@ -694,20 +695,20 @@ function Login({ onLogin }: { onLogin: (s: Session) => void }) {
               <div className="preview-top"><i></i><i></i><i></i><span>Estoque</span></div>
               <div className="stock-screen"><small>CONTROLE DE ESTOQUE</small><h4>Saldos e movimentações</h4><div><span><b>Produto</b><b>Saldo</b><b>Situação</b></span><span><i>Original 350ml</i><b>100</b><em>Disponível</em></span><span><i>Heineken 350ml</i><b>18</b><em>Atenção</em></span><span><i>Água 500ml</i><b>64</b><em>Disponível</em></span></div></div>
             </div>
-            <div className="showcase-copy"><span>03 · ESTOQUE</span><h3>Reponha antes que o produto acabe</h3><p>Consulte saldos, registre entradas e ajustes e identifique itens em atenção. No exemplo, a Heineken chegou a 18 unidades e já aparece destacada para reposição.</p><ul className="restaurant-details"><li><b>Reposição:</b> 6 produtos em atenção</li><li><b>Cobertura:</b> quantidade disponível para o próximo turno</li><li><b>Conferência:</b> entradas, vendas e ajustes no mesmo histórico</li></ul></div>
+            <div className="showcase-copy"><span>03 · ESTOQUE</span><h3>Veja saldo e histórico de cada produto</h3><p>Consulte a quantidade disponível por filial, registre ajustes e acompanhe os movimentos criados por venda, cancelamento e conferência de estoque.</p><ul className="restaurant-details"><li><b>Saldo:</b> calculado pelos movimentos</li><li><b>Ajustes:</b> impedem saldo negativo</li><li><b>Histórico:</b> entradas, vendas e reversões</li></ul></div>
             {zoomedPreview === "stock" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
           <article className={zoomedPreview === "delivery" ? "preview-zoomed" : undefined}>
-            <div className="app-preview delivery-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("delivery")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("delivery")} aria-label="Ampliar exemplo configurável de controle de entregas">
+            <div className="app-preview delivery-preview" role="button" tabIndex={0} onClick={() => setZoomedPreview("delivery")} onKeyDown={(event) => (event.key === "Enter" || event.key === " ") && setZoomedPreview("delivery")} aria-label="Ampliar prévia de acompanhamento de entregas">
               <span className="preview-zoom-trigger" aria-hidden="true">↗ <span>Ver detalhes</span></span>
               <div className="preview-top"><i></i><i></i><i></i><span>Entregas · Hoje</span></div>
-              <div className="delivery-screen"><header><span><small>PEDIDOS DE HOJE</small><b>24 entregas</b></span><span><small>CONCLUÍDAS</small><b>18</b></span><span><small>EM ROTA</small><b>4</b></span><span><small>AGUARDANDO</small><b>2</b></span></header><div><span><b>#1048 · Ana Souza</b><small>Centro · previsão 18:40</small><em className="route">Em rota</em></span><span><b>#1049 · Carlos Lima</b><small>Jardins · previsão 18:55</small><em>Preparando</em></span><span><b>#1047 · Marina Alves</b><small>Vila Nova · entregue 18:12</small><em className="done">Entregue</em></span></div><footer>Fluxo configurável conforme sua operação</footer></div>
+              <div className="delivery-screen"><header><span><small>ENTREGAS HOJE</small><b>3 pedidos</b></span><span><small>CONCLUÍDAS</small><b>1</b></span><span><small>EM ANDAMENTO</small><b>2</b></span><span><small>ALERTA</small><b>1</b></span></header><div><span><b>Pedido #1048</b><small>Venda de entrega · há 18 min</small><em className="route">Em andamento</em></span><span><b>Pedido #1049</b><small>Venda de entrega · há 51 min</small><em>Atenção</em></span><span><b>Pedido #1047</b><small>Entrega registrada · 18:12</small><em className="done">Concluída</em></span></div><footer>Tempo acompanhado no painel da filial</footer></div>
             </div>
-            <div className="showcase-copy"><span>04 · ENTREGAS CONFIGURÁVEIS</span><h3>Saiba o que está parado, em rota ou entregue</h3><p>Um fluxo configurável pode reunir pedido, cliente, região, previsão e situação da entrega. Assim, a equipe responde com clareza e o gestor identifica atrasos antes da reclamação.</p><ul className="restaurant-details"><li><b>Tempo médio:</b> 32 minutos</li><li><b>No prazo:</b> 92% das entregas</li><li><b>Ação imediata:</b> 2 pedidos aguardam saída</li></ul></div>
+            <div className="showcase-copy"><span>04 · ENTREGAS</span><h3>Acompanhe o que ainda precisa ser concluído</h3><p>Ao registrar a venda como entrega, o pedido aparece no histórico. A equipe marca a conclusão e o painel alerta quando o tempo ultrapassa o limite configurado pela empresa.</p><ul className="restaurant-details"><li><b>Status:</b> em andamento ou concluída</li><li><b>Alerta:</b> limite de tempo configurável</li><li><b>Histórico:</b> horário da venda e da entrega</li></ul></div>
             {zoomedPreview === "delivery" && <button className="preview-close" onClick={() => setZoomedPreview(null)} aria-label="Fechar">×</button>}
           </article>
         </div>
-        <small className="showcase-data-note">Dados demonstrativos para exemplificar a leitura dos painéis. O fluxo de entregas é configurável e ainda não integra o módulo operacional padrão.</small>
+        <small className="showcase-data-note">Prévia dos campos e ações disponíveis no Venda+. Valores e produtos são demonstrativos; dados reais ficam isolados por empresa e filial.</small>
         <div className="showcase-cta"><div><strong>Não é apenas um sistema. É uma visão mais clara da sua empresa.</strong><span>Cadastre sua empresa e comece com seus próprios produtos, equipe e rotina.</span></div><a href="/cadastro">Criar cadastro gratuito</a></div>
       </section>
       <section className="segment-section" id="segmentos" aria-labelledby="segment-title">

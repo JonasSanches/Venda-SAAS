@@ -1,0 +1,47 @@
+.previewUpgrade :global(.operational-showcase-grid > article.preview-zoomed) {
+  width: min(760px, calc(100vw - 32px)) !important;
+  grid-template-rows: auto auto !important;
+  border-color: #2c80d2;
+}
+
+.previewUpgrade :global(.preview-zoomed .app-preview) {
+  height: 274px !important;
+  padding: 13px !important;
+  background: #e9f2fc;
+}
+
+.previewUpgrade :global(.preview-zoomed .app-preview > .preview-top),
+.previewUpgrade :global(.preview-zoomed .app-preview > .report-screen),
+.previewUpgrade :global(.preview-zoomed .app-preview > .delivery-screen),
+.previewUpgrade :global(.preview-zoomed .app-preview > .stock-screen) {
+  width: auto !important;
+  transform: none !important;
+}
+
+.previewUpgrade :global(.preview-zoomed .showcase-copy) {
+  padding: 22px 26px;
+}
+
+.previewUpgrade :global(.preview-zoomed .showcase-copy h3) {
+  font-size: 23px;
+}
+
+@media (max-width: 620px) {
+  .previewUpgrade :global(.operational-showcase-grid > article.preview-zoomed) {
+    width: calc(100vw - 20px) !important;
+    grid-template-rows: auto auto !important;
+  }
+
+  .previewUpgrade :global(.preview-zoomed .app-preview) {
+    height: 248px !important;
+    padding: 12px !important;
+  }
+
+  .previewUpgrade :global(.preview-zoomed .showcase-copy) {
+    padding: 20px;
+  }
+
+  .previewUpgrade :global(.preview-zoomed .showcase-copy h3) {
+    font-size: 21px;
+  }
+}
