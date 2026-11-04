@@ -11,6 +11,7 @@ import { EmailMarketing } from "./email-marketing";
 import { QrSales } from "./qr-sales";
 import { VideoTranscripts } from "./video-transcripts";
 import { request } from "./api-client";
+import { SquareMeterCalculator } from "./square-meter-calculator";
 import styles from "./product-showcase.module.css";
 type Product = {
   id: string;
@@ -173,17 +174,19 @@ export default function Home() {
   const [passwordOpen, setPasswordOpen] = useState(false);
   const refresh = useCallback(async (s: Session) => {
     try {
-      if (s.tenant.segment === "QR_SALES") {
+      const canReadProducts = s.user.roles.some((role) =>
+        ["ADMIN", "MANAGER", "SELLER", "STOCK", "CASHIER"].includes(role)
+      );
+
+      if (canReadProducts) {
         setProducts(await request<Product[]>("/products", s.accessToken));
-        setError("");
-        return;
+      } else {
+        setProducts([]);
       }
-      const [p, stats] = await Promise.all([
-        request<Product[]>("/products", s.accessToken),
-        request<Summary>("/sales/summary", s.accessToken),
-      ]);
-      setProducts(p);
-      setSummary(stats);
+
+      if (s.tenant.segment !== "QR_SALES") {
+        setSummary(await request<Summary>("/sales/summary", s.accessToken));
+      }
       setError("");
     } catch (e) {
       setError((e as Error).message);
@@ -334,6 +337,8 @@ export default function Home() {
           <EmailMarketing token={session.accessToken} />
         ) : page === "Transcrições de vídeo" ? (
           <VideoTranscripts token={session.accessToken} />
+        ) : page === "Calculadora de m²" ? (
+          <SquareMeterCalculator products={products} companyName={session.tenant.name} />
         ) : page === "Menu Digital por QRCode" ? (
           <QrSales token={session.accessToken} />
         ) : page === "Estúdio de moldes" ? (
@@ -1984,18 +1989,19 @@ function CommercialFiscal() {
 const money = (value: number) =>
   value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 const pagesFor = (roles: string[], segment?: string) => {
+  const calculator = ["Calculadora de m²"];
   if (segment === "QR_SALES") {
-    if (roles.some((role) => ["ADMIN", "MANAGER"].includes(role))) return ["Menu Digital por QRCode", "Produtos", "Clientes", "Configurações"];
-    if (roles.includes("SELLER")) return ["Menu Digital por QRCode", "Produtos", "Clientes"];
-    return ["Menu Digital por QRCode"];
+    if (roles.some((role) => ["ADMIN", "MANAGER"].includes(role))) return ["Menu Digital por QRCode", "Produtos", "Clientes", "Configurações", ...calculator];
+    if (roles.includes("SELLER")) return ["Menu Digital por QRCode", "Produtos", "Clientes", ...calculator];
+    return ["Menu Digital por QRCode", ...calculator];
   }
   const studio = segment === "APPAREL_CUSTOMIZATION" ? ["Estúdio de moldes"] : [];
   const pizzeria = segment === "PIZZERIA" ? ["Pizzaria"] : [];
   const transportation = segment === "TRANSPORTATION" ? ["Transportation Detention Recovery"] : [];
   const operations = [...studio, ...pizzeria, ...transportation];
-  if (roles.includes("ADMIN")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "Menu Digital por QRCode", "E-mail Marketing", "Transcrições de vídeo", ...operations, "Usuários", "Filial", "Configurações", "Fiscal"];
-  if (roles.includes("MANAGER")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "Menu Digital por QRCode", "E-mail Marketing", "Transcrições de vídeo", ...operations, "Usuários"];
-  if (roles.includes("SELLER")) return ["Visão geral", "PDV", "Produtos", "Clientes", ...(segment === "PIZZERIA" ? ["Pizzaria"] : [])];
-  if (roles.includes("STOCK")) return ["Visão geral", "Estoque", "Produtos"];
-  return ["Visão geral", "Caixa", "PDV"];
+  if (roles.includes("ADMIN")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "Menu Digital por QRCode", "E-mail Marketing", "Transcrições de vídeo", ...operations, ...calculator, "Usuários", "Filial", "Configurações", "Fiscal"];
+  if (roles.includes("MANAGER")) return ["Visão geral", "Caixa", "PDV", "Estoque", "Produtos", "Clientes", "Menu Digital por QRCode", "E-mail Marketing", "Transcrições de vídeo", ...operations, ...calculator, "Usuários"];
+  if (roles.includes("SELLER")) return ["Visão geral", "PDV", "Produtos", "Clientes", ...(segment === "PIZZERIA" ? ["Pizzaria"] : []), ...calculator];
+  if (roles.includes("STOCK")) return ["Visão geral", "Estoque", "Produtos", ...calculator];
+  return ["Visão geral", "Caixa", "PDV", ...calculator];
 };
