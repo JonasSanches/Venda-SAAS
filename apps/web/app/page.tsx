@@ -75,6 +75,7 @@ type Session = {
   tenant: {
     tenantId: string;
     name: string;
+    logoDataUrl?: string | null;
     status?: string;
     segment?: string;
     expiresAt?: string;
@@ -287,7 +288,7 @@ export default function Home() {
       {supportView && <div style={{position:"fixed",top:0,left:0,right:0,zIndex:50,padding:"7px 16px",background:"#8a6818",color:"#fff",fontSize:12,fontWeight:800,textAlign:"center"}}>Visualização administrativa · somente leitura · sessão expira em 15 minutos</div>}
       <aside>
         <div className="brand">
-          <span>V</span> <BrandName /> <OmegaCredit />
+          {session.tenant.logoDataUrl ? <img className="tenant-logo" src={session.tenant.logoDataUrl} alt={`Logo de ${session.tenant.name}`} /> : <><span>V</span> <BrandName /> <OmegaCredit /></>}
         </div>
         <nav>
           {pagesFor(session.user.roles, session.tenant.segment).map((name) => (
@@ -304,6 +305,7 @@ export default function Home() {
       <section className="content">
         <header>
           <div>
+            {session.tenant.logoDataUrl && <img className="tenant-logo-mobile" src={session.tenant.logoDataUrl} alt={`Logo de ${session.tenant.name}`} />}
             <div className="environment-line">
               <small>AMBIENTE DE DEMONSTRAÇÃO</small>
             </div>
@@ -329,6 +331,7 @@ export default function Home() {
           <Products
             products={products}
             token={session.accessToken}
+            canEdit={!supportView && session.user.roles.some(role=>["ADMIN","MANAGER","STOCK"].includes(role))}
             onCreated={updated}
           />
         ) : page === "Clientes" ? (
@@ -355,7 +358,7 @@ export default function Home() {
         ) : page === "Filial" ? (
           <Branch session={session} onSelect={selectBranch} />
         ) : page === "Meu perfil" ? (
-          <UserProfile session={session} onSelectBranch={selectBranch} onChangePassword={()=>setPasswordOpen(true)} onLogout={()=>{if(supportView){sessionStorage.removeItem("varejo-preview-session");window.close();}else localStorage.removeItem("varejo-session");setSession(null);}} />
+          <UserProfile session={session} onLogoSaved={(logoDataUrl)=>{setSession(current=>{if(!current)return current;const next={...current,tenant:{...current.tenant,logoDataUrl}};(supportView?sessionStorage:localStorage).setItem(supportView?"varejo-preview-session":"varejo-session",JSON.stringify(next));return next})}} onSelectBranch={selectBranch} onChangePassword={()=>setPasswordOpen(true)} onLogout={()=>{if(supportView){sessionStorage.removeItem("varejo-preview-session");window.close();}else localStorage.removeItem("varejo-session");setSession(null);}} />
         ) : page === "Configurações" && session.tenant.segment === "QR_SALES" ? (
           <QrStorefrontSettings token={session.accessToken} onProfile={()=>setPage("Meu perfil")} />
         ) : page === "Configurações" ? (
@@ -404,10 +407,20 @@ function QrStorefrontSettings({token,onProfile}:{token:string;onProfile:()=>void
   async function save(){try{await request("/qr-checkout/storefront-settings",token,{method:"POST",body:JSON.stringify(settings)});setMessage("Visual do Menu Digital por QRCode salvo. Todos os QR Codes ativos usarão este modelo.");setError("")}catch(cause){setError((cause as Error).message)}}
   return <section className="qr-storefront-settings"><button type="button" className="settings-profile-link" onClick={onProfile}><span><small>CONTA E ACESSO</small><strong>Meu perfil</strong><em>Empresa, filial, senha e sessão</em></span><b>→</b></button><header><small>MENU DIGITAL POR QRCODE</small><h2>Visual da vitrine</h2><p>Escolha o template e a tipografia que o comprador verá em todos os seus menus ativos.</p></header><div className="storefront-options">{options.map(option=><button type="button" key={option.id} className={`storefront-option ${option.id.toLowerCase()} ${settings.template===option.id?"selected":""}`} onClick={()=>setSettings(current=>({...current,template:option.id}))}><i style={{fontFamily:selectedFont.family,fontSize:settings.fontSize,color:settings.fontColor}}><b>Produto</b><span>R$ 24,90</span><em>Comprar</em></i><strong>{option.name}</strong><small>{option.note}</small></button>)}</div><section className="storefront-typography"><div><small>TIPOGRAFIA</small><h3>Fonte do menu</h3><p>Escolha uma das sete fontes para títulos, produtos e textos do comprador.</p></div><div className="storefront-fonts">{fonts.map(font=><button type="button" key={font.id} className={settings.font===font.id?"selected":""} style={{fontFamily:font.family}} onClick={()=>setSettings(current=>({...current,font:font.id}))}>{font.name}</button>)}</div><label>Tamanho da fonte <strong>{settings.fontSize}px</strong><input type="range" min="14" max="28" value={settings.fontSize} onChange={event=>setSettings(current=>({...current,fontSize:Number(event.target.value)}))}/></label><label>Cor da fonte<input type="color" value={settings.fontColor} onChange={event=>setSettings(current=>({...current,fontColor:event.target.value}))}/><code>{settings.fontColor.toUpperCase()}</code></label></section><button onClick={save}>Salvar visual do menu</button>{message&&<div className="success">{message}</div>}{error&&<div className="error">{error}</div>}</section>
 }
-function UserProfile({session,onSelectBranch,onChangePassword,onLogout}:{session:Session;onSelectBranch:(branch:BranchInfo)=>void;onChangePassword:()=>void;onLogout:()=>void}){
+async function readImage(file: File): Promise<string> {
+  if (!/^(image\/png|image\/jpeg|image\/webp)$/.test(file.type)) throw Error("Escolha uma imagem PNG, JPG ou WebP.");
+  if (file.size > 500 * 1024) throw Error("A imagem deve ter no máximo 500 KB.");
+  return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onerror=()=>reject(Error("Não foi possível ler a imagem."));reader.onload=()=>resolve(String(reader.result));reader.readAsDataURL(file)});
+}
+function LogoEditor({session,onSaved}:{session:Session;onSaved:(logo:string|null)=>void}) {
+  const [file,setFile]=useState<File|null>(null),[status,setStatus]=useState(""),[saving,setSaving]=useState(false);
+  async function save(logoDataUrl:string|null){setSaving(true);setStatus("");try{await request("/platform/trial/logo",session.accessToken,{method:"PUT",body:JSON.stringify({logoDataUrl})});onSaved(logoDataUrl);setFile(null);setStatus("Logo atualizada.")}catch(e){setStatus((e as Error).message)}finally{setSaving(false)}}
+  return <article className="image-editor"><small>LOGO DA EMPRESA</small>{session.tenant.logoDataUrl&&<img className="image-editor-preview" src={session.tenant.logoDataUrl} alt="Logo atual"/>}<label>Escolha uma imagem<input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>setFile(e.target.files?.[0]??null)}/></label><small>PNG, JPG ou WebP; até 500 KB.</small><button type="button" disabled={!file||saving} onClick={async()=>{try{if(file)await save(await readImage(file))}catch(e){setStatus((e as Error).message)}}}>Salvar logo</button>{session.tenant.logoDataUrl&&<button type="button" className="secondary" disabled={saving} onClick={()=>void save(null)}>Remover logo</button>}{status&&<p role="status">{status}</p>}</article>;
+}
+function UserProfile({session,onLogoSaved,onSelectBranch,onChangePassword,onLogout}:{session:Session;onLogoSaved:(logo:string|null)=>void;onSelectBranch:(branch:BranchInfo)=>void;onChangePassword:()=>void;onLogout:()=>void}){
   const role=session.user.roles.includes("ADMIN")?"Administrador":session.user.roles.includes("MANAGER")?"Gerente":"Vendedor";
   const branches=session.tenant.branches??[session.tenant.branch!];
-  return <section className="user-profile-page"><header><small>CONTA CONECTADA</small><h2>Meu perfil</h2><p>Gerencie sua sessão, empresa e acesso em um só lugar.</p></header><article className="user-profile-card"><div className="profile-avatar">{session.user.name.trim().slice(0,1).toUpperCase()}</div><div><small>USUÁRIO CONECTADO</small><h3>{session.user.name}</h3><p>{session.user.email}</p><mark>{role}</mark></div></article><div className="profile-settings-grid"><article><small>EMPRESA ATUAL</small><strong>{session.tenant.name}</strong><p>Conta ativa para esta operação.</p></article><article><small>FILIAL DE TRABALHO</small><label>Escolha a filial<select value={session.tenant.branch?.id} onChange={event=>{const branch=branches.find(item=>item.id===event.target.value);if(branch)onSelectBranch(branch)}}>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label></article><article><small>SEGURANÇA</small><strong>Senha de acesso</strong><p>Altere sua senha sempre que necessário.</p><button type="button" className="secondary" onClick={onChangePassword}>Alterar minha senha</button></article><article className="profile-session"><small>SESSÃO</small><strong>Sair do sistema</strong><p>Encerra o acesso neste dispositivo.</p><button type="button" className="danger" onClick={onLogout}>Sair</button></article></div></section>
+  return <section className="user-profile-page"><header><small>CONTA CONECTADA</small><h2>Meu perfil</h2><p>Gerencie sua sessão, empresa e acesso em um só lugar.</p></header><article className="user-profile-card"><div className="profile-avatar">{session.user.name.trim().slice(0,1).toUpperCase()}</div><div><small>USUÁRIO CONECTADO</small><h3>{session.user.name}</h3><p>{session.user.email}</p><mark>{role}</mark></div></article><div className="profile-settings-grid">{session.user.roles.includes("ADMIN")&&!session.user.roles.includes("SUPPORT_READONLY")&&<LogoEditor session={session} onSaved={onLogoSaved}/>}<article><small>EMPRESA ATUAL</small><strong>{session.tenant.name}</strong><p>Conta ativa para esta operação.</p></article><article><small>FILIAL DE TRABALHO</small><label>Escolha a filial<select value={session.tenant.branch?.id} onChange={event=>{const branch=branches.find(item=>item.id===event.target.value);if(branch)onSelectBranch(branch)}}>{branches.map(branch=><option key={branch.id} value={branch.id}>{branch.name} · {branch.state}</option>)}</select></label></article><article><small>SEGURANÇA</small><strong>Senha de acesso</strong><p>Altere sua senha sempre que necessário.</p><button type="button" className="secondary" onClick={onChangePassword}>Alterar minha senha</button></article><article className="profile-session"><small>SESSÃO</small><strong>Sair do sistema</strong><p>Encerra o acesso neste dispositivo.</p><button type="button" className="danger" onClick={onLogout}>Sair</button></article></div></section>
 }
 function ChangePassword({
   token,
@@ -863,9 +876,11 @@ function Products({
   products,
   token,
   onCreated,
+  canEdit,
 }: {
   products: Product[];
   token: string;
+  canEdit: boolean;
   onCreated: () => void;
 }) {
   const [open, setOpen] = useState(false),
@@ -1090,7 +1105,7 @@ function Products({
           <div className="product-row" key={p.id}>
             <span>{p.sku}</span>
             <span>{p.barcode ?? "—"}</span>
-            <strong>{p.name}</strong>
+            <div><strong>{p.name}</strong>{canEdit&&<ProductImageEditor product={p} token={token} onSaved={onCreated}/>}</div>
             <span>{p.ncm ?? "—"}</span>
             <span>{money(p.price)}</span>
             <ProductCostEditor product={p} token={token} onSaved={onCreated}/>
@@ -1101,6 +1116,11 @@ function Products({
       </div>
     </>
   );
+}
+function ProductImageEditor({product,token,onSaved}:{product:Product;token:string;onSaved:()=>void}) {
+  const [file,setFile]=useState<File|null>(null),[open,setOpen]=useState(false),[status,setStatus]=useState(""),[saving,setSaving]=useState(false);
+  async function save(imageDataUrl:string|null){setSaving(true);setStatus("");try{await request(`/products/${product.id}/image`,token,{method:"PUT",body:JSON.stringify({imageDataUrl})});setFile(null);setOpen(false);setStatus("Foto salva.");onSaved()}catch(e){setStatus((e as Error).message)}finally{setSaving(false)}}
+  return <div className="product-image-editor">{product.imageDataUrl&&<img className="product-image-preview" src={product.imageDataUrl} alt={`Foto de ${product.name}`}/>}<button type="button" className="secondary" onClick={()=>setOpen(!open)}>{open?"Cancelar":product.imageDataUrl?"Alterar foto":"Adicionar foto"}</button>{open&&<div><input aria-label={`Foto de ${product.name}`} type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>setFile(e.target.files?.[0]??null)}/><small>PNG, JPG ou WebP; até 500 KB.</small><button type="button" disabled={!file||saving} onClick={async()=>{try{if(file)await save(await readImage(file))}catch(e){setStatus((e as Error).message)}}}>Salvar foto</button>{product.imageDataUrl&&<button type="button" className="secondary" disabled={saving} onClick={()=>void save(null)}>Remover foto</button>}</div>}{status&&<small role="status">{status}</small>}</div>;
 }
 function ProductCostEditor({product,token,onSaved}:{product:Product;token:string;onSaved:()=>void}){
   const [cost,setCost]=useState(product.cost??0),[saving,setSaving]=useState(false),[status,setStatus]=useState("");

@@ -57,6 +57,11 @@ export class TrialService {
     const full=await prisma.tenant.findUnique({where:{id},include:tenantInclude});return full?this.publicTenant(full):null;
   }
 
+  async updateLogo(id:string,logoDataUrl:string|null){
+    if(this.demoMode){const trial=this.trials.find(item=>item.tenantId===id);if(!trial)throw new BadRequestException("Empresa não encontrada");trial.logoDataUrl=logoDataUrl??undefined;this.save();return this.publicDemo(trial)}
+    await prisma.tenant.update({where:{id},data:{logoDataUrl}});return this.get(id);
+  }
+
   async list(){
     if(this.demoMode){this.trials.forEach(item=>this.refreshDemo(item));return this.trials.map(item=>this.publicDemo(item))}
     await prisma.tenant.updateMany({where:{status:{in:["PENDING","TRIAL","EXPIRED"]}},data:{status:"ACTIVE",trialStartsAt:null,trialExpiresAt:null,subscriptionPlan:null,subscriptionExpiresAt:null}});

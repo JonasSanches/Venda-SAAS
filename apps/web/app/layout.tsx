@@ -3,7 +3,6 @@ import "./styles.css";
 import "./functional.css";
 import "./preview-fixes.css";
 import "./dashboard.css";
-import { TenantBranding } from "./tenant-branding";
 import { LanguageProvider } from "./language-provider";
 import { ChatAssistant } from "./chat-assistant";
 import { VisitorTracker } from "./visitor-tracker";
@@ -46,7 +45,6 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         <LanguageProvider>
-          <TenantBranding />
           {children}
           <VisitorTracker />
           <ChatAssistant />

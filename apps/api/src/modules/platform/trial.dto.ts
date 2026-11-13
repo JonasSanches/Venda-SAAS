@@ -1,4 +1,4 @@
-import{IsEmail,IsIn,IsInt,IsOptional,IsString,Max,Min,MinLength,NotEquals}from"class-validator";
+import{IsDataURI,IsDefined,ValidateIf,Matches,MaxLength,IsEmail,IsIn,IsInt,IsOptional,IsString,Max,Min,MinLength,NotEquals}from"class-validator";
 const SEGMENTS=["RESTAURANT","PIZZERIA","WINERY","RETAIL","APPAREL_CUSTOMIZATION","TRANSPORTATION","WORKSHOP","QR_SALES"] as const;
 export class TrialDto{@IsString()@MinLength(2)companyName!:string;@IsIn(["SP","RJ"])state!:"SP"|"RJ";@IsString()@MinLength(2)city!:string;@IsIn(SEGMENTS)segment!:string;@IsString()@MinLength(10)phone!:string;@IsOptional()@IsString()logoDataUrl?:string;@IsString()@MinLength(2)name!:string;@IsEmail()email!:string;@IsString()@MinLength(8)password!:string}
 export class ExtendTrialDto{@IsInt()@Min(-365)@Max(365)@NotEquals(0)days!:number}
@@ -8,3 +8,5 @@ export class UpdateTenantDto{@IsString()@MinLength(2)name!:string;@IsString()@Mi
 export class TenantStatusDto{@IsIn(["TRIAL","ACTIVE","SUSPENDED"])status!:"TRIAL"|"ACTIVE"|"SUSPENDED"}
 export class TenantUserStatusDto{@IsIn(["ACTIVE","BLOCKED"])status!:"ACTIVE"|"BLOCKED"}
 export class TenantUserRoleDto{@IsIn(["ADMIN","MANAGER","SELLER","CASHIER","STOCK"])role!:"ADMIN"|"MANAGER"|"SELLER"|"CASHIER"|"STOCK"}
+
+export class TenantLogoDto { @ValidateIf((_object,value)=>value!==null) @IsDefined() @IsDataURI() @Matches(/^data:image\/(png|jpeg|webp);base64,/) @MaxLength(700000) logoDataUrl!: string | null }

@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  Put,
   Req,
 } from "@nestjs/common";
 import type { FastifyRequest } from "fastify";
@@ -18,6 +19,7 @@ import {
   TenantUserRoleDto,
   TenantUserStatusDto,
   TrialDto,
+  TenantLogoDto,
   UpdateTenantDto,
 } from "./trial.dto";
 import { TrialService } from "./trial.service";
@@ -38,6 +40,10 @@ export class PlatformController {
   }
   @Get("trial") current() {
     return this.s.get(tenantContext.getStore()!.tenantId);
+  }
+  @Put("trial/logo") logo(@Req() request:PlatformRequest,@Body() input:TenantLogoDto) {
+    if (!request.identity?.roles.includes("ADMIN")) throw new ForbiddenException("Apenas administradores podem alterar a logo");
+    return this.s.updateLogo(request.identity.tenantId,input.logoDataUrl);
   }
   @Get("trials") list(@Req() request: PlatformRequest) {
     this.admin(request);

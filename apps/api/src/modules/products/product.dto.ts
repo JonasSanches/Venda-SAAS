@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsDataURI, IsIn, IsNumber, IsObject, IsOptional, IsString, Length, Matches, MaxLength, Min, ValidateNested } from "class-validator";
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsDataURI, IsDefined, ValidateIf, IsIn, IsNumber, IsObject, IsOptional, IsString, Length, Matches, MaxLength, Min, ValidateNested } from "class-validator";
 
 export class CreateProductDto {
   @ApiProperty() @IsString() @Length(1, 64) sku!: string;
@@ -28,3 +28,5 @@ export class ProductFiscalDto {
   @ApiProperty() @IsString() cofinsCst!: string;
 }
 export class ProductCostDto { @ApiProperty() @IsNumber({ maxDecimalPlaces: 4 }) @Min(0) cost!:number; }
+
+export class ProductImageDto { @ApiProperty({ nullable: true }) @ValidateIf((_object,value)=>value!==null) @IsDefined() @IsDataURI() @Matches(/^data:image\/(png|jpeg|webp);base64,/) @MaxLength(700000) imageDataUrl!: string | null; }
