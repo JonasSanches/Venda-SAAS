@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from "react";
 
 type Message = { from: "bot" | "user"; text: string };
 type Lang = "pt" | "en";
@@ -163,6 +163,41 @@ export function ChatAssistant() {
   const [lang, setLang] = useState<Lang>("pt");
   const [messages, setMessages] = useState<Message[]>([]);
   const end = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const drag = useRef<{id:number;startX:number;startY:number;left:number;top:number;moved:boolean} | null>(null);
+  const suppressClick = useRef(false);
+  const positionRef = useRef<{x:number;y:number} | null>(null);
+  const [position,setPosition] = useState<{x:number;y:number} | null>(null);
+  const [viewport,setViewport] = useState({width:0,height:0,mobile:false});
+  useEffect(() => {
+    try { const saved=JSON.parse(localStorage.getItem("vendamais-chat-position") ?? "null"); if(saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)){const next={x:Math.min(1,Math.max(0,saved.x)),y:Math.min(1,Math.max(0,saved.y))};positionRef.current=next;setPosition(next)} } catch {}
+    const resize=()=>setViewport({width:window.innerWidth,height:window.innerHeight,mobile:window.matchMedia("(max-width: 900px)").matches});
+    resize();window.addEventListener("resize",resize);return()=>window.removeEventListener("resize",resize);
+  }, []);
+  function pointerDown(event:ReactPointerEvent<HTMLButtonElement>){
+    if(!viewport.mobile || open || (event.pointerType === "mouse" && event.button !== 0))return;
+    const bounds=event.currentTarget.getBoundingClientRect();suppressClick.current=false;
+    drag.current={id:event.pointerId,startX:event.clientX,startY:event.clientY,left:bounds.left,top:bounds.top,moved:false};
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  function pointerMove(event:ReactPointerEvent<HTMLButtonElement>){
+    const current=drag.current;if(!current || current.id!==event.pointerId)return;
+    const dx=event.clientX-current.startX,dy=event.clientY-current.startY;
+    if(!current.moved && Math.hypot(dx,dy)<8)return;
+    current.moved=true;suppressClick.current=true;
+    const width=event.currentTarget.offsetWidth,height=event.currentTarget.offsetHeight;
+    const maxX=Math.max(0,window.innerWidth-width),maxY=Math.max(0,window.innerHeight-height);
+    const x=Math.min(maxX,Math.max(0,current.left+dx)),y=Math.min(maxY,Math.max(0,current.top+dy));
+    const next={x:maxX?x/maxX:0,y:maxY?y/maxY:0};positionRef.current=next;setPosition(next);
+  }
+  function pointerEnd(event:ReactPointerEvent<HTMLButtonElement>){
+    const current=drag.current;if(!current || current.id!==event.pointerId)return;
+    if(current.moved && positionRef.current){try{localStorage.setItem("vendamais-chat-position",JSON.stringify(positionRef.current))}catch{}}
+    if(event.type === "pointercancel")suppressClick.current=true;
+    drag.current=null;
+  }
+  const buttonWidth=toggleRef.current?.offsetWidth ?? 54,buttonHeight=toggleRef.current?.offsetHeight ?? 54;
+  const floatingStyle=viewport.mobile && !open && position ? {left:position.x*Math.max(0,viewport.width-buttonWidth),top:position.y*Math.max(0,viewport.height-buttonHeight),right:"auto",bottom:"auto"} : undefined;
   useEffect(() => {
     const sync = () => setLang(currentLanguage());
     sync();
@@ -189,7 +224,7 @@ export function ChatAssistant() {
     form.reset();
   };
   const labels = copy[lang];
-  return <div className={`sales-chat ${open ? "open" : ""}`}>
+  return <div className={`sales-chat ${open ? "open" : ""}`} style={floatingStyle}>
     {open && <section className="sales-chat-panel" role="dialog" aria-label={labels.title}>
       <header><div><strong>{labels.title}</strong><small>{labels.status}</small></div><button onClick={() => setOpen(false)} aria-label="Fechar / Close">×</button></header>
       <div className="sales-chat-messages">{messages.map((message, index) => <p key={index} className={message.from}>{renderMessage(message.text, lang)}</p>)}<div ref={end}/></div>
@@ -197,6 +232,6 @@ export function ChatAssistant() {
       <a className="sales-chat-whatsapp" href={`https://wa.me/5511978436640?text=${encodeURIComponent(labels.whatsappText)}`} target="_blank" rel="noopener noreferrer">{labels.whatsapp}</a>
       <form onSubmit={submit}><input name="question" placeholder={labels.placeholder} autoComplete="off"/><button>{labels.send}</button></form>
     </section>}
-    <button className="sales-chat-toggle" onClick={() => setOpen((value) => !value)} aria-label={labels.open}><span>{open ? "×" : "💬"}</span><b>{open ? "" : labels.floating}</b></button>
+    <button ref={toggleRef} className="sales-chat-toggle" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerEnd} onPointerCancel={pointerEnd} onClick={() => {if(suppressClick.current){suppressClick.current=false;return}setOpen((value) => !value)}} aria-label={labels.open} aria-expanded={open} title={lang === "pt" ? "Toque para abrir; arraste para mover" : "Tap to open; drag to move"}><span>{open ? "×" : "💬"}</span><b>{open ? "" : labels.floating}</b></button>
   </div>;
 }
