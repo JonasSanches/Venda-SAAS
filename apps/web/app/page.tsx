@@ -299,7 +299,7 @@ export default function Home() {
       </div>
     );
   if (session.user.email.trim().toLowerCase() === "brcolorozanan@gmail.com" && !supportView)
-    return <OrderAssistant token={session.accessToken} userName={session.user.name} companyName={session.tenant.name} logo={session.tenant.logoDataUrl} theme={theme} canConfigure={session.user.roles.some(role=>["ADMIN","MANAGER"].includes(role))} canEdit={session.user.roles.some(role=>["ADMIN","MANAGER","STOCK"].includes(role))} onLogout={()=>{localStorage.removeItem("varejo-session");setSession(null)}} />;
+    return <><OrderAssistant token={session.accessToken} userName={session.user.name} userEmail={session.user.email} onChangePassword={()=>setPasswordOpen(true)} companyName={session.tenant.name} logo={session.tenant.logoDataUrl} theme={theme} canConfigure={session.user.roles.some(role=>["ADMIN","MANAGER"].includes(role))} canEdit={session.user.roles.some(role=>["ADMIN","MANAGER","STOCK"].includes(role))} onLogout={()=>{localStorage.removeItem("varejo-session");setSession(null)}} />{passwordOpen&&<ChangePassword token={session.accessToken} onClose={()=>setPasswordOpen(false)}/>}</>;
   if (!session.tenant.branch)
     return (
       <div className="login">

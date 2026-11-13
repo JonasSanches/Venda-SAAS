@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, PointerEvent as ReactPointerEvent, useEffect, useRef, useState } from "react";
+import { chatPositionPixels, chatPositionRelative } from "./chat-position";
 
 type Message = { from: "bot" | "user"; text: string };
 type Lang = "pt" | "en";
@@ -168,15 +169,16 @@ export function ChatAssistant() {
   const suppressClick = useRef(false);
   const positionRef = useRef<{x:number;y:number} | null>(null);
   const [position,setPosition] = useState<{x:number;y:number} | null>(null);
-  const [viewport,setViewport] = useState({width:0,height:0,mobile:false});
+  const buttonSize=useRef({width:58,height:54});
+  const [viewport,setViewport] = useState({width:0,height:0,offsetLeft:0,offsetTop:0,mobile:false});
   useEffect(() => {
     try { const saved=JSON.parse(localStorage.getItem("vendamais-chat-position") ?? "null"); if(saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)){const next={x:Math.min(1,Math.max(0,saved.x)),y:Math.min(1,Math.max(0,saved.y))};positionRef.current=next;setPosition(next)} } catch {}
-    const resize=()=>setViewport({width:window.innerWidth,height:window.innerHeight,mobile:window.matchMedia("(max-width: 900px)").matches});
-    resize();window.addEventListener("resize",resize);return()=>window.removeEventListener("resize",resize);
+    const resize=()=>{const view=window.visualViewport;setViewport({width:view?.width??window.innerWidth,height:view?.height??window.innerHeight,offsetLeft:view?.offsetLeft??0,offsetTop:view?.offsetTop??0,mobile:window.matchMedia("(max-width: 900px)").matches})};
+    resize();window.addEventListener("resize",resize);window.visualViewport?.addEventListener("resize",resize);window.visualViewport?.addEventListener("scroll",resize);return()=>{window.removeEventListener("resize",resize);window.visualViewport?.removeEventListener("resize",resize);window.visualViewport?.removeEventListener("scroll",resize)};
   }, []);
   function pointerDown(event:ReactPointerEvent<HTMLButtonElement>){
     if(!viewport.mobile || open || (event.pointerType === "mouse" && event.button !== 0))return;
-    const bounds=event.currentTarget.getBoundingClientRect();suppressClick.current=false;
+    const bounds=event.currentTarget.getBoundingClientRect();if(bounds.width && bounds.height)buttonSize.current={width:bounds.width,height:bounds.height};suppressClick.current=false;
     drag.current={id:event.pointerId,startX:event.clientX,startY:event.clientY,left:bounds.left,top:bounds.top,moved:false};
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -185,10 +187,7 @@ export function ChatAssistant() {
     const dx=event.clientX-current.startX,dy=event.clientY-current.startY;
     if(!current.moved && Math.hypot(dx,dy)<8)return;
     current.moved=true;suppressClick.current=true;
-    const width=event.currentTarget.offsetWidth,height=event.currentTarget.offsetHeight;
-    const maxX=Math.max(0,window.innerWidth-width),maxY=Math.max(0,window.innerHeight-height);
-    const x=Math.min(maxX,Math.max(0,current.left+dx)),y=Math.min(maxY,Math.max(0,current.top+dy));
-    const next={x:maxX?x/maxX:0,y:maxY?y/maxY:0};positionRef.current=next;setPosition(next);
+    const next=chatPositionRelative(current.left+dx,current.top+dy,viewport,buttonSize.current);positionRef.current=next;setPosition(next);
   }
   function pointerEnd(event:ReactPointerEvent<HTMLButtonElement>){
     const current=drag.current;if(!current || current.id!==event.pointerId)return;
@@ -196,8 +195,9 @@ export function ChatAssistant() {
     if(event.type === "pointercancel")suppressClick.current=true;
     drag.current=null;
   }
-  const buttonWidth=toggleRef.current?.offsetWidth ?? 54,buttonHeight=toggleRef.current?.offsetHeight ?? 54;
-  const floatingStyle=viewport.mobile && !open && position ? {left:position.x*Math.max(0,viewport.width-buttonWidth),top:position.y*Math.max(0,viewport.height-buttonHeight),right:"auto",bottom:"auto"} : undefined;
+  const measured=toggleRef.current?.getBoundingClientRect();
+  if(measured?.width && measured.height)buttonSize.current={width:measured.width,height:measured.height};
+  const floatingStyle=viewport.mobile && !open && position ? {...chatPositionPixels(position,viewport,buttonSize.current),right:"auto",bottom:"auto"} : undefined;
   useEffect(() => {
     const sync = () => setLang(currentLanguage());
     sync();
