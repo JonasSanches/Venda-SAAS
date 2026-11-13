@@ -9,3 +9,7 @@
 .order-assistant[data-order-theme]:not([data-order-theme="green"]) :is(.oa-placeholder,.oa-list-placeholder,.oa-result){background:var(--oa-card)}
 .order-assistant .oa-tabs button.active{background:transparent;color:var(--oa-accent);border-bottom-color:var(--oa-accent)}
 .order-assistant .oa-tabs button:hover{background:transparent;color:var(--oa-accent)}
+.order-assistant select,.order-assistant textarea{width:100%;min-width:0;min-height:46px;padding:10px 12px;border:1px solid #b8cbc0;border-radius:9px;background:#fff;color:var(--oa-text);font:inherit;font-size:16px}
+.order-assistant[data-order-theme]:not([data-order-theme="green"]) :is(select,textarea){background:var(--oa-bg);color:var(--oa-text);border-color:var(--oa-line)}
+.oa-delivery-details{display:grid;gap:12px;margin:20px 0;padding-top:16px;border-top:1px solid var(--oa-line)}.oa-delivery-details h3{margin:0;font-size:17px}.oa-unit-row{display:grid;grid-template-columns:1fr 1fr auto;align-items:end;gap:10px}.oa-form textarea{resize:vertical}
+@media(max-width:600px){.oa-unit-row{grid-template-columns:1fr}.oa-unit-row button{justify-self:start}.oa-tabs{scrollbar-width:thin}.oa-tabs button{flex:0 0 auto}}
