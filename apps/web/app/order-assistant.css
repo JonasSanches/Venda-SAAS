@@ -36,3 +36,11 @@
 /* Tipografia da experiência de pedidos, com alternativas disponíveis no aparelho. */
 .order-assistant{font-family:"Trebuchet MS",Verdana,sans-serif}
 .order-assistant :is(button,input,select,textarea){font-family:inherit}
+.oa-cart-float,.oa-cart-backdrop{display:none}
+@media(max-width:900px){
+ .order-assistant .oa-cart-float{position:fixed;z-index:81;left:50%;bottom:calc(12px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:8px;width:max-content;max-width:calc(100vw - 160px);min-height:52px;padding:9px 14px;border:1px solid var(--oa-accent);border-radius:999px;background:var(--oa-accent);color:#fff;box-shadow:0 8px 24px #0005;font-size:12px;white-space:nowrap}
+ .order-assistant .oa-cart-float svg{flex:none}.order-assistant .oa-cart-float span{overflow:hidden;text-overflow:ellipsis}.order-assistant .oa-cart-float strong{white-space:nowrap}
+ .order-assistant .oa-cart-backdrop{position:fixed;z-index:320;inset:0;display:flex;align-items:flex-end;justify-content:center;background:#0008}
+ .order-assistant .oa-cart-sheet{display:flex;flex-direction:column;width:min(100%,560px);max-height:min(85dvh,760px);padding:18px 16px calc(16px + env(safe-area-inset-bottom));border:1px solid var(--oa-line);border-radius:20px 20px 0 0;background:var(--oa-card);color:var(--oa-text);box-shadow:0 -10px 36px #0004}
+ .order-assistant .oa-cart-sheet-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px}.oa-cart-sheet-header h2{margin:3px 0;font-size:21px}.oa-cart-sheet-header small{font-size:10px;font-weight:700}.oa-cart-sheet-items{min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}.oa-cart-sheet-footer{flex:none;padding-top:4px}.oa-cart-sheet-footer .oa-total{margin:12px 0}.oa-cart-sheet-footer>button{width:100%;margin-top:7px}.order-assistant .oa-remove-item{grid-column:2;justify-self:end;min-height:36px;padding:4px 8px;background:transparent;color:var(--oa-accent);border:0;font-size:12px;text-decoration:underline}
+}
