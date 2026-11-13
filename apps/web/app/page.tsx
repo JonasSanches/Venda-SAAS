@@ -338,7 +338,7 @@ export default function Home() {
               key={name}
               onClick={() => { setDockOpen(false); setPage(name); }}
             >
-              <MenuIcon name={name}/><span>{name}</span>
+              <MenuIcon name={name}/><span>{name === "PDV" ? "Venda / Pedido" : name}</span>
             </button>
           ))}
         </nav>
@@ -350,7 +350,7 @@ export default function Home() {
             <div className="environment-line">
               <small>AMBIENTE DE DEMONSTRAÇÃO</small>
             </div>
-            <h1>{page}</h1>
+            <h1>{page === "PDV" ? "Venda / Pedido" : page}</h1>
           </div>
           <button className="profile" onClick={()=>setPage("Meu perfil")} aria-label="Abrir meu perfil">
             <span>{session.user.name}</span>

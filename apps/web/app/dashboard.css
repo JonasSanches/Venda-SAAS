@@ -87,3 +87,5 @@ main[data-theme="white"] .products-table .product-row.head,main[data-theme="whit
 main[data-theme="white"] .products-table .product-row b{color:var(--green)!important}
 main[data-theme="white"] .product-row.head{background:#e9f4ed;color:var(--muted)}
 .theme-sample.white{background:#fff;border-color:#bdcfc3}.theme-sample.white:before{background:#d9e9de}.theme-sample.white span{background:#edf5ef}.theme-sample.white b{background:linear-gradient(135deg,#f8fbf9 0 42%,#087650 42% 47%,#f8fbf9 47%);border-color:#bad4c2}
+
+@media(max-width:900px){main[data-theme].mobile-dock-page .mobile-dock nav button span{white-space:normal;line-height:1.2;text-align:center}}
