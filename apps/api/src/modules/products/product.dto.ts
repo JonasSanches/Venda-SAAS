@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { ArrayMaxSize, ArrayMinSize, IsArray, IsDataURI, IsDefined, ValidateIf, IsIn, IsNumber, IsObject, IsOptional, IsString, Length, Matches, MaxLength, Min, ValidateNested } from "class-validator";
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsDataURI, IsDefined, ValidateIf, IsIn, IsNumber, IsObject, IsOptional, IsString, Length, Matches, MaxLength, Max, Min, ValidateNested } from "class-validator";
 
 export class CreateProductDto {
   @ApiProperty() @IsString() @Length(1, 64) sku!: string;
@@ -9,6 +9,7 @@ export class CreateProductDto {
   @ApiProperty({ required: false }) @IsOptional() @IsObject() designData?: Record<string, unknown>;
   @ApiProperty() @IsString() @Length(2, 160) name!: string;
   @ApiProperty({ required: false }) @IsOptional() @IsDataURI() @MaxLength(750000) imageDataUrl?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsNumber({ maxDecimalPlaces: 3 }) @Min(0.001) @Max(999999999.999) coverageM2?: number;
   @ApiProperty() @IsNumber({ maxDecimalPlaces: 2 }) @Min(0) price!: number;
   @ApiProperty({ required: false }) @IsOptional() @IsNumber({ maxDecimalPlaces: 4 }) @Min(0) cost?: number;
   @ApiProperty({ required: false }) @IsOptional() @IsString() @Length(8, 8) ncm?: string;
@@ -30,3 +31,5 @@ export class ProductFiscalDto {
 export class ProductCostDto { @ApiProperty() @IsNumber({ maxDecimalPlaces: 4 }) @Min(0) cost!:number; }
 
 export class ProductImageDto { @ApiProperty({ nullable: true }) @ValidateIf((_object,value)=>value!==null) @IsDefined() @IsDataURI() @Matches(/^data:image\/(png|jpeg|webp);base64,/) @MaxLength(700000) imageDataUrl!: string | null; }
+
+export class UpdateOrderProductDto { @IsString() @Length(2,160) name!:string; @IsNumber({maxDecimalPlaces:2}) @Min(0) price!:number; @ValidateIf((_object,value)=>value!==null) @IsDefined() @IsNumber({maxDecimalPlaces:3}) @Min(0.001) @Max(999999999.999) coverageM2!:number|null; }

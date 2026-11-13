@@ -398,6 +398,7 @@ model Product {
   designData     Json?           @map("design_data")
   name           String
   imageDataUrl   String?         @map("image_data_url") @db.Text
+  coverageM2     Decimal?        @map("coverage_m2") @db.Decimal(12, 3)
   price          Decimal         @db.Decimal(14, 2)
   cost           Decimal         @default(0) @db.Decimal(14, 4)
   ncm            String?

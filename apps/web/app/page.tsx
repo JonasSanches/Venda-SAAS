@@ -12,6 +12,7 @@ import { QrSales } from "./qr-sales";
 import { VideoTranscripts } from "./video-transcripts";
 import { request } from "./api-client";
 import { SquareMeterCalculator } from "./square-meter-calculator";
+import { OrderAssistant } from "./order-assistant";
 import { calculateProductUnits } from "./product-area-calculation";
 import styles from "./product-showcase.module.css";
 type Product = {
@@ -297,6 +298,8 @@ export default function Home() {
         <p>Abrindo o monitor da plataforma...</p>
       </div>
     );
+  if (session.user.email.trim().toLowerCase() === "brcolorozanan@gmail.com" && !supportView)
+    return <OrderAssistant token={session.accessToken} companyName={session.tenant.name} logo={session.tenant.logoDataUrl} theme={theme} canEdit={session.user.roles.some(role=>["ADMIN","MANAGER","STOCK"].includes(role))} onLogout={()=>{localStorage.removeItem("varejo-session");setSession(null)}} />;
   if (!session.tenant.branch)
     return (
       <div className="login">
