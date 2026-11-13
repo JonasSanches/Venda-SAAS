@@ -193,7 +193,7 @@ export default function Home() {
   }, []);
   useEffect(() => { setDockOpen(false); }, [page]);
   useEffect(() => {
-    if (!mobileViewport || page !== "PDV" || !dockOpen) return;
+    if (!mobileViewport || !dockOpen) return;
     resetDockTimer();
     const dismiss = (event: PointerEvent) => {
       const target = event.target as Node;
@@ -322,16 +322,16 @@ export default function Home() {
       setSession(next);
     };
   return (
-    <main data-theme={theme} className={page === "PDV" ? "pdv-dock-page" : undefined}>
+    <main data-theme={theme} className="mobile-dock-page">
       {supportView && <div style={{position:"fixed",top:0,left:0,right:0,zIndex:50,padding:"7px 16px",background:"#8a6818",color:"#fff",fontSize:12,fontWeight:800,textAlign:"center"}}>Visualização administrativa · somente leitura · sessão expira em 15 minutos</div>}
-      {page === "PDV" && <button ref={dockToggleRef} className="mobile-dock-toggle" type="button" aria-controls="main-navigation" aria-expanded={dockOpen} aria-label={dockOpen ? "Ocultar menu" : "Abrir menu"} onClick={()=>setDockOpen(open=>!open)}>
+      <button ref={dockToggleRef} className="mobile-dock-toggle" type="button" aria-controls="main-navigation" aria-expanded={dockOpen} aria-label={dockOpen ? "Ocultar menu" : "Abrir menu"} onClick={()=>setDockOpen(open=>!open)}>
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d={dockOpen ? "M6 6l12 12M18 6 6 18" : "M4 7h16M4 12h16M4 17h16"}/></svg><span>Menu</span>
-      </button>}
-      <aside ref={dockRef} className={page === "PDV" ? `mobile-dock ${dockOpen ? "is-open" : "is-closed"}` : undefined} onPointerDown={dockOpen ? resetDockTimer : undefined} onScroll={dockOpen ? resetDockTimer : undefined} onFocus={dockOpen ? resetDockTimer : undefined}>
+      </button>
+      <aside ref={dockRef} className={`mobile-dock ${dockOpen ? "is-open" : "is-closed"}`} onPointerDown={dockOpen ? resetDockTimer : undefined} onScroll={dockOpen ? resetDockTimer : undefined} onFocus={dockOpen ? resetDockTimer : undefined}>
         <div className="brand">
           {session.tenant.logoDataUrl ? <img className="tenant-logo" src={session.tenant.logoDataUrl} alt={`Logo de ${session.tenant.name}`} /> : <><span>V</span> <BrandName /> <OmegaCredit /></>}
         </div>
-        <nav id="main-navigation" aria-label="Navegação principal" inert={mobileViewport && page === "PDV" && !dockOpen}>
+        <nav id="main-navigation" aria-label="Navegação principal" inert={mobileViewport && !dockOpen}>
           {pagesFor(session.user.roles, session.tenant.segment).map((name) => (
             <button
               className={page === name ? "active" : ""}

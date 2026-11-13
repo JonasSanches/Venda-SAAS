@@ -60,19 +60,19 @@ main[data-theme] .pdv-area-result small{color:var(--muted);line-height:1.4}
 }
 @media(max-width:350px){main[data-theme] .product-cards{gap:7px}main[data-theme] .pdv-product-details strong{font-size:12px}main[data-theme] .pdv-catalog-heading{flex-direction:column}}
 
-/* O PDV no celular libera espaço e mantém o acesso ao menu sempre visível. */
+/* Menu recolhível em todas as telas de gestão no celular. */
 .mobile-dock-toggle{display:none}
 @media(max-width:900px){
- main[data-theme].pdv-dock-page .mobile-dock-toggle{position:fixed;z-index:53;left:max(10px,env(safe-area-inset-left));bottom:calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:52px;height:52px;min-height:52px;padding:4px;border:1px solid var(--line);border-radius:16px;background:var(--green);color:#fff;box-shadow:0 6px 22px #0006;font-size:9px;line-height:1}
- main[data-theme].pdv-dock-page .mobile-dock-toggle svg{width:22px;height:22px}
- main[data-theme].pdv-dock-page .mobile-dock{left:70px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));width:auto;max-height:min(60dvh,440px);overflow-y:auto;overscroll-behavior:contain;padding:8px;border:1px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--paper) 88%,#000);box-shadow:0 12px 32px #0008;transform-origin:bottom left;transition:transform 360ms cubic-bezier(.2,.8,.2,1),opacity 240ms ease,visibility 0s linear 360ms}
- main[data-theme].pdv-dock-page .mobile-dock.is-closed{opacity:0;visibility:hidden;pointer-events:none;transform:translate(-32px,35px) scale(.82)}
- main[data-theme].pdv-dock-page .mobile-dock.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translate(0,0) scale(1);transition:transform 400ms cubic-bezier(.18,.89,.32,1.15),opacity 220ms ease,visibility 0s}
- main[data-theme].pdv-dock-page .mobile-dock nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
- main[data-theme].pdv-dock-page .mobile-dock nav button{min-height:54px;font-size:10px}
- main[data-theme].pdv-dock-page .content{padding-bottom:calc(85px + env(safe-area-inset-bottom))}
+ main[data-theme].mobile-dock-page .mobile-dock-toggle{position:fixed;z-index:53;left:max(10px,env(safe-area-inset-left));bottom:calc(10px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:52px;height:52px;min-height:52px;padding:4px;border:1px solid var(--line);border-radius:16px;background:var(--green);color:#fff;box-shadow:0 6px 22px #0006;font-size:9px;line-height:1}
+ main[data-theme].mobile-dock-page .mobile-dock-toggle svg{width:22px;height:22px}
+ main[data-theme].mobile-dock-page .mobile-dock{left:70px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));width:auto;max-height:min(60dvh,440px);overflow-y:auto;overscroll-behavior:contain;padding:8px;border:1px solid var(--line);border-radius:18px;background:color-mix(in srgb,var(--paper) 88%,#000);box-shadow:0 12px 32px #0008;transform-origin:bottom left;transition:transform 360ms cubic-bezier(.2,.8,.2,1),opacity 240ms ease,visibility 0s linear 360ms}
+ main[data-theme].mobile-dock-page .mobile-dock.is-closed{opacity:0;visibility:hidden;pointer-events:none;transform:translate(-32px,35px) scale(.82)}
+ main[data-theme].mobile-dock-page .mobile-dock.is-open{opacity:1;visibility:visible;pointer-events:auto;transform:translate(0,0) scale(1);transition:transform 400ms cubic-bezier(.18,.89,.32,1.15),opacity 220ms ease,visibility 0s}
+ main[data-theme].mobile-dock-page .mobile-dock nav{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+ main[data-theme].mobile-dock-page .mobile-dock nav button{min-height:54px;font-size:10px}
+ main[data-theme].mobile-dock-page .content{padding-bottom:calc(85px + env(safe-area-inset-bottom))}
 }
-@media(prefers-reduced-motion:reduce){main[data-theme].pdv-dock-page .mobile-dock:is(.is-open,.is-closed){transition:none}}
+@media(prefers-reduced-motion:reduce){main[data-theme].mobile-dock-page .mobile-dock:is(.is-open,.is-closed){transition:none}}
 /* Tema branco para as telas de gestão. */
 main[data-theme="white"]{--ink:#17241e;--muted:#52655b;--line:#d9e4dd;--green:#087650;--pale:#e9f4ed;--paper:#fff;background:#fff;color:var(--ink)}
 main[data-theme="white"]>aside{background:#f4f8f5;color:var(--ink);border-color:var(--line)}
