@@ -112,6 +112,7 @@ export class PizzeriaService {
     this.assertOperator(); if(this.demoMode)return this.demo.createOrder(tenantId,input); await this.requireEnabled(tenantId);
     const quotes=await Promise.all(input.items.map((item:any)=>this.quote(tenantId,item)));
     return withTenant(tenantId, async tx => {
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${'pizzeria-order'}), hashtext(${tenantId}))`;
       const customer=input.customerId?await tx.party.findFirst({where:{id:input.customerId,tenantId,type:"CUSTOMER"}}):null;
       if(input.customerId&&!customer)throw new BadRequestException("Cliente não encontrado nesta empresa.");
       const last=await tx.pizzaOrder.findFirst({where:{tenantId},orderBy:{number:"desc"},select:{number:true}});

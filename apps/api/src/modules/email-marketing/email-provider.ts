@@ -38,4 +38,4 @@ export class UnconfiguredEmailProvider implements EmailProvider {
 export function emailProvider():EmailProvider{
   return String(process.env.EMAIL_PROVIDER??"").toLowerCase()==="resend"?new ResendEmailProvider():new UnconfiguredEmailProvider();
 }
-export function emailIdempotencyKey(input:Pick<EmailSendRequest,"to"|"subject"|"html">){return createHmac("sha256",process.env.EMAIL_WEBHOOK_SECRET??"email").update(`${input.to}:${input.subject}:${input.html}`).digest("hex");}
+export function emailIdempotencyKey(input:Pick<EmailSendRequest,"to"|"subject"|"html">){return createHmac("sha256",process.env.EMAIL_LEGACY_IDEMPOTENCY_SECRET??"email").update(`${input.to}:${input.subject}:${input.html}`).digest("hex");}

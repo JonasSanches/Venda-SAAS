@@ -570,6 +570,7 @@ model EmailCampaignRecipient {
   contactId         String               @map("contact_id") @db.Uuid
   email             String               @db.VarChar(320)
   providerMessageId String?              @map("provider_message_id") @db.VarChar(250)
+  providerIdempotencyKey String?          @map("provider_idempotency_key") @db.VarChar(100)
   status            EmailRecipientStatus @default(QUEUED)
   attempts          Int                  @default(0)
   availableAt       DateTime             @default(now()) @map("available_at")
