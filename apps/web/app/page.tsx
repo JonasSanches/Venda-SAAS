@@ -12,6 +12,7 @@ import { QrSales } from "./qr-sales";
 import { VideoTranscripts } from "./video-transcripts";
 import { request } from "./api-client";
 import { SquareMeterCalculator } from "./square-meter-calculator";
+import { calculateProductUnits } from "./product-area-calculation";
 import styles from "./product-showcase.module.css";
 type Product = {
   id: string;
@@ -341,7 +342,7 @@ export default function Home() {
         ) : page === "Transcrições de vídeo" ? (
           <VideoTranscripts token={session.accessToken} />
         ) : page === "Calculadora de m²" ? (
-          <SquareMeterCalculator products={products} companyName={session.tenant.name} />
+          <SquareMeterCalculator products={products} companyName={session.tenant.name} logoDataUrl={session.tenant.logoDataUrl ?? undefined} />
         ) : page === "Menu Digital por QRCode" ? (
           <QrSales token={session.accessToken} />
         ) : page === "Estúdio de moldes" ? (
@@ -1277,6 +1278,8 @@ function Pdv({
   onSale: () => void;
 }) {
   const [stock, setStock] = useState<Stock[]>([]);
+  const [search, setSearch] = useState("");
+  const [calculating, setCalculating] = useState<Stock | null>(null);
   const [cart, setCart] = useState<Record<string, number>>({});
   const [orders, setOrders] = useState<Order[]>([]);
   const [method, setMethod] = useState("PIX");
@@ -1303,6 +1306,16 @@ function Pdv({
     (sum, p) => sum + (cart[p.id] ?? 0) * p.price,
     0,
   );
+  function addQuantity(product: Stock, quantity: number) {
+    const inCart = cart[product.id] ?? 0;
+    if (!product.active || quantity <= 0 || inCart + quantity > product.quantity) {
+      setMessage(`Estoque insuficiente para ${product.name}. Disponível: ${Math.max(0, product.quantity - inCart)}.`);
+      return false;
+    }
+    setCart(old => ({ ...old, [product.id]: (old[product.id] ?? 0) + quantity }));
+    setMessage(`${product.name} adicionado ao carrinho.`);
+    return true;
+  }
   function addByBarcode(code: string) {
     window.clearTimeout(scannerFallbackTimer.current);
     const normalized = code.trim();
@@ -1316,8 +1329,7 @@ function Pdv({
       setMessage(`Estoque insuficiente para ${product.name}.`);
       return;
     }
-    setCart((old) => ({ ...old, [product.id]: (old[product.id] ?? 0) + 1 }));
-    setMessage(`${product.name} adicionado ao carrinho.`);
+    addQuantity(product, 1);
     setBarcode("");
   }
   async function checkout() {
@@ -1348,20 +1360,19 @@ function Pdv({
           <button type="button" className="secondary" onClick={startReader}>Ler código</button>
         </form>
         {mobileScannerOpen&&<MobileScannerPair token={token} onClose={()=>setMobileScannerOpen(false)} onRead={addByBarcode}/>}
+        <div className="pdv-catalog-heading"><div><h2>Produtos</h2><p>Toque em adicionar ou calcule a quantidade por área.</p></div><a href="#venda-atual">Ver venda · {Object.values(cart).reduce((a,b)=>a+b,0)} item(ns)</a></div>
+        <label className="pdv-search">Buscar produto<input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Nome, SKU ou código de barras" /></label>
         <div className="product-cards">
-          {stock.map((p) => (
-            <button
-              key={p.id}
-              disabled={p.quantity <= 0}
-              onClick={() =>
-                setCart((old) => ({ ...old, [p.id]: (old[p.id] ?? 0) + 1 }))
-              }
-            >
-              {p.imageDataUrl?<img className="pdv-product-thumb" src={p.imageDataUrl} alt=""/>:<span className="pdv-product-thumb placeholder" aria-hidden="true">{p.name.slice(0,1)}</span>}
-              <span className="pdv-product-info"><small>{p.sku}</small><strong>{p.name}</strong><b>{money(p.price)}</b><i>Saldo: {p.quantity}</i></span>
-            </button>
+          {stock.filter(p=>p.active && `${p.name} ${p.sku} ${p.barcode??""}`.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR"))).map((p) => (
+            <article className="pdv-product-tile" key={p.id}>
+              {p.imageDataUrl?<img className="pdv-product-image" src={p.imageDataUrl} alt={`Foto de ${p.name}`}/>:<span className="pdv-product-image placeholder" aria-hidden="true">{p.name.slice(0,1).toUpperCase()}</span>}
+              <div className="pdv-product-details"><small>{p.sku}</small><strong>{p.name}</strong><b>{money(p.price)}</b><small>Disponível: {Math.max(0,p.quantity-(cart[p.id]??0))}</small></div>
+              <div className="pdv-product-actions"><button type="button" disabled={p.quantity <= (cart[p.id]??0)} onClick={()=>addQuantity(p,1)}>+ Adicionar</button><button type="button" className="secondary" onClick={()=>setCalculating(p)} aria-label={`Calcular m² para ${p.name}`}>Calcular m²</button></div>
+            </article>
           ))}
         </div>
+        {stock.filter(p=>p.active && `${p.name} ${p.sku} ${p.barcode??""}`.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR"))).length===0&&<p className="muted">Nenhum produto encontrado.</p>}
+        {calculating&&<ProductAreaCalculator product={calculating} available={Math.max(0,calculating.quantity-(cart[calculating.id]??0))} onClose={()=>setCalculating(null)} onAdd={quantity=>{if(addQuantity(calculating,quantity))setCalculating(null)}}/>}
         <h2 className="subtitle">Vendas recentes</h2>
         {orders.slice(0, 5).map((o) => (
           <div className="order" key={o.id}>
@@ -1372,7 +1383,7 @@ function Pdv({
           </div>
         ))}
       </section>
-      <aside className="cart">
+      <aside className="cart" id="venda-atual">
         <h2>Venda atual</h2>
         {products
           .filter((p) => cart[p.id])
@@ -1381,6 +1392,7 @@ function Pdv({
               <span>{p.name}</span>
               <div>
                 <button
+                  aria-label={`Remover uma unidade de ${p.name}`}
                   onClick={() =>
                     setCart((old) => ({
                       ...old,
@@ -1391,11 +1403,7 @@ function Pdv({
                   −
                 </button>
                 <b>{cart[p.id]}</b>
-                <button
-                  onClick={() =>
-                    setCart((old) => ({ ...old, [p.id]: old[p.id] + 1 }))
-                  }
-                >
+                <button aria-label={`Adicionar uma unidade de ${p.name}`} disabled={(cart[p.id]??0) >= (stock.find(item=>item.id===p.id)?.quantity??0)} onClick={() => { const item=stock.find(item=>item.id===p.id); if(item)addQuantity(item,1); }}>
                   +
                 </button>
               </div>
@@ -1436,6 +1444,13 @@ function Pdv({
       </aside>
     </div>
   );
+}
+function ProductAreaCalculator({product,available,onClose,onAdd}:{product:Stock;available:number;onClose:()=>void;onAdd:(quantity:number)=>void}) {
+  const [area,setArea]=useState(""),[coverage,setCoverage]=useState(""),[loss,setLoss]=useState("10");
+  const areaNumber=Number(area),coverageNumber=Number(coverage),lossNumber=Number(loss);
+  const quantity=calculateProductUnits(areaNumber,coverageNumber,lossNumber)??0;
+  const valid=quantity>0;
+  return <div className="modal-backdrop" onClick={onClose}><section className="pdv-area-modal" role="dialog" aria-modal="true" aria-labelledby="pdv-area-title" onClick={event=>event.stopPropagation()}><div className="pdv-area-heading"><div><small>CALCULAR QUANTIDADE</small><h2 id="pdv-area-title">{product.name}</h2></div><button type="button" className="secondary" onClick={onClose} aria-label="Fechar calculadora">Fechar</button></div><p>Informe a área e o rendimento indicado pelo fabricante para cada unidade.</p><label>Área a cobrir (m²)<input type="number" min="0" step="any" inputMode="decimal" value={area} onChange={e=>setArea(e.target.value)} placeholder="Ex.: 25" /></label><label>Rendimento por unidade (m²)<input type="number" min="0" step="any" inputMode="decimal" value={coverage} onChange={e=>setCoverage(e.target.value)} placeholder="Ex.: 5" /></label><label>Margem de perda (%)<input type="number" min="0" max="100" step="any" inputMode="decimal" value={loss} onChange={e=>setLoss(e.target.value)}/></label>{valid&&<div className="pdv-area-result"><span>Quantidade estimada</span><strong>{quantity} unidade(s)</strong><span>Total: {money(quantity*product.price)}</span><small>Disponível para adicionar: {available}. Confirme o rendimento e as condições de aplicação.</small></div>}{valid&&quantity>available&&<p className="error">Quantidade maior que o estoque disponível.</p>}<button type="button" disabled={!valid||quantity>available} onClick={()=>onAdd(quantity)}>Adicionar à venda</button></section></div>;
 }
 function Cash({ token, onChange }: { token: string; onChange: () => void }) {
   type State = {

@@ -14,3 +14,48 @@ main[data-theme] .cash-actions form .secondary,main[data-theme] .product-form .s
 @media(max-width:1250px){.executive-metrics{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:700px){.executive-metrics{grid-template-columns:repeat(2,1fr)}.dashboard-settings{grid-template-columns:1fr}.dashboard-settings button{width:100%}}
 @media(max-width:420px){.executive-metrics{grid-template-columns:1fr}.executive-metrics article{min-height:112px}}
+
+/* Catálogo de vendas adaptado para toque, usando as cores do tema escolhido. */
+main[data-theme] .pdv-catalog-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:18px 0 12px}
+main[data-theme] .pdv-catalog-heading h2{margin:0;font-size:20px;color:var(--ink)}
+main[data-theme] .pdv-catalog-heading p{margin:4px 0 0;color:var(--muted);font-size:12px}
+main[data-theme] .pdv-catalog-heading a{color:var(--green);font-weight:700;font-size:12px;text-decoration:none;white-space:nowrap}
+main[data-theme] .pdv-search{display:grid;gap:6px;margin-bottom:14px;color:var(--ink);font-weight:700;font-size:12px}
+main[data-theme] .pdv-search input{width:100%;min-height:46px;font-size:16px}
+main[data-theme] .product-cards{grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:12px}
+main[data-theme] .pdv-product-tile{display:flex;flex-direction:column;min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:color-mix(in srgb,var(--paper) 83%,#18324a);color:var(--ink)}
+main[data-theme] .pdv-product-image{display:grid;place-items:center;width:100%;aspect-ratio:4/3;object-fit:cover;background:color-mix(in srgb,var(--paper) 70%,#fff 12%);color:var(--green);font-size:36px;font-weight:800}
+main[data-theme] .pdv-product-details{display:grid;gap:4px;flex:1;padding:12px;min-width:0}
+main[data-theme] .pdv-product-details strong{color:var(--ink);font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+main[data-theme] .pdv-product-details small{color:var(--muted);font-size:11px}
+main[data-theme] .pdv-product-details b{color:var(--green);font-size:15px}
+main[data-theme] .pdv-product-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 10px 10px}
+main[data-theme] .pdv-product-actions button{min-height:42px;padding:8px 5px;font-size:11px;line-height:1.2}
+main[data-theme] .pdv-product-actions button:disabled{opacity:.45}
+main[data-theme] .pdv-area-modal{width:min(100%,480px);max-height:calc(100dvh - 24px);overflow-y:auto;display:grid;gap:12px;padding:22px;border:1px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);box-shadow:0 15px 60px #0008}
+main[data-theme] .pdv-area-modal label{display:grid;gap:6px;font-weight:700;font-size:13px}
+main[data-theme] .pdv-area-modal input{width:100%;min-height:46px;font-size:16px}
+main[data-theme] .pdv-area-modal p{margin:0;color:var(--muted);line-height:1.5}
+main[data-theme] .pdv-area-modal p.error{color:#d33}
+main[data-theme] .pdv-area-heading{display:flex;justify-content:space-between;gap:10px;align-items:start}
+main[data-theme] .pdv-area-heading h2{margin:3px 0;font-size:20px;overflow-wrap:anywhere}
+main[data-theme] .pdv-area-heading small{color:var(--muted);font-size:10px}
+main[data-theme] .pdv-area-result{display:grid;gap:5px;padding:14px;background:var(--pale);border-radius:8px}
+main[data-theme] .pdv-area-result strong{font-size:20px;color:var(--green)}
+main[data-theme] .pdv-area-result small{color:var(--muted);line-height:1.4}
+@media(max-width:700px){
+ main[data-theme] .pdv-scanner{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+ main[data-theme] .pdv-scanner label{grid-column:1/-1;min-width:0}
+ main[data-theme] .pdv-scanner input{width:100%;min-height:46px;font-size:16px}
+ main[data-theme] .pdv-scanner button{min-height:44px}
+ main[data-theme] .pdv-catalog-heading{align-items:start}
+ main[data-theme] .product-cards{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px}
+ main[data-theme] .pdv-product-details{padding:10px}
+ main[data-theme] .pdv-product-actions{grid-template-columns:1fr;padding:0 10px 10px}
+ main[data-theme] .pdv-product-actions button{min-height:44px;font-size:12px}
+ main[data-theme] .pdv aside.cart{scroll-margin-top:12px;padding:16px}
+ main[data-theme] .cart-item button{min-width:44px;min-height:44px}
+ main[data-theme] .cart select{width:100%;min-height:44px;font-size:16px}
+ main[data-theme] .pdv-area-modal{padding:17px}
+}
+@media(max-width:350px){main[data-theme] .product-cards{gap:7px}main[data-theme] .pdv-product-details strong{font-size:12px}main[data-theme] .pdv-catalog-heading{flex-direction:column}}
