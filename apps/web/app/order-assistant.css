@@ -32,3 +32,4 @@
 .order-assistant[data-order-theme="white"] :is(input,select,textarea){background:#fff;color:var(--oa-text);border-color:#b8cbc0}
 .order-assistant[data-order-theme="white"] :is(.oa-placeholder,.oa-list-placeholder,.oa-result){background:#edf5f0}
 .oa-profile-theme{width:100%;max-width:300px;margin:6px 0}
+@media(max-width:900px){.order-assistant .oa-dock-menu button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:69px}.order-assistant .oa-dock-menu button svg{flex:none;color:var(--oa-accent)}.order-assistant .oa-dock-menu button span{line-height:1.2}}
