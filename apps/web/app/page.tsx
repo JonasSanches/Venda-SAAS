@@ -171,6 +171,39 @@ export default function Home() {
     cashOpen: false,
   });
   const [page, setPage] = useState("Visão geral");
+  const [mobileViewport, setMobileViewport] = useState(false);
+  const [dockOpen, setDockOpen] = useState(false);
+  const dockRef = useRef<HTMLElement>(null);
+  const dockToggleRef = useRef<HTMLButtonElement>(null);
+  const dockTimer = useRef<number | undefined>(undefined);
+  const resetDockTimer = useCallback(() => {
+    window.clearTimeout(dockTimer.current);
+    dockTimer.current = window.setTimeout(() => {
+      if (dockRef.current?.querySelector(":focus-visible")) return;
+      setDockOpen(false);
+    }, 8000);
+  }, []);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width: 900px)");
+    const update = () => setMobileViewport(media.matches);
+    update(); media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
+  useEffect(() => { setDockOpen(false); }, [page]);
+  useEffect(() => {
+    if (!mobileViewport || page !== "PDV" || !dockOpen) return;
+    resetDockTimer();
+    const dismiss = (event: PointerEvent) => {
+      const target = event.target as Node;
+      if (!dockRef.current?.contains(target) && !dockToggleRef.current?.contains(target)) setDockOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { setDockOpen(false); dockToggleRef.current?.focus(); }
+    };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("keydown", escape);
+    return () => { window.clearTimeout(dockTimer.current); document.removeEventListener("pointerdown", dismiss); document.removeEventListener("keydown", escape); };
+  }, [mobileViewport, page, dockOpen, resetDockTimer]);
   const [theme, setTheme] = useState<SystemTheme>("green");
   const [error, setError] = useState("");
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -285,18 +318,21 @@ export default function Home() {
       setSession(next);
     };
   return (
-    <main data-theme={theme}>
+    <main data-theme={theme} className={page === "PDV" ? "pdv-dock-page" : undefined}>
       {supportView && <div style={{position:"fixed",top:0,left:0,right:0,zIndex:50,padding:"7px 16px",background:"#8a6818",color:"#fff",fontSize:12,fontWeight:800,textAlign:"center"}}>Visualização administrativa · somente leitura · sessão expira em 15 minutos</div>}
-      <aside>
+      {page === "PDV" && <button ref={dockToggleRef} className="mobile-dock-toggle" type="button" aria-controls="main-navigation" aria-expanded={dockOpen} aria-label={dockOpen ? "Ocultar menu" : "Abrir menu"} onClick={()=>setDockOpen(open=>!open)}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d={dockOpen ? "M6 6l12 12M18 6 6 18" : "M4 7h16M4 12h16M4 17h16"}/></svg><span>Menu</span>
+      </button>}
+      <aside ref={dockRef} className={page === "PDV" ? `mobile-dock ${dockOpen ? "is-open" : "is-closed"}` : undefined} onPointerDown={dockOpen ? resetDockTimer : undefined} onScroll={dockOpen ? resetDockTimer : undefined} onFocus={dockOpen ? resetDockTimer : undefined}>
         <div className="brand">
           {session.tenant.logoDataUrl ? <img className="tenant-logo" src={session.tenant.logoDataUrl} alt={`Logo de ${session.tenant.name}`} /> : <><span>V</span> <BrandName /> <OmegaCredit /></>}
         </div>
-        <nav>
+        <nav id="main-navigation" aria-label="Navegação principal" inert={mobileViewport && page === "PDV" && !dockOpen}>
           {pagesFor(session.user.roles, session.tenant.segment).map((name) => (
             <button
               className={page === name ? "active" : ""}
               key={name}
-              onClick={() => setPage(name)}
+              onClick={() => { setDockOpen(false); setPage(name); }}
             >
               <MenuIcon name={name}/><span>{name}</span>
             </button>
