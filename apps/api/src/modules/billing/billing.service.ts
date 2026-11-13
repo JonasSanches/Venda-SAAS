@@ -31,10 +31,14 @@ export class BillingService{
     const response=await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(paymentId)}`,{headers:{Authorization:`Bearer ${this.token()}`}});if(!response.ok)throw new BadGatewayException("Não foi possível validar o pagamento");
     const data=await response.json(),reference=String(data.external_reference??""),providerId=String(data.id??"");
     const payment=await prisma.billingPayment.findUnique({where:{externalReference:reference}});if(!payment)return{received:true};
-    if(Number(data.transaction_amount)!==Number(payment.amount))throw new BadRequestException("Valor do pagamento não confere");
+    if(providerId!==paymentId || data.currency_id!=="BRL" || !Number.isFinite(Number(data.transaction_amount)) || Math.round(Number(data.transaction_amount)*100)!==Math.round(Number(payment.amount)*100))throw new BadRequestException("Dados do pagamento não conferem");
     await prisma.$transaction(async tx=>{
-      const current=await tx.billingPayment.findUniqueOrThrow({where:{id:payment.id}}),approved=data.status==="approved",firstApproval=approved&&current.status!=="APPROVED";
-      await tx.billingPayment.update({where:{id:payment.id},data:{providerPaymentId:providerId,status:String(data.status).toUpperCase(),paymentMethod:String(data.payment_type_id??data.payment_method_id??""),paidAt:approved?new Date(data.date_approved??Date.now()):current.paidAt}});
+      // Serialize payments for the same company so duplicate notifications and
+      // simultaneous renewals cannot extend the subscription more than once.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${'billing'}), hashtext(${payment.tenantId}))`;
+      const current=await tx.billingPayment.findUniqueOrThrow({where:{id:payment.id}}),approved=data.status==="approved",firstApproval=approved&&!["APPROVED","REFUNDED","CHARGED_BACK","CANCELLED"].includes(current.status);
+      const reversed=["refunded","charged_back","cancelled"].includes(data.status);
+      if(firstApproval || (reversed && current.providerPaymentId===providerId) || (!approved && !reversed && !["APPROVED","REFUNDED","CHARGED_BACK","CANCELLED"].includes(current.status))) await tx.billingPayment.update({where:{id:payment.id},data:{providerPaymentId:providerId,status:String(data.status).toUpperCase(),paymentMethod:String(data.payment_type_id??data.payment_method_id??""),paidAt:approved?new Date(data.date_approved??Date.now()):current.paidAt}});
       if(firstApproval){const[planCode,cycleCode="MONTHLY"]=String(payment.plan??"").split(":"),cycle=CYCLES[cycleCode as CycleCode]??CYCLES.MONTHLY,tenant=await tx.tenant.findUniqueOrThrow({where:{id:payment.tenantId},select:{subscriptionExpiresAt:true}}),now=new Date(),base=tenant.subscriptionExpiresAt&&tenant.subscriptionExpiresAt>now?tenant.subscriptionExpiresAt:now,expiresAt=new Date(base.getTime()+cycle.days*86_400_000);await tx.tenant.update({where:{id:payment.tenantId},data:{status:"ACTIVE",subscriptionPlan:planCode,subscriptionExpiresAt:expiresAt}})}
     });
     return{received:true};

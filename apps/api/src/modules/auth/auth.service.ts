@@ -40,7 +40,7 @@ export class AuthService {
       return parsed;
     } catch { throw new UnauthorizedException("Sessão inválida ou expirada"); }
   }
-  async assertActive(tenantId:string,userId:string){if(process.env.DEMO_MODE!=="false")return;const user=await prisma.user.findFirst({where:{id:userId,tenantId},select:{status:true}});if(!user||user.status==="BLOCKED")throw new UnauthorizedException("Usuário bloqueado ou removido")}
+  async assertActive(tenantId:string,userId:string,tokenRoles:string[]){if(process.env.DEMO_MODE!=="false")return tokenRoles;const user=await prisma.user.findFirst({where:{id:userId,tenantId},select:{status:true,roles:{select:{role:{select:{name:true,tenantId:true}}}}}});if(!user||user.status==="BLOCKED")throw new UnauthorizedException("Usuário bloqueado ou removido");if(tokenRoles.includes("SUPPORT_READONLY"))return tokenRoles;return user.roles.filter(item=>item.role.tenantId===tenantId).map(item=>item.role.name)}
   async listUsers(){
     const tenantId=currentTenantId();
     if(process.env.DEMO_MODE!=="false")return this.store.users(tenantId);

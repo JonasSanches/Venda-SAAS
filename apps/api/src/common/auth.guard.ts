@@ -18,8 +18,10 @@ export class AuthGuard implements CanActivate {
     const identity = this.auth.verifyToken(authorization.slice(7));
     (request as FastifyRequest & {identity?:typeof identity}).identity=identity;
     const branchHeader=request.headers["x-branch-id"];
-    tenantContext.enterWith({ ...identity, branchId:typeof branchHeader==="string"?branchHeader:undefined, requestId: String(request.id) });
-    await this.auth.assertActive(identity.tenantId,identity.userId);
+    const requestContext={ ...identity, branchId:typeof branchHeader==="string"?branchHeader:undefined, requestId: String(request.id) };
+    tenantContext.enterWith(requestContext);
+    identity.roles=await this.auth.assertActive(identity.tenantId,identity.userId,identity.roles);
+    requestContext.roles=identity.roles;
     const tenant = await prisma.tenant.findUnique({ where: { id: identity.tenantId }, select: { segment: true } });
     if (tenant?.segment === "QR_SALES") this.assertQrSalesAccess(request.method, request.url);
     this.assertRoleAccess(identity.roles,request.method,request.url);

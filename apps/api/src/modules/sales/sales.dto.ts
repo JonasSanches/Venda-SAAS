@@ -1,6 +1,11 @@
-import { ArrayMinSize, IsArray, IsIn, IsInt, IsOptional, IsString, Max, Min, MinLength } from "class-validator";
-export class CheckoutDto{
-  @IsArray() @ArrayMinSize(1) items!:Array<{productId:string;quantity:number}>;
+import { Type } from "class-transformer";
+import { ArrayMaxSize, ArrayMinSize, IsArray, IsIn, IsInt, IsNumber, IsOptional, IsString, IsUUID, Max, Min, MinLength, ValidateNested } from "class-validator";
+export class CheckoutItemDto {
+  @IsUUID() productId!: string;
+  @IsNumber({ maxDecimalPlaces: 3 }) @Min(0.001) @Max(1000000) quantity!: number;
+}
+export class CheckoutDto {
+  @IsArray() @ArrayMinSize(1) @ArrayMaxSize(200) @ValidateNested({each:true}) @Type(()=>CheckoutItemDto) items!: CheckoutItemDto[];
   @IsString() @IsIn(["DINHEIRO","PIX","CREDITO","DEBITO"]) paymentMethod!:string;
   @IsOptional() @IsIn(["PDV","DELIVERY"]) channel?:"PDV"|"DELIVERY";
 }
