@@ -28,3 +28,7 @@
 }
 @media(max-width:700px){.order-assistant .oa-user-trigger{max-width:112px;padding:8px;font-size:12px}.oa-brand{min-width:0}.oa-brand h1{font-size:20px}}
 @media(prefers-reduced-motion:reduce){.order-assistant .oa-dock-menu:is(.is-open,.is-closed){transition:none}}
+.order-assistant[data-order-theme="white"]{--oa-bg:#fff;--oa-card:#fff;--oa-text:#17241e;--oa-muted:#506158;--oa-accent:#087650;--oa-line:#d8e2dc}
+.order-assistant[data-order-theme="white"] :is(input,select,textarea){background:#fff;color:var(--oa-text);border-color:#b8cbc0}
+.order-assistant[data-order-theme="white"] :is(.oa-placeholder,.oa-list-placeholder,.oa-result){background:#edf5f0}
+.oa-profile-theme{width:100%;max-width:300px;margin:6px 0}

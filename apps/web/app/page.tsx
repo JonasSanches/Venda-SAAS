@@ -63,8 +63,9 @@ type DashboardData = {
   marginTrend: number[];
 };
 type BranchInfo = { id: string; name: string; state: string };
-type SystemTheme = "green" | "blue" | "lilac" | "gray" | "brown";
+type SystemTheme = "green" | "blue" | "lilac" | "gray" | "brown" | "white";
 const systemThemes: Array<{ id: SystemTheme; name: string; description: string }> = [
+  { id: "white", name: "Branco", description: "Aparência clara, com fundo branco." },
   { id: "green", name: "Verde", description: "O visual padrão do Venda+." },
   { id: "blue", name: "Azul", description: "Painel executivo escuro, como a referência." },
   { id: "lilac", name: "Lilás claro", description: "Leve, acolhedor e contemporâneo." },
@@ -299,7 +300,7 @@ export default function Home() {
       </div>
     );
   if (session.user.email.trim().toLowerCase() === "brcolorozanan@gmail.com" && !supportView)
-    return <><OrderAssistant token={session.accessToken} userName={session.user.name} userEmail={session.user.email} onChangePassword={()=>setPasswordOpen(true)} companyName={session.tenant.name} logo={session.tenant.logoDataUrl} theme={theme} canConfigure={session.user.roles.some(role=>["ADMIN","MANAGER"].includes(role))} canEdit={session.user.roles.some(role=>["ADMIN","MANAGER","STOCK"].includes(role))} onLogout={()=>{localStorage.removeItem("varejo-session");setSession(null)}} />{passwordOpen&&<ChangePassword token={session.accessToken} onClose={()=>setPasswordOpen(false)}/>}</>;
+    return <><OrderAssistant token={session.accessToken} userName={session.user.name} userEmail={session.user.email} onChangePassword={()=>setPasswordOpen(true)} companyName={session.tenant.name} logo={session.tenant.logoDataUrl} theme={theme} themeOptions={systemThemes} onThemeChange={value=>{const next=systemThemes.find(option=>option.id===value)?.id;if(next){setTheme(next);localStorage.setItem(`vendamais-theme:${session.tenant.tenantId}`,next)}}} canConfigure={session.user.roles.some(role=>["ADMIN","MANAGER"].includes(role))} canEdit={session.user.roles.some(role=>["ADMIN","MANAGER","STOCK"].includes(role))} onLogout={()=>{localStorage.removeItem("varejo-session");setSession(null)}} />{passwordOpen&&<ChangePassword token={session.accessToken} onClose={()=>setPasswordOpen(false)}/>}</>;
   if (!session.tenant.branch)
     return (
       <div className="login">

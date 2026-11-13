@@ -73,3 +73,17 @@ main[data-theme] .pdv-area-result small{color:var(--muted);line-height:1.4}
  main[data-theme].pdv-dock-page .content{padding-bottom:calc(85px + env(safe-area-inset-bottom))}
 }
 @media(prefers-reduced-motion:reduce){main[data-theme].pdv-dock-page .mobile-dock:is(.is-open,.is-closed){transition:none}}
+/* Tema branco para as telas de gestão. */
+main[data-theme="white"]{--ink:#17241e;--muted:#52655b;--line:#d9e4dd;--green:#087650;--pale:#e9f4ed;--paper:#fff;background:#fff;color:var(--ink)}
+main[data-theme="white"]>aside{background:#f4f8f5;color:var(--ink);border-color:var(--line)}
+main[data-theme="white"]>aside nav button{color:#40564a}
+main[data-theme="white"]>aside nav button:is(:hover,.active){background:var(--green);color:#fff}
+main[data-theme="white"] :is(input,select,textarea){background:#fff;color:var(--ink);border-color:#b8cbc0}
+main[data-theme="white"] :is(.table,.products-table,.product-form,.stock-form,.user-form,.branch-form,.bulk-import,.detail,.empty,.cash-summary,.cash-actions,.pdv-scanner,.pdv aside.cart,.pdv-product-tile,.order,.theme-option,.dashboard-settings,.profile-settings-grid article,.executive-metrics article){background:#f7faf8!important;color:var(--ink);border-color:var(--line)}
+main[data-theme="white"] .theme-option{color:var(--ink)!important}
+main[data-theme="white"] .theme-option>small{color:var(--muted)!important}
+main[data-theme="white"] .products-table .product-row,main[data-theme="white"] .products-table .product-row strong{color:var(--ink)!important}
+main[data-theme="white"] .products-table .product-row.head,main[data-theme="white"] .products-table .product-row time{color:var(--muted)!important}
+main[data-theme="white"] .products-table .product-row b{color:var(--green)!important}
+main[data-theme="white"] .product-row.head{background:#e9f4ed;color:var(--muted)}
+.theme-sample.white{background:#fff;border-color:#bdcfc3}.theme-sample.white:before{background:#d9e9de}.theme-sample.white span{background:#edf5ef}.theme-sample.white b{background:linear-gradient(135deg,#f8fbf9 0 42%,#087650 42% 47%,#f8fbf9 47%);border-color:#bad4c2}
