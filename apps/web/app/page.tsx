@@ -165,6 +165,7 @@ function MenuIcon({ name }: { name: string }) {
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const sessionToken = useRef<string | null>(null);
   const [summary, setSummary] = useState<Summary>({
     products: 0,
     stockUnits: 0,
@@ -216,24 +217,47 @@ export default function Home() {
       );
 
       if (canReadProducts) {
-        setProducts(await request<Product[]>("/products", s.accessToken));
+        const loaded = await request<Product[]>("/products", s.accessToken);
+        if (sessionToken.current !== s.accessToken) return;
+        setProducts(loaded);
       } else {
         setProducts([]);
       }
 
       if (s.tenant.segment !== "QR_SALES") {
-        setSummary(await request<Summary>("/sales/summary", s.accessToken));
+        const loaded = await request<Summary>("/sales/summary", s.accessToken);
+        if (sessionToken.current !== s.accessToken) return;
+        setSummary(loaded);
       }
       setError("");
     } catch (e) {
-      setError((e as Error).message);
+      if (sessionToken.current === s.accessToken) setError((e as Error).message);
     }
   }, []);
   const [supportView, setSupportView] = useState(false);
   useEffect(() => {
     const preview = sessionStorage.getItem("varejo-preview-session");
     const saved = preview ?? localStorage.getItem("varejo-session");
-    if (saved) { setSupportView(Boolean(preview)); setSession(JSON.parse(saved)); }
+    if (saved) {
+      try { const value = JSON.parse(saved) as Session; sessionToken.current = value.accessToken; setSupportView(Boolean(preview)); setSession(value); } catch {}
+    }
+  }, []);
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== "varejo-session" || sessionStorage.getItem("varejo-preview-session")) return;
+      let next: Session | null = null;
+      try { next = event.newValue ? JSON.parse(event.newValue) as Session : null; } catch {}
+      if (sessionToken.current !== (next?.accessToken ?? null)) {
+        sessionToken.current = next?.accessToken ?? null;
+        setProducts([]);
+        setSummary({ products: 0, stockUnits: 0, orders: 0, revenue: 0, cashOpen: false });
+        setError("");
+        setPage("Visão geral");
+      }
+      setSession(next);
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
   }, []);
   useEffect(() => {
     if (!session) return;
@@ -260,9 +284,9 @@ export default function Home() {
           "/platform/trial",
           session.accessToken,
         );
-        if (!active) return;
+        if (!active || sessionToken.current !== session.accessToken) return;
         setSession((current) => {
-          if (!current) return current;
+          if (!current || current.accessToken !== session.accessToken) return current;
           const selectedBranch = current.tenant.branch;
           const branch =
             tenant.branches?.find((item) => item.id === selectedBranch?.id) ??
@@ -288,6 +312,10 @@ export default function Home() {
     return (
       <Login
         onLogin={(value) => {
+          sessionToken.current = value.accessToken;
+          setProducts([]);
+          setSummary({ products: 0, stockUnits: 0, orders: 0, revenue: 0, cashOpen: false });
+          setError("");
           localStorage.setItem("varejo-session", JSON.stringify(value));
           setSession(value);
         }}
@@ -300,7 +328,7 @@ export default function Home() {
       </div>
     );
   if (session.user.email.trim().toLowerCase() === "brcolorozanan@gmail.com" && !supportView)
-    return <><OrderAssistant token={session.accessToken} userName={session.user.name} userEmail={session.user.email} onChangePassword={()=>setPasswordOpen(true)} companyName={session.tenant.name} logo={session.tenant.logoDataUrl} theme={theme} themeOptions={systemThemes} onThemeChange={value=>{const next=systemThemes.find(option=>option.id===value)?.id;if(next){setTheme(next);localStorage.setItem(`vendamais-theme:${session.tenant.tenantId}`,next)}}} canConfigure={session.user.roles.some(role=>["ADMIN","MANAGER"].includes(role))} canEdit={session.user.roles.some(role=>["ADMIN","MANAGER","STOCK"].includes(role))} onLogout={()=>{localStorage.removeItem("varejo-session");setSession(null)}} />{passwordOpen&&<ChangePassword token={session.accessToken} onClose={()=>setPasswordOpen(false)}/>}</>;
+    return <><OrderAssistant token={session.accessToken} userName={session.user.name} userEmail={session.user.email} onChangePassword={()=>setPasswordOpen(true)} companyName={session.tenant.name} logo={session.tenant.logoDataUrl} theme={theme} themeOptions={systemThemes} onThemeChange={value=>{const next=systemThemes.find(option=>option.id===value)?.id;if(next){setTheme(next);localStorage.setItem(`vendamais-theme:${session.tenant.tenantId}`,next)}}} canConfigure={session.user.roles.some(role=>["ADMIN","MANAGER"].includes(role))} canEdit={session.user.roles.some(role=>["ADMIN","MANAGER","STOCK"].includes(role))} onLogout={()=>{sessionToken.current=null;setProducts([]);setSummary({products:0,stockUnits:0,orders:0,revenue:0,cashOpen:false});localStorage.removeItem("varejo-session");setSession(null)}} />{passwordOpen&&<ChangePassword token={session.accessToken} onClose={()=>setPasswordOpen(false)}/>}</>;
   if (!session.tenant.branch)
     return (
       <div className="login">
@@ -399,7 +427,7 @@ export default function Home() {
         ) : page === "Filial" ? (
           <Branch session={session} onSelect={selectBranch} />
         ) : page === "Meu perfil" ? (
-          <UserProfile session={session} onLogoSaved={(logoDataUrl)=>{setSession(current=>{if(!current)return current;const next={...current,tenant:{...current.tenant,logoDataUrl}};(supportView?sessionStorage:localStorage).setItem(supportView?"varejo-preview-session":"varejo-session",JSON.stringify(next));return next})}} onSelectBranch={selectBranch} onChangePassword={()=>setPasswordOpen(true)} onLogout={()=>{if(supportView){sessionStorage.removeItem("varejo-preview-session");window.close();}else localStorage.removeItem("varejo-session");setSession(null);}} />
+          <UserProfile session={session} onLogoSaved={(logoDataUrl)=>{setSession(current=>{if(!current)return current;const next={...current,tenant:{...current.tenant,logoDataUrl}};(supportView?sessionStorage:localStorage).setItem(supportView?"varejo-preview-session":"varejo-session",JSON.stringify(next));return next})}} onSelectBranch={selectBranch} onChangePassword={()=>setPasswordOpen(true)} onLogout={()=>{sessionToken.current=null;setProducts([]);setSummary({products:0,stockUnits:0,orders:0,revenue:0,cashOpen:false});if(supportView){sessionStorage.removeItem("varejo-preview-session");window.close();}else localStorage.removeItem("varejo-session");setSession(null);}} />
         ) : page === "Configurações" && session.tenant.segment === "QR_SALES" ? (
           <QrStorefrontSettings token={session.accessToken} onProfile={()=>setPage("Meu perfil")} />
         ) : page === "Configurações" ? (
