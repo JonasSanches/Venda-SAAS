@@ -23,6 +23,7 @@ const copy = {
     send: "Enviar",
     open: "Abrir atendimento",
     floating: "Chat 24h",
+    dismiss: "Solte para ocultar o chat",
     whatsappText: "Olá, preciso de ajuda sobre o Venda+.",
   },
   en: {
@@ -41,6 +42,7 @@ const copy = {
     send: "Send",
     open: "Open chat",
     floating: "24/7 Chat",
+    dismiss: "Drop to hide chat",
     whatsappText: "Hi, I need help with Venda+.",
   },
 };
@@ -169,9 +171,13 @@ export function ChatAssistant() {
   const suppressClick = useRef(false);
   const positionRef = useRef<{x:number;y:number} | null>(null);
   const [position,setPosition] = useState<{x:number;y:number} | null>(null);
+  const [dragging,setDragging] = useState(false);
+  const [overDismiss,setOverDismiss] = useState(false);
+  const [dismissed,setDismissed] = useState(false);
   const buttonSize=useRef({width:58,height:54});
   const [viewport,setViewport] = useState({width:0,height:0,offsetLeft:0,offsetTop:0,mobile:false});
   useEffect(() => {
+    try { setDismissed(sessionStorage.getItem("vendamais-chat-dismissed") === "1"); } catch {}
     try { const saved=JSON.parse(localStorage.getItem("vendamais-chat-position") ?? "null"); if(saved && Number.isFinite(saved.x) && Number.isFinite(saved.y)){const next={x:Math.min(1,Math.max(0,saved.x)),y:Math.min(1,Math.max(0,saved.y))};positionRef.current=next;setPosition(next)} } catch {}
     const resize=()=>{const view=window.visualViewport;setViewport({width:view?.width??window.innerWidth,height:view?.height??window.innerHeight,offsetLeft:view?.offsetLeft??0,offsetTop:view?.offsetTop??0,mobile:window.matchMedia("(max-width: 900px)").matches})};
     resize();window.addEventListener("resize",resize);window.visualViewport?.addEventListener("resize",resize);window.visualViewport?.addEventListener("scroll",resize);return()=>{window.removeEventListener("resize",resize);window.visualViewport?.removeEventListener("resize",resize);window.visualViewport?.removeEventListener("scroll",resize)};
@@ -180,17 +186,28 @@ export function ChatAssistant() {
     if(!viewport.mobile || open || (event.pointerType === "mouse" && event.button !== 0))return;
     const bounds=event.currentTarget.getBoundingClientRect();if(bounds.width && bounds.height)buttonSize.current={width:bounds.width,height:bounds.height};suppressClick.current=false;
     drag.current={id:event.pointerId,startX:event.clientX,startY:event.clientY,left:bounds.left,top:bounds.top,moved:false};
+    setDragging(false);setOverDismiss(false);
     event.currentTarget.setPointerCapture(event.pointerId);
   }
   function pointerMove(event:ReactPointerEvent<HTMLButtonElement>){
     const current=drag.current;if(!current || current.id!==event.pointerId)return;
     const dx=event.clientX-current.startX,dy=event.clientY-current.startY;
     if(!current.moved && Math.hypot(dx,dy)<8)return;
-    current.moved=true;suppressClick.current=true;
+    current.moved=true;suppressClick.current=true;setDragging(true);
     const next=chatPositionRelative(current.left+dx,current.top+dy,viewport,buttonSize.current);positionRef.current=next;setPosition(next);
+    const centerX=viewport.offsetLeft+viewport.width/2;
+    const inBottomArea=event.clientY>=viewport.offsetTop+viewport.height-132;
+    setOverDismiss(inBottomArea && Math.abs(event.clientX-centerX)<=108);
   }
   function pointerEnd(event:ReactPointerEvent<HTMLButtonElement>){
     const current=drag.current;if(!current || current.id!==event.pointerId)return;
+    const centerX=viewport.offsetLeft+viewport.width/2;
+    const inDismissZone=current.moved && event.type !== "pointercancel" && event.clientY>=viewport.offsetTop+viewport.height-132 && Math.abs(event.clientX-centerX)<=108;
+    setDragging(false);setOverDismiss(false);
+    if(inDismissZone){
+      try { sessionStorage.setItem("vendamais-chat-dismissed","1");localStorage.removeItem("vendamais-chat-position"); } catch {}
+      drag.current=null;setDismissed(true);return;
+    }
     if(current.moved && positionRef.current){try{localStorage.setItem("vendamais-chat-position",JSON.stringify(positionRef.current))}catch{}}
     if(event.type === "pointercancel")suppressClick.current=true;
     drag.current=null;
@@ -224,7 +241,10 @@ export function ChatAssistant() {
     form.reset();
   };
   const labels = copy[lang];
-  return <div className={`sales-chat ${open ? "open" : ""}`} style={floatingStyle}>
+  if(dismissed)return null;
+  return <>
+    {viewport.mobile && dragging && !open && <div className={`sales-chat-dismiss-zone ${overDismiss ? "ready" : ""}`} aria-live="polite"><span>×</span><b>{labels.dismiss}</b></div>}
+    <div className={`sales-chat ${open ? "open" : ""}`} style={floatingStyle}>
     {open && <section className="sales-chat-panel" role="dialog" aria-label={labels.title}>
       <header><div><strong>{labels.title}</strong><small>{labels.status}</small></div><button onClick={() => setOpen(false)} aria-label="Fechar / Close">×</button></header>
       <div className="sales-chat-messages">{messages.map((message, index) => <p key={index} className={message.from}>{renderMessage(message.text, lang)}</p>)}<div ref={end}/></div>
@@ -233,5 +253,6 @@ export function ChatAssistant() {
       <form onSubmit={submit}><input name="question" placeholder={labels.placeholder} autoComplete="off"/><button>{labels.send}</button></form>
     </section>}
     <button ref={toggleRef} className="sales-chat-toggle" onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={pointerEnd} onPointerCancel={pointerEnd} onClick={() => {if(suppressClick.current){suppressClick.current=false;return}setOpen((value) => !value)}} aria-label={labels.open} aria-expanded={open} title={lang === "pt" ? "Toque para abrir; arraste para mover" : "Tap to open; drag to move"}><span>{open ? "×" : "💬"}</span><b>{open ? "" : labels.floating}</b></button>
-  </div>;
+    </div>
+  </>;
 }
