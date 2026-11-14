@@ -17,6 +17,9 @@ const templates: Record<Template, { name: string; note: string }> = {
   TSHIRT_REGULAR: { name: "Camiseta regular", note: "Modelagem regular com mangas, visualização de frente e costas." },
   TANK_TOP: { name: "Camiseta regata", note: "Modelagem sem mangas, visualização de frente e costas." },
 };
+// Os moldes de camiseta continuam suportados para abrir produtos antigos, mas
+// não fazem mais parte das opções oferecidas para novos pedidos da BR Color.
+const availableTemplates: Template[] = ["BOARD_SHORTS_SLIT", "BOARD_SHORTS_SLIT_2", "BOARD_SHORTS_STRAIGHT"];
 
 const initialSide = (): SideDesign => ({ layers: [] });
 const printAreaLabels: Record<PrintArea, string> = { WHOLE: "Estampa toda", BODY: "Corpo da peça", WAIST: "Cintura", SIDES: "Linhas laterais", CORD: "Cordão", INTERIOR: "Interior" };
@@ -101,7 +104,7 @@ export function GarmentStudio({ onSave }: { onSave: (product: { sku: string; nam
   return <div className="garment-studio">
     <section className="studio-intro"><div><small>CRIAÇÃO E PERSONALIZAÇÃO</small><h2>Monte a peça antes de produzir</h2><p>Escolha o molde, envie sua arte e ajuste frente e costas. O resultado pode virar um produto do catálogo ou uma ficha em PDF para aprovação.</p></div><div className="studio-warning"><b>Molde visual</b><span>Use para criação e aprovação. Medidas de corte, costura, sangria e gradação devem ser confirmadas com a produção.</span></div></section>
     {error && <div className="error">{error}</div>}{message && <div className="success">{message}</div>}
-    <div className="template-picker">{(Object.keys(templates) as Template[]).map((key) => <button type="button" key={key} className={template === key ? "active" : ""} onClick={() => setTemplate(key)}><b>{templates[key].name}</b><span>{templates[key].note}</span></button>)}</div>
+    <div className="template-picker">{availableTemplates.map((key) => <button type="button" key={key} className={template === key ? "active" : ""} onClick={() => setTemplate(key)}><b>{templates[key].name}</b><span>{templates[key].note}</span></button>)}</div>
     <div className="studio-workspace">
       <aside className="studio-controls">
         <div className="side-switch"><button type="button" className={side === "front" ? "active" : ""} onClick={() => setSide("front")}>Frente</button><button type="button" className={side === "back" ? "active" : ""} onClick={() => { setSide("back"); if (printArea === "CORD") setPrintArea("BODY"); }}>Costas</button></div>
