@@ -17,11 +17,14 @@ function prismaClient() {
   for (const candidate of candidates) {
     try { return require(candidate).PrismaClient; } catch (_) { /* try next */ }
   }
-  throw new Error("Prisma Client was not found inside the API container.");
+  return null;
 }
 
 const PrismaClient = prismaClient();
-const db = new PrismaClient();
+// The runtime image keeps the generated client in pnpm's content-addressed
+// directory. The database package is therefore the most stable entrypoint;
+// retain the direct-client fallback for local development.
+const db = PrismaClient ? new PrismaClient() : require("/app/packages/database").prisma;
 const TENANT_DOCUMENT = "DEMO-VENDAMAIS-2026";
 const ADMIN_EMAIL = "demonstracao@vendamais-app.com";
 const DAY = 24 * 60 * 60 * 1000;
